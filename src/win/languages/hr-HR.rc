@@ -34,6 +34,7 @@ BEGIN
         MENUITEM "&Sakrij statusni redak",		IDM_VID_HIDE_STATUS_BAR
         MENUITEM "&Sakrij alatni redak",		IDM_VID_HIDE_TOOLBAR
         MENUITEM SEPARATOR
+        MENUITEM "&Show non-primary monitors",  IDM_VID_MONITORS
         MENUITEM "&Prozor s promjenjivim veličinama",          IDM_VID_RESIZE
         MENUITEM "&Zapamtite veličinu i položaj",  IDM_VID_REMEMBER
         MENUITEM SEPARATOR
@@ -176,8 +177,8 @@ BEGIN
         MENUITEM "&Prazno",					IDM_CDROM_EMPTY
         MENUITEM "&Ponovo učitaj prethodnu sliku",			IDM_CDROM_RELOAD
         MENUITEM SEPARATOR
-        MENUITEM "&Slika",					IDM_CDROM_IMAGE
-        MENUITEM "&Mapa",					IDM_CDROM_DIR
+        MENUITEM "&Slika...",					IDM_CDROM_IMAGE
+        MENUITEM "&Mapa...",					IDM_CDROM_DIR
     END
 END
 
@@ -271,6 +272,7 @@ END
 #define STR_DYNAREC		"Dinamički rekompilator"
 
 #define STR_VIDEO		"Video:"
+#define STR_VIDEO_2		"Video 2:"
 #define STR_VOODOO		"Voodoo grafika"
 #define STR_IBM8514		"IBM 8514/a grafika"
 #define STR_XGA			"XGA grafika"

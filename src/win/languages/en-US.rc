@@ -34,6 +34,7 @@ BEGIN
         MENUITEM "&Hide status bar",		IDM_VID_HIDE_STATUS_BAR
         MENUITEM "Hide &toolbar",		IDM_VID_HIDE_TOOLBAR
         MENUITEM SEPARATOR
+        MENUITEM "&Show non-primary monitors",  IDM_VID_MONITORS
         MENUITEM "&Resizeable window",          IDM_VID_RESIZE
         MENUITEM "R&emember size && position",  IDM_VID_REMEMBER
         MENUITEM SEPARATOR
@@ -176,8 +177,8 @@ BEGIN
         MENUITEM "E&mpty",					IDM_CDROM_EMPTY
         MENUITEM "&Reload previous image",			IDM_CDROM_RELOAD
         MENUITEM SEPARATOR
-        MENUITEM "&Image",					IDM_CDROM_IMAGE
-        MENUITEM "&Folder",					IDM_CDROM_DIR
+        MENUITEM "&Image...",					IDM_CDROM_IMAGE
+        MENUITEM "&Folder...",					IDM_CDROM_DIR
     END
 END
 
@@ -271,6 +272,7 @@ END
 #define STR_DYNAREC		"Dynamic Recompiler"
 
 #define STR_VIDEO		"Video:"
+#define STR_VIDEO_2		"Video 2:"
 #define STR_VOODOO		"Voodoo Graphics"
 #define STR_IBM8514		"IBM 8514/a Graphics"
 #define STR_XGA			"XGA Graphics"
