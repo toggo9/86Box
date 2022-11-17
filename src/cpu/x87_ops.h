@@ -1,24 +1,24 @@
 /*
- * 86Box	A hypervisor and IBM PC system emulator that specializes in
- *		running old operating systems and software designed for IBM
- *		PC systems and compatibles from 1981 through fairly recent
- *		system designs based on the PCI bus.
+ * 86Box    A hypervisor and IBM PC system emulator that specializes in
+ *          running old operating systems and software designed for IBM
+ *          PC systems and compatibles from 1981 through fairly recent
+ *          system designs based on the PCI bus.
  *
- *		This file is part of the 86Box distribution.
+ *          This file is part of the 86Box distribution.
  *
- *		x87 FPU instructions core.
+ *          x87 FPU instructions core.
  *
- * Version:	@(#)x87_ops.h	1.0.8	2019/06/11
  *
- * Authors:	Fred N. van Kempen, <decwiz@yahoo.com>
- *		Sarah Walker, <tommowalker@tommowalker.co.uk>
- *		leilei,
- *		Miran Grca, <mgrca8@gmail.com>
  *
- *		Copyright 2008-2019 Sarah Walker.
- *		Copyright 2016-2019 leilei.
- *		Copyright 2016-2019 Miran Grca.
- *		Copyright 2018,2019 Fred N. van Kempen.
+ * Authors: Fred N. van Kempen, <decwiz@yahoo.com>
+ *          Sarah Walker, <tommowalker@tommowalker.co.uk>
+ *          leilei,
+ *          Miran Grca, <mgrca8@gmail.com>
+ *
+ *          Copyright 2008-2019 Sarah Walker.
+ *          Copyright 2016-2019 leilei.
+ *          Copyright 2016-2019 Miran Grca.
+ *          Copyright 2018-2019 Fred N. van Kempen.
  */
 #include <math.h>
 #include <fenv.h>
@@ -97,7 +97,7 @@ static int rounding_modes[4] = {FE_TONEAREST, FE_DOWNWARD, FE_UPWARD, FE_TOWARDZ
         } while (0)
 #endif
 
-static __inline void x87_checkexceptions()
+static __inline void x87_checkexceptions(void)
 {
 }
 
@@ -139,7 +139,7 @@ static __inline void x87_push_u64(uint64_t i)
 #endif
 }
 
-static __inline double x87_pop()
+static __inline double x87_pop(void)
 {
         double t = cpu_state.ST[cpu_state.TOP&7];
         cpu_state.tag[cpu_state.TOP&7] = TAG_EMPTY;
@@ -242,7 +242,7 @@ static __inline int64_t x87_fround(double b)
 
 #include "x87_ops_conv.h"
 
-static __inline double x87_ld80()
+static __inline double x87_ld80(void)
 {
         x87_conv_t test;
         test.eind.ll = readmeml(easeg,cpu_state.eaaddr);

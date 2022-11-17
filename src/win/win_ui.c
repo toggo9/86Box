@@ -17,7 +17,7 @@
  *          Copyright 2008-2020 Sarah Walker.
  *          Copyright 2016-2020 Miran Grca.
  *          Copyright 2017-2020 Fred N. van Kempen.
- *          Copyright 2019,2020 GH Cao.
+ *          Copyright 2019-2020 GH Cao.
  */
 #include <stdatomic.h>
 #define UNICODE
@@ -200,7 +200,7 @@ static int   menu_vidapi = -1;
 static HMENU cur_menu    = NULL;
 
 static void
-show_render_options_menu()
+show_render_options_menu(void)
 {
     if (vid_api == menu_vidapi)
         return;

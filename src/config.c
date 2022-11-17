@@ -1,29 +1,29 @@
 /*
  * 86Box    A hypervisor and IBM PC system emulator that specializes in
- *        running old operating systems and software designed for IBM
- *        PC systems and compatibles from 1981 through fairly recent
- *        system designs based on the PCI bus.
+ *          running old operating systems and software designed for IBM
+ *          PC systems and compatibles from 1981 through fairly recent
+ *          system designs based on the PCI bus.
  *
- *        This file is part of the 86Box distribution.
+ *          This file is part of the 86Box distribution.
  *
- *        Configuration file handler.
+ *          Configuration file handler.
  *
  *
  *
- * Authors:    Sarah Walker,
- *        Miran Grca, <mgrca8@gmail.com>
- *        Fred N. van Kempen, <decwiz@yahoo.com>
- *        Overdoze,
- *        David Hrdlička, <hrdlickadavid@outlook.com>
+ * Authors: Sarah Walker,
+ *          Miran Grca, <mgrca8@gmail.com>
+ *          Fred N. van Kempen, <decwiz@yahoo.com>
+ *          Overdoze,
+ *          David Hrdlička, <hrdlickadavid@outlook.com>
  *
- *        Copyright 2008-2019 Sarah Walker.
- *        Copyright 2016-2019 Miran Grca.
- *        Copyright 2017-2019 Fred N. van Kempen.
- *        Copyright 2018,2019 David Hrdlička.
+ *          Copyright 2008-2019 Sarah Walker.
+ *          Copyright 2016-2019 Miran Grca.
+ *          Copyright 2017-2019 Fred N. van Kempen.
+ *          Copyright 2018,2019 David Hrdlička.
  *
  * NOTE:    Forcing config files to be in Unicode encoding breaks
- *        it on Windows XP, and possibly also Vista. Use the
- *        -DANSI_CFG for use on these systems.
+ *          it on Windows XP, and possibly also Vista. Use the
+ *          -DANSI_CFG for use on these systems.
  */
 
 #include <inttypes.h>
@@ -494,8 +494,8 @@ load_machine(void)
     mem_size = (((machine_has_bus(machine, MACHINE_AT) && (machines[machine].ram_granularity < 128)) ? machines[machine].min_ram*1024 : machines[machine].min_ram);
 #endif
 
-    if (mem_size > 2097152)
-        mem_size = 2097152;
+    if (mem_size > machine_get_max_ram(machine))
+        mem_size = machine_get_max_ram(machine);
 
     cpu_use_dynarec = !!ini_section_get_int(cat, "cpu_use_dynarec", 0);
 
@@ -999,7 +999,7 @@ load_hard_disks(void)
 
             case HDD_BUS_IDE:
                 max_spt    = 63;
-                max_hpc    = 16;
+                max_hpc    = 255;
                 max_tracks = 266305;
                 break;
 
