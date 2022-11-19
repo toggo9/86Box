@@ -923,7 +923,7 @@ static const device_config_t et4000_config[] = {
     {
         .type = CONFIG_END
     }
-// clang-format on
+  // clang-format on
 };
 
 const device_t et4000_tc6058af_isa_device = {

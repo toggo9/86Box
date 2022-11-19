@@ -492,10 +492,11 @@ svga_recalctimings(svga_t *svga)
             svga->hdisp *= (svga->seqregs[1] & 1) ? 8 : 9;
 
         if (!(svga->gdcreg[6] & 1) && !(svga->attrregs[0x10] & 1)) { /*Text mode*/
-            if (svga->seqregs[1] & 8) /*40 column*/
+            if (svga->seqregs[1] & 8) {                              /*40 column*/
                 svga->render = svga_render_text_40;
-            else
+            } else {
                 svga->render = svga_render_text_80;
+            }
             svga->hdisp_old = svga->hdisp;
         } else {
             svga->hdisp_old = svga->hdisp;
