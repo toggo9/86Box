@@ -157,6 +157,7 @@ optimc_reg_write(uint16_t addr, uint8_t val, void *p)
                 if (val != old) {
                     optimc->cur_mode = optimc->cur_wss_enabled = !!(val & 0x80);
 
+                    sound_set_cd_audio_filter(NULL, NULL);
                     if (optimc->cur_wss_enabled) /* WSS */
                         sound_set_cd_audio_filter(ad1848_filter_cd_audio, &optimc->ad1848);
                     else /* SBPro */
@@ -311,9 +312,8 @@ optimc_reg_read(uint16_t addr, void *p)
             case 1: /* MC2 */
             case 3: /* MC4 */
             case 4: /* MC5 */
-                temp = optimc->regs[addr - 0xF8D];
             case 5: /* MC6 */
-                temp = optimc->regs[5];
+                temp = optimc->regs[addr - 0xF8D];
                 break;
             case 2: /* MC3 */
                 temp = (optimc->regs[2] & ~0x3) | 0x2;
@@ -341,7 +341,7 @@ optimc_init(const device_t *info)
     optimc->cur_mpu401_addr    = 0x330;
     optimc->cur_mpu401_enabled = 1;
 
-    optimc->regs[0] = ((device_get_config_int("gameport")) ? 0x01 : 0x00);
+    optimc->regs[0] = 0x00;
     optimc->regs[1] = 0x03;
     optimc->regs[2] = 0x00;
     optimc->regs[3] = 0x00;
@@ -426,12 +426,6 @@ mirosound_pcm10_available(void)
 
 static const device_config_t acermagic_s20_config[] = {
   // clang-format off
-    {
-        .name = "gameport",
-        .description = "Gameport",
-        .type = CONFIG_BINARY,
-        .default_int = 0
-    },
     {
         .name = "receive_input",
         .description = "Receive input (SB MIDI)",
