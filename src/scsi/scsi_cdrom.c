@@ -2942,33 +2942,12 @@ begin:
                     ide_padstr8(dev->buffer + 16, 16, device_identify); /* Product */
                     ide_padstr8(dev->buffer + 32, 4, EMU_VERSION_EX);   /* Revision */
                 } else {
-<<<<<<< Updated upstream
                     ide_padstr8(dev->buffer + 8, 8, cdrom_drive_types[dev->drv->type].vendor);    /* Vendor */
                     ide_padstr8(dev->buffer + 16, 16, cdrom_drive_types[dev->drv->type].model);   /* Product */
                     ide_padstr8(dev->buffer + 32, 4, cdrom_drive_types[dev->drv->type].revision); /* Revision */
                     if ((!strcmp(cdrom_drive_types[dev->drv->type].internal_name, "PIONEER_CD-ROM_DRM-604X_2403"))) {
                         dev->buffer[36] = 0x20;
                         ide_padstr8(dev->buffer + 37, 10, "1993/01/01"); /* Date */
-=======
-                    if (dev->early) {
-                        ide_padstr8(dev->buffer + 8, 8, "NEC");                /* Vendor */
-                        ide_padstr8(dev->buffer + 16, 16, "CD-ROM DRIVE:260"); /* Product */
-                        ide_padstr8(dev->buffer + 32, 4, "1.01");              /* Revision */
-                    } else if (machine_is_sony()) {
-                        ide_padstr8(dev->buffer + 8, 8, "SONY");    /* Vendor */
-                        ide_padstr8(dev->buffer + 16, 16, "CD-ROM CDU76"); /* Product */
-                        ide_padstr8(dev->buffer + 32, 4, "1.0i");      /* Revision */
-                    } else {
-#ifdef HITACHI
-                        ide_padstr8(dev->buffer + 8, 8, "HITACHI");    /* Vendor */
-                        ide_padstr8(dev->buffer + 16, 16, "CDR-8130"); /* Product */
-                        ide_padstr8(dev->buffer + 32, 4, "0020");      /* Revision */
-#else
-                        ide_padstr8(dev->buffer + 8, 8, "SONY");    /* Vendor */
-                        ide_padstr8(dev->buffer + 16, 16, "CD-ROM CDU76"); /* Product */
-                        ide_padstr8(dev->buffer + 32, 4, "1.0i");      /* Revision */
-#endif
->>>>>>> Stashed changes
                     }
                 }
 

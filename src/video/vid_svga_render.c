@@ -68,7 +68,11 @@ svga_render_blank(svga_t *svga)
     }
 
     pclog("svga->displine = %i, svga->y_add = %i, svga->x_add = %i\n", svga->displine, svga->y_add, svga->x_add);
+<<<<<<< Updated upstream
     uint32_t *line_ptr   = &svga->monitor->target_buffer->line[svga->displine + svga->y_add][svga->x_add];
+=======
+    uint32_t *line_ptr   = &buffer32->line[svga->displine + svga->y_add][svga->x_add];
+>>>>>>> Stashed changes
     pclog("svga->hdisp = %i, svga->scrollcache = %i, char_width = %i, sizeof(uint32_t) = %i\n", svga->hdisp, svga->scrollcache, char_width, sizeof(uint32_t));
     uint32_t  line_width = (uint32_t) (svga->hdisp + svga->scrollcache) * char_width * sizeof(uint32_t);
 
