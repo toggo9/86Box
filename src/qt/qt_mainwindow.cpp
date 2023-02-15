@@ -39,12 +39,17 @@ extern "C" {
 #include <86box/keyboard.h>
 #include <86box/plat.h>
 #include <86box/ui.h>
-#include <86box/discord.h>
+#ifdef DISCORD
+#   include <86box/discord.h>
+#endif
 #include <86box/device.h>
 #include <86box/video.h>
 #include <86box/machine.h>
 #include <86box/vid_ega.h>
 #include <86box/version.h>
+//#include <86box/acpi.h> /* Requires timer.h include, which conflicts with Qt headers */
+extern atomic_int acpi_pwrbut_pressed;
+extern int acpi_enabled;
 
 #ifdef USE_VNC
 #    include <86box/vnc.h>
@@ -304,6 +309,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionUpdate_status_bar_icons->setChecked(update_icons);
     ui->actionEnable_Discord_integration->setChecked(enable_discord);
     ui->actionApply_fullscreen_stretch_mode_when_maximized->setChecked(video_fullscreen_scale_maximized);
+
+#ifndef DISCORD
+    ui->actionEnable_Discord_integration->setVisible(false);
+#endif
 
 #if defined Q_OS_WINDOWS || defined Q_OS_MACOS
     /* Make the option visible only if ANGLE is loaded. */
@@ -723,6 +732,7 @@ MainWindow::destroyRendererMonitorSlot(int monitor_index)
         }
         config_save();
         this->renderers[monitor_index].release()->deleteLater();
+        ui->stackedWidget->switchRenderer((RendererStack::Renderer) vid_api);
     }
 }
 
@@ -1672,6 +1682,7 @@ MainWindow::refreshMediaMenu()
     mm->refresh(ui->menuMedia);
     status->refresh(ui->statusbar);
     ui->actionMCA_devices->setVisible(machine_has_bus(machine, MACHINE_BUS_MCA));
+    ui->actionACPI_Shutdown->setEnabled(!!acpi_enabled);
 }
 
 void
@@ -2095,12 +2106,21 @@ MainWindow::on_actionAbout_86Box_triggered()
 {
     QMessageBox msgBox;
     msgBox.setTextFormat(Qt::RichText);
-    QString githash;
+    QString versioninfo;
 #ifdef EMU_GIT_HASH
-    githash = QString(" [%1]").arg(EMU_GIT_HASH);
+    versioninfo = QString(" [%1]").arg(EMU_GIT_HASH);
 #endif
-    githash.append(QString(" [%1]").arg(QSysInfo::buildCpuArchitecture()));
-    msgBox.setText(QString("<b>%3%1%2</b>").arg(EMU_VERSION_FULL, githash, tr("86Box v")));
+#ifdef USE_DYNAREC
+#    ifdef USE_NEW_DYNAREC
+#        define DYNAREC_STR "new dynarec"
+#    else
+#        define DYNAREC_STR "old dynarec"
+#    endif
+#else
+#    define DYNAREC_STR "no dynarec"
+#endif
+    versioninfo.append(QString(" [%1, %2]").arg(QSysInfo::buildCpuArchitecture(), tr(DYNAREC_STR)));
+    msgBox.setText(QString("<b>%3%1%2</b>").arg(EMU_VERSION_FULL, versioninfo, tr("86Box v")));
     msgBox.setInformativeText(tr("An emulator of old computers\n\nAuthors: Sarah Walker, Miran Grca, Fred N. van Kempen (waltje), SA1988, Tiseno100, reenigne, leilei, JohnElliott, greatpsycho, and others.\n\nReleased under the GNU General Public License version 2 or later. See LICENSE for more information."));
     msgBox.setWindowTitle("About 86Box");
     msgBox.addButton("OK", QMessageBox::ButtonRole::AcceptRole);
@@ -2282,11 +2302,13 @@ void
 MainWindow::on_actionEnable_Discord_integration_triggered(bool checked)
 {
     enable_discord = checked;
+#ifdef DISCORD
     if (enable_discord) {
         discord_init();
         discord_update_activity(dopause);
     } else
         discord_close();
+#endif
 }
 
 void
@@ -2369,6 +2391,7 @@ MainWindow::on_actionShow_non_primary_monitors_triggered()
                                                monitor_settings[monitor_index].mon_window_h > 2048 ? 2048 : monitor_settings[monitor_index].mon_window_h);
             }
             secondaryRenderer->switchRenderer((RendererStack::Renderer) vid_api);
+            ui->stackedWidget->switchRenderer((RendererStack::Renderer) vid_api);
         }
     } else {
         for (int monitor_index = 1; monitor_index < MONITORS_NUM; monitor_index++) {
@@ -2411,3 +2434,9 @@ MainWindow::on_actionApply_fullscreen_stretch_mode_when_maximized_triggered(bool
     device_force_redraw();
     config_save();
 }
+
+void MainWindow::on_actionACPI_Shutdown_triggered()
+{
+    acpi_pwrbut_pressed = 1;
+}
+
