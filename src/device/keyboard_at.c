@@ -3144,7 +3144,7 @@ kbd_init(const device_t *info)
 
     dev->flags = info->local;
 
-    video_reset(gfxcard);
+    video_reset(gfxcard[0]);
     dev->kbc_poll_phase = KBC_RESET;
     kbd_send_to_host(dev, 0xaa);
 
