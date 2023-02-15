@@ -592,6 +592,8 @@ DEVOBJ := bugger.o cartridge.o cassette.o hasp.o hwm.o hwm_lm75.o hwm_lm78.o hwm
           clock_ics9xxx.o isapnp.o \
           i2c.o i2c_gpio.o smbus_ali7101.o smbus_piix4.o \
           keyboard.o \
+          i804x.o i804x_dev.o \
+          i804x_olivetti_kbd.o \
           keyboard_xt.o $(KBCOBJ) \
           mouse.o \
           mouse_bus.o \

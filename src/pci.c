@@ -71,6 +71,7 @@ static uint32_t   pci_base = 0xc000, pci_size = 0x1000;
 
 static void pci_reset_regs(void);
 
+#define ENABLE_PCI_LOG 1
 #ifdef ENABLE_PCI_LOG
 int pci_do_log = ENABLE_PCI_LOG;
 
@@ -167,8 +168,8 @@ pci_write(uint16_t port, uint8_t val, void *priv)
             if (!pci_enable)
                 return;
 
-            pci_log("Writing %02X to PCI card on bus %i, slot %02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_bus, pci_card, slot, pci_func, pci_index | (port & 3));
             slot = pci_card_to_slot_mapping[pci_bus_number_to_index_mapping[pci_bus]][pci_card];
+            pci_log("Writing %02X to PCI card on bus %i, slot %02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_bus, pci_card, slot, pci_func, pci_index | (port & 3));
             if (slot != 0xff) {
                 if (pci_cards[slot].write) {
                     pci_log("Writing to PCI card on slot %02X (pci_cards[%i]) (%02X:%02X)...\n", pci_card, slot, pci_func, pci_index | (port & 3));
@@ -204,8 +205,8 @@ pci_writew(uint16_t port, uint16_t val, void *priv)
             if (!pci_enable)
                 return;
 
-            pci_log("Writing %04X to PCI card on bus %i, slot %02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_bus, pci_card, slot, pci_func, pci_index | (port & 3));
             slot = pci_card_to_slot_mapping[pci_bus_number_to_index_mapping[pci_bus]][pci_card];
+            pci_log("Writing %04X to PCI card on bus %i, slot %02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_bus, pci_card, slot, pci_func, pci_index | (port & 3));
             if (slot != 0xff) {
                 if (pci_cards[slot].write) {
                     pci_log("Writing to PCI card on slot %02X (pci_cards[%i]) (%02X:%02X)...\n", pci_card, slot, pci_func, pci_index | (port & 3));
@@ -242,8 +243,8 @@ pci_writel(uint16_t port, uint32_t val, void *priv)
             if (!pci_enable)
                 return;
 
-            pci_log("Writing %08X to PCI card on bus %i, slot %02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_bus, pci_card, slot, pci_func, pci_index | (port & 3));
             slot = pci_card_to_slot_mapping[pci_bus_number_to_index_mapping[pci_bus]][pci_card];
+            pci_log("Writing %08X to PCI card on bus %i, slot %02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_bus, pci_card, slot, pci_func, pci_index | (port & 3));
             if (slot != 0xff) {
                 if (pci_cards[slot].write) {
                     pci_log("Writing to PCI card on slot %02X (pci_cards[%i]) (%02X:%02X)...\n", pci_card, slot, pci_func, pci_index | (port & 3));
@@ -454,7 +455,8 @@ pci_type2_write(uint16_t port, uint8_t val, void *priv)
 
         pci_key = val & 0xf0;
     } else if (port == 0xcfa) {
-        pci_bus = val;
+        // pci_bus = val;
+        pci_bus = (val == 0xf0) ? 0x00 : val;
 
         pci_log("Allocating ports %04X-%04X...\n", pci_base, pci_base + pci_size - 1);
 
@@ -478,16 +480,18 @@ pci_type2_write(uint16_t port, uint8_t val, void *priv)
 
         slot = pci_card_to_slot_mapping[pci_bus_number_to_index_mapping[pci_bus]][pci_card];
         if (slot != 0xff) {
-            if (pci_cards[slot].write)
+            if (pci_cards[slot].write) {
+                pci_log("Writing %02X to PCI card on slot %02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_card, slot, pci_func, pci_index | (port & 3));
                 pci_cards[slot].write(pci_func, pci_index | (port & 3), val, pci_cards[slot].priv);
+            }
 #ifdef ENABLE_PCI_LOG
             else
-                pci_log("Writing to empty PCI card on slot %02X (pci_cards[%i]) (%02X:%02X)...\n", pci_card, slot, pci_func, pci_index);
+                pci_log("Writing %02X to empty PCI card on slot %02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_card, slot, pci_func, pci_index);
 #endif
         }
 #ifdef ENABLE_PCI_LOG
         else
-            pci_log("Writing to unassigned PCI card on slot %02X (pci_cards[%i]) (%02X:%02X)...\n", pci_card, slot, pci_func, pci_index);
+            pci_log("Writing %02X to unassigned PCI card on slot %02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_card, slot, pci_func, pci_index);
 #endif
     }
 }
