@@ -71,7 +71,6 @@ static uint32_t   pci_base = 0xc000, pci_size = 0x1000;
 
 static void pci_reset_regs(void);
 
-#define ENABLE_PCI_LOG 1
 #ifdef ENABLE_PCI_LOG
 int pci_do_log = ENABLE_PCI_LOG;
 

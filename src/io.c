@@ -56,7 +56,6 @@ typedef struct {
 int   initialized = 0;
 io_t *io[NPORTS], *io_last[NPORTS];
 
-// #define ENABLE_IO_LOG 1
 #ifdef ENABLE_IO_LOG
 int io_do_log = ENABLE_IO_LOG;
 
@@ -65,7 +64,7 @@ io_log(const char *fmt, ...)
 {
     va_list ap;
 
-    if (io_do_log && (CS < 0xf000)) {
+    if (io_do_log) {
         va_start(ap, fmt);
         pclog_ex(fmt, ap);
         va_end(ap);
@@ -311,7 +310,7 @@ inb(uint16_t port)
     /* if (port == 0x1ed)
         ret = 0xfe; */
 
-    io_log("[%04X:%08X] (%i, %i, %04i) in b(%04X) = %02X (AH = %02X)\n", CS, cpu_state.pc, in_smm, found, qfound, port, ret, AH);
+    io_log("[%04X:%08X] (%i, %i, %04i) in b(%04X) = %02X\n", CS, cpu_state.pc, in_smm, found, qfound, port, ret);
 
     return (ret);
 }

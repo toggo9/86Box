@@ -232,12 +232,12 @@ mda_poll(void *p)
                             xsize = 656;
                         if (ysize < 32)
                             ysize = 200;
-                        // set_screen_size(xsize, ysize);
+                        set_screen_size(xsize, ysize);
 
                         if (video_force_resize_get())
                             video_force_resize_set(0);
                     }
-                    // video_blit_memtoscreen(0, mda->firstline, xsize, ysize);
+                    video_blit_memtoscreen(0, mda->firstline, xsize, ysize);
                     frames++;
                     video_res_x = mda->crtc[1];
                     video_res_y = mda->crtc[6];

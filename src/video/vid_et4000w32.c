@@ -2475,7 +2475,6 @@ et4000w32p_pci_read(int func, int addr, void *p)
         case 0x13:
             return (et4000->linearbase >> 24);
 
-#if 0
         case 0x30:
             return et4000->pci_regs[0x30] & 0x01; /* BIOS ROM address */
         case 0x31:
@@ -2484,12 +2483,6 @@ et4000w32p_pci_read(int func, int addr, void *p)
             return 0x00;
         case 0x33:
             return et4000->pci_regs[0x33] & 0xf0;
-#endif
-
-        case 0x3c:
-            return et4000->pci_regs[addr];
-        case 0x3d:
-            return PCI_INTA;
     }
 
     return 0;
@@ -2524,7 +2517,6 @@ et4000w32p_pci_write(int func, int addr, uint8_t val, void *p)
             et4000w32p_recalcmapping(et4000);
             break;
 
-#if 0
         case 0x30:
         case 0x31:
         case 0x32:
@@ -2544,11 +2536,6 @@ et4000w32p_pci_write(int func, int addr, uint8_t val, void *p)
                 et4000w32_log("ET4000 bios_rom disabled\n");
                 mem_mapping_disable(&et4000->bios_rom.mapping);
             }
-            return;
-#endif
-
-        case 0x3c:
-            et4000->pci_regs[addr] = val;
             return;
     }
 }
@@ -2662,10 +2649,8 @@ et4000w32p_init(const device_t *info)
             /* ET4000/W32p rev D */
             et4000->rev = 6;
 
-#if 0
             rom_init(&et4000->bios_rom, BIOS_ROM_PATH_CARDEX, 0xc0000, 0x8000, 0x7fff, 0,
                      MEM_MAPPING_EXTERNAL);
-#endif
 
             et4000->svga.ramdac    = device_add(&stg_ramdac_device);
             et4000->svga.clock_gen = et4000->svga.ramdac;
@@ -2685,8 +2670,8 @@ et4000w32p_init(const device_t *info)
             et4000->svga.getclock  = icd2061_getclock;
             break;
     }
-    // if (info->flags & DEVICE_PCI)
-        // mem_mapping_disable(&et4000->bios_rom.mapping);
+    if (info->flags & DEVICE_PCI)
+        mem_mapping_disable(&et4000->bios_rom.mapping);
 
     mem_mapping_add(&et4000->linear_mapping, 0, 0, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear, svga_writew_linear, svga_writel_linear, NULL, MEM_MAPPING_EXTERNAL, &et4000->svga);
     mem_mapping_add(&et4000->mmu_mapping, 0, 0, et4000w32p_mmu_read, NULL, NULL, et4000w32p_mmu_write, NULL, NULL, NULL, MEM_MAPPING_EXTERNAL, et4000);

@@ -486,8 +486,7 @@ m24_kbd_poll(void *priv)
 {
     m24_kbd_t *m24_kbd = (m24_kbd_t *) priv;
 
-    // timer_advance_u64(&m24_kbd->send_delay_timer, 1000 * TIMER_USEC);
-    timer_advance_u64(&m24_kbd->send_delay_timer, (100ULL * TIMER_USEC));
+    timer_advance_u64(&m24_kbd->send_delay_timer, 1000 * TIMER_USEC);
     if (m24_kbd->wantirq) {
         m24_kbd->wantirq = 0;
         picint(2);
@@ -571,7 +570,6 @@ m24_kbd_write(uint16_t port, uint8_t val, void *priv)
                     }
                 }
             } else {
-                pclog("[%04X:%08X] M24: keyboard command %02X\n", CS, cpu_state.pc, val);
                 m24_kbd->command = val;
                 switch (val) {
                     /* 01: FD, 05: ANY ---> Customer test reports no keyboard.
@@ -661,7 +659,6 @@ m24_kbd_read(uint16_t port, void *priv)
                 m24_kbd->status &= ~STAT_IFULL;
                 m24_kbd->wantirq = 1;
             }
-            pclog("[%04X:%08X] M24: [R] 60 = %02X\n", CS, cpu_state.pc, ret);
             break;
 
         case 0x61:
@@ -725,8 +722,6 @@ m24_kbd_reset(void *priv)
     m24_kbd->scan[4]                      = 0x4d;
     m24_kbd->scan[5]                      = 0x48;
     m24_kbd->scan[6]                      = 0x50;
-
-    m24_kbd_adddata(0xaa);
 }
 
 static int
@@ -849,7 +844,7 @@ ms_poll(int x, int y, int z, int b, void *priv)
    - Right Alt (Gr)(E0 38) -> F16 (66);
    - Right Windows (E0 5C) -> F18 (67).
  */
-static const scancode scancode_olivetti_m24_deluxe[512] = {
+const scancode scancode_olivetti_m24_deluxe[512] = {
   // clang-format off
     { {0},       {0}       }, { {0x01, 0}, {0x81, 0} },
     { {0x02, 0}, {0x82, 0} }, { {0x03, 0}, {0x83, 0} },
@@ -1116,7 +1111,7 @@ static const scancode scancode_olivetti_m24_deluxe[512] = {
    - Right Windows (E0 5C) -> 56;
    - Menu          (E0 5D) -> 5C.
  */
-static const scancode scancode_olivetti_m240[512] = {
+const scancode scancode_olivetti_m240[512] = {
   // clang-format off
     { {0},       {0}       }, { {0x01, 0}, {0x81, 0} },
     { {0x02, 0}, {0x82, 0} }, { {0x03, 0}, {0x83, 0} },
@@ -1869,9 +1864,6 @@ machine_xt_m240_init(const machine_t *model)
 
     m24_kbd_init(m24_kbd);
     device_add_ex(&m24_kbd_device, m24_kbd);
-    // device_add(&keyboard_at_olivetti_device);
-    // io_sethandler(0x0061, 1,
-                  // m24_kbd_read, NULL, NULL, m24_kbd_write, NULL, NULL, m24_kbd);
 
     if (fdc_type == FDC_INTERNAL)
         device_add(&fdc_at_device); /* io.c logs clearly show it using port 3F7 */
