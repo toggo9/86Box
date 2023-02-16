@@ -145,7 +145,7 @@
         So for example, the IBM PS/2 type 1 controller flags would be: 00000010 00000000 11111111 00000000 = 0200ff00 . */
 
 typedef struct {
-    uint8_t status, ib, ob, p1, p2, old_p2, pad, fast_a20_phase,
+    uint8_t status, ib, ob, p1, p2, old_p2, mca, fast_a20_phase,
         secr_phase, mem_index, ami_stat, ami_mode,
         kbc_in, kbc_cmd, kbc_in_cmd, kbc_poll_phase, kbc_to_send,
         kbc_send_pending, kbc_channel, kbc_stat_hi, kbc_wait_for_response, inhibit,
@@ -2108,6 +2108,9 @@ write64_generic(void *priv, uint8_t val)
             /* IBM PS/1:
                     Bit 2 and 4 ignored (we return always 0),
                     Bit 6 must 1 for 5.25" floppy drive, 0 for 3.5".
+               IBM PS/2 MCA:
+                    Bit 2 must be set or else the BIOS returns error 305 (Keyboard Fuse Error)
+                    on POST.
                Intel AMI:
                     Bit 2 ignored (we return always 1),
                     Bit 4 must be 1,
@@ -2145,7 +2148,9 @@ write64_generic(void *priv, uint8_t val)
                 dev->p1 = ((dev->p1 + 1) & 3) | (dev->p1 & 0xfc);
             } else {
                 kbd_log("[%04X:%08X] Reading %02X from input port\n", CS, cpu_state.pc, ((dev->p1 | fixed_bits) & 0xf0) | 0x0c);
-                if ((dev->flags & KBC_FLAG_PS2) && ((dev->flags & KBC_VEN_MASK) != KBC_VEN_INTEL_AMI))
+                if (dev->mca)
+                    kbc_transmit(dev, ((dev->p1 | fixed_bits) & 0xf0) | 0x0c);
+                else if ((dev->flags & KBC_FLAG_PS2) && ((dev->flags & KBC_VEN_MASK) != KBC_VEN_INTEL_AMI))
                     // kbc_transmit(dev, ((dev->p1 | fixed_bits) & 0xf0) | 0x0c);
                     kbc_transmit(dev, ((dev->p1 | fixed_bits) & 0xf0) | 0x08);
                 // kbc_transmit(dev, (dev->p1 | fixed_bits) & (((dev->flags & KBC_VEN_MASK) == KBC_VEN_ACER) ? 0xeb : 0xef));
@@ -3002,11 +3007,11 @@ kbd_write(uint16_t port, uint8_t val, void *priv)
                 kbc_push_to_ib(dev, val);
             break;
         case 4:
-            if (val == 0xd1) {
+            /* if (val == 0xd1) {
                 dev->fast_a20_phase = 1;
                 kbc_push_to_ib(dev, val);
                 kbc_process(dev);
-            } else
+            } else */
                 kbc_push_to_ib(dev, val);
             break;
     }
@@ -3200,6 +3205,8 @@ kbd_init(const device_t *info)
             break;
     }
 
+    dev->mca = !!(info->flags & DEVICE_MCA);
+
     kbd_power_on(dev);
 
     /* We need this, sadly. */
@@ -3379,7 +3386,7 @@ const device_t keyboard_ps2_olivetti_device = {
 const device_t keyboard_ps2_mca_device = {
     .name          = "PS/2 Keyboard",
     .internal_name = "keyboard_ps2_mca",
-    .flags         = 0,
+    .flags         = DEVICE_MCA,
     .local         = KBC_TYPE_PS2_1 | KBC_VEN_IBM_MCA,
     .init          = kbd_init,
     .close         = kbd_close,
@@ -3393,7 +3400,7 @@ const device_t keyboard_ps2_mca_device = {
 const device_t keyboard_ps2_mca_2_device = {
     .name          = "PS/2 Keyboard",
     .internal_name = "keyboard_ps2_mca_2",
-    .flags         = 0,
+    .flags         = DEVICE_MCA,
     .local         = KBC_TYPE_PS2_2 | KBC_VEN_IBM_MCA,
     .init          = kbd_init,
     .close         = kbd_close,

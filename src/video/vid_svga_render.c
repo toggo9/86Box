@@ -67,12 +67,12 @@ svga_render_blank(svga_t *svga)
             break;
     }
 
-    pclog("svga->displine = %i, svga->y_add = %i, svga->x_add = %i\n", svga->displine, svga->y_add, svga->x_add);
+    // pclog("svga->displine = %i, svga->y_add = %i, svga->x_add = %i\n", svga->displine, svga->y_add, svga->x_add);
     uint32_t *line_ptr   = &svga->monitor->target_buffer->line[svga->displine + svga->y_add][svga->x_add];
-    pclog("svga->hdisp = %i, svga->scrollcache = %i, char_width = %i, sizeof(uint32_t) = %i\n", svga->hdisp, svga->scrollcache, char_width, sizeof(uint32_t));
+    // pclog("svga->hdisp = %i, svga->scrollcache = %i, char_width = %i, sizeof(uint32_t) = %i\n", svga->hdisp, svga->scrollcache, char_width, sizeof(uint32_t));
     uint32_t  line_width = (uint32_t) (svga->hdisp + svga->scrollcache) * char_width * sizeof(uint32_t);
 
-    pclog("line_width = %i\n", line_width);
+    // pclog("line_width = %i\n", line_width);
     if ((svga->hdisp + svga->scrollcache) > 0)
         memset(line_ptr, 0, line_width);
 }
