@@ -3512,6 +3512,14 @@ keyboard_at_adddata_mouse(uint8_t val)
 }
 
 void
+keyboard_at_adddata_mouse_cmd(uint8_t val)
+{
+    atkbd_t *dev = SavedKbd;
+
+    kbc_queue_add(dev, val, 2, 0x00);
+}
+
+void
 keyboard_at_adddata_mouse_direct(uint8_t val)
 {
     // atkbd_t *dev = SavedKbd;
