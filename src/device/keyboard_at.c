@@ -655,6 +655,7 @@ static const scancode scancode_set3[512] = {
 #define UISTR_LEN 256
 static void add_data_kbd(uint16_t val);
 
+#define ENABLE_KEYBOARD_AT_LOG 1
 #ifdef ENABLE_KEYBOARD_AT_LOG
 int keyboard_at_do_log = ENABLE_KEYBOARD_AT_LOG;
 
@@ -3505,14 +3506,6 @@ keyboard_at_set_mouse(void (*func)(uint8_t val, void *priv), void *priv)
 
 void
 keyboard_at_adddata_mouse(uint8_t val)
-{
-    atkbd_t *dev = SavedKbd;
-
-    kbc_queue_add(dev, val, 2, 0x00);
-}
-
-void
-keyboard_at_adddata_mouse_cmd(uint8_t val)
 {
     atkbd_t *dev = SavedKbd;
 
