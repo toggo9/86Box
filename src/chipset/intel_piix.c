@@ -77,6 +77,7 @@ typedef struct _piix_ {
     piix_io_trap_t io_traps[26];
     port_92_t     *port_92;
     pc_timer_t     fast_off_timer;
+    usb_params_t   usb_params;
 } piix_t;
 
 #ifdef ENABLE_PIIX_LOG
@@ -512,7 +513,6 @@ piix_write(int func, int addr, uint8_t val, void *priv)
                 break;
             case 0x4e:
                 fregs[0x4e] = val;
-                keyboard_at_set_mouse_scan((val & 0x10) ? 1 : 0);
                 if (dev->type >= 4)
                     kbc_alias_update_io_mapping(dev);
                 break;
@@ -1159,9 +1159,7 @@ piix_read(int func, int addr, void *priv)
     if ((func <= dev->max_func) || ((func == 1) && (dev->max_func == 0))) {
         fregs = (uint8_t *) dev->regs[func];
         ret   = fregs[addr];
-        if ((func == 0) && (addr == 0x4e))
-            ret |= keyboard_at_get_mouse_scan();
-        else if ((func == 2) && (addr == 0xff))
+        if ((func == 2) && (addr == 0xff))
             ret |= 0xef;
 
         piix_log("PIIX function %i read: %02X from %02X\n", func, ret, addr);
@@ -1429,6 +1427,17 @@ piix_fast_off_count(void *priv)
 }
 
 static void
+piix_usb_update_interrupt(usb_t* usb, void *priv)
+{
+    piix_t *dev = (piix_t *) priv;
+
+    if (usb->irq_level)
+        pci_set_irq(dev->pci_slot, PCI_INTD);
+    else
+        pci_clear_irq(dev->pci_slot, PCI_INTD);
+}
+
+static void
 piix_reset(void *p)
 {
     piix_t *dev = (piix_t *) p;
@@ -1445,6 +1454,9 @@ piix_reset(void *p)
         piix_write(0, 0xa7, 0x00, p);
         piix_write(0, 0xa8, 0x0f, p);
     }
+
+    /* Disable the PIC mouse latch. */
+    piix_write(0, 0x4e, 0x03, p);
 
     if (dev->type == 5)
         piix_write(0, 0xe1, 0x40, p);
@@ -1532,9 +1544,8 @@ piix_speed_changed(void *priv)
         timer_on_auto(&dev->fast_off_timer, ((double) cpu_fast_off_val + 1) * dev->fast_off_period);
 }
 
-static void
-    *
-    piix_init(const device_t *info)
+static void *
+piix_init(const device_t *info)
 {
     piix_t *dev = (piix_t *) malloc(sizeof(piix_t));
     memset(dev, 0, sizeof(piix_t));
@@ -1570,8 +1581,12 @@ static void
         sff_set_irq_mode(dev->bm[1], 1, 2);
     }
 
-    if (dev->type >= 3)
-        dev->usb = device_add(&usb_device);
+    if (dev->type >= 3) {
+        dev->usb_params.parent_priv      = dev;
+        dev->usb_params.smi_handle       = NULL;
+        dev->usb_params.update_interrupt = piix_usb_update_interrupt;
+        dev->usb                         = device_add_parameters(&usb_device, &dev->usb_params);
+    }
 
     if (dev->type > 3) {
         dev->nvr   = device_add(&piix4_nvr_device);

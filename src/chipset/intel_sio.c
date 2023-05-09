@@ -27,6 +27,7 @@
 #include <86box/dma.h>
 #include <86box/mem.h>
 #include <86box/pci.h>
+#include <86box/pic.h>
 #include <86box/timer.h>
 #include <86box/pit.h>
 #include <86box/port_92.h>
@@ -199,6 +200,8 @@ sio_write(int func, int addr, uint8_t val, void *priv)
             dev->regs[addr] = val;
             break;
         case 0x4c:
+            dev->regs[addr] = (val & 0x7f);
+            break;
         case 0x4d:
             dev->regs[addr] = (val & 0x7f);
             break;
@@ -443,6 +446,9 @@ static void
 sio_reset(void *p)
 {
     sio_t *dev = (sio_t *) p;
+
+    /* Disable the PIC mouse latch. */
+    sio_write(0, 0x4d, 0x40, p);
 
     sio_write(0, 0x57, 0x04, p);
 

@@ -59,6 +59,7 @@ typedef struct ali1543_t {
     sff8038i_t      *ide_controller[2];
     smbus_ali7101_t *smbus;
     usb_t           *usb;
+    usb_params_t     usb_params;
 
 } ali1543_t;
 
@@ -151,10 +152,7 @@ ali1533_write(int func, int addr, uint8_t val, void *priv)
             break;
 
         case 0x41:
-            /* TODO: Bit 7 selects keyboard controller type:
-                     0 = AT, 1 = PS/2 */
-            keyboard_at_set_mouse_scan((val & 0x40) ? 1 : 0);
-            dev->pci_conf[addr] = val & 0xbf;
+            dev->pci_conf[addr] = val;
             break;
 
         case 0x42: /* ISA Bus Speed */
@@ -454,9 +452,7 @@ ali1533_read(int func, int addr, void *priv)
             ret = 0x00;
         else {
             ret = dev->pci_conf[addr];
-            if (addr == 0x41)
-                ret |= (keyboard_at_get_mouse_scan() << 2);
-            else if (addr == 0x58)
+            if (addr == 0x58)
                 ret = (ret & 0xbf) | (dev->ide_dev_enable ? 0x40 : 0x00);
             else if ((dev->type == 1) && ((addr >= 0x7c) && (addr <= 0xff)) && !dev->pmu_dev_enable) {
                 dev->pmu_dev_enable = 1;
@@ -910,7 +906,12 @@ ali5237_write(int func, int addr, uint8_t val, void *priv)
 
         case 0x0c: /* Cache Line Size */
         case 0x0d: /* Latency Timer */
+            dev->usb_conf[addr] = val;
+            break;
+
         case 0x3c: /* Interrupt Line Register */
+            dev->usb_conf[addr] = val;
+            break;
 
         case 0x42: /* Test Mode Register */
             dev->usb_conf[addr] = val & 0x10;
@@ -1430,6 +1431,17 @@ ali7101_read(int func, int addr, void *priv)
 }
 
 static void
+ali5237_usb_update_interrupt(usb_t* usb, void *priv)
+{
+    ali1543_t *dev = (ali1543_t *) priv;
+
+    if (usb->irq_level)
+        pci_set_mirq(4, !!(dev->pci_conf[0x74] & 0x10));
+    else
+        pci_clear_mirq(4, !!(dev->pci_conf[0x74] & 0x10));
+}
+
+static void
 ali1543_reset(void *priv)
 {
     ali1543_t *dev = (ali1543_t *) priv;
@@ -1510,7 +1522,8 @@ ali1543_reset(void *priv)
     dev->pci_conf[0x0a] = 0x01;
     dev->pci_conf[0x0b] = 0x06;
 
-    ali1533_write(0, 0x48, 0x00, dev); // Disables all IRQ's
+    ali1533_write(0, 0x41, 0x00, dev);    /* Disables the keyboard and mouse IRQ latch. */
+    ali1533_write(0, 0x48, 0x00, dev);    /* Disables all IRQ's. */
     ali1533_write(0, 0x44, 0x00, dev);
     ali1533_write(0, 0x4d, 0x00, dev);
     ali1533_write(0, 0x53, 0x00, dev);
@@ -1520,6 +1533,8 @@ ali1543_reset(void *priv)
     ali1533_write(0, 0x74, 0x00, dev);
     ali1533_write(0, 0x75, 0x00, dev);
     ali1533_write(0, 0x76, 0x00, dev);
+    if (dev->type == 1)
+        ali1533_write(0, 0x78, 0x00, dev);
 
     unmask_a20_in_smm = 1;
 }
@@ -1576,7 +1591,10 @@ ali1543_init(const device_t *info)
     dev->smbus = device_add(&ali7101_smbus_device);
 
     /* USB */
-    dev->usb = device_add(&usb_device);
+    dev->usb_params.parent_priv      = dev;
+    dev->usb_params.smi_handle       = NULL;
+    dev->usb_params.update_interrupt = ali5237_usb_update_interrupt;
+    dev->usb                         = device_add_parameters(&usb_device, &dev->usb_params);
 
     dev->type   = info->local & 0xff;
     dev->offset = (info->local >> 8) & 0x7f;

@@ -30,6 +30,7 @@
 #include <86box/mem.h>
 #include <86box/smram.h>
 #include <86box/pci.h>
+#include <86box/pic.h>
 #include <86box/port_92.h>
 #include <86box/chipset.h>
 
