@@ -3358,7 +3358,9 @@ s3_recalctimings(svga_t *svga)
                      The datasheets for the pre-Trio64V+ cards say +64, which implies bit 6,
                      and, contrary to VGADOC, it also exists on Trio32, Trio64, Vision868,
                      and Vision968. */
-            // pclog("svga->crtc[0x5d] = %02X\n", svga->crtc[0x5d]);
+#if 0
+            pclog("svga->crtc[0x5d] = %02X\n", svga->crtc[0x5d]);
+#endif
             if (svga->crtc[0x5d] & 0x08)
                 svga->hblank_ext = 0x40;
             svga->hblank_end_len = 0x00000040;

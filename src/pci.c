@@ -460,7 +460,9 @@ pci_type2_write(uint16_t port, uint8_t val, void *priv)
 
         pci_key = val & 0xf0;
     } else if (port == 0xcfa) {
-        // pci_bus = val;
+#if 0
+        pci_bus = val;
+#endif
         pci_bus = (val == 0xf0) ? 0x00 : val;
 
         pci_log("Allocating ports %04X-%04X...\n", pci_base, pci_base + pci_size - 1);

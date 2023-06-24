@@ -936,7 +936,9 @@ scsi_cdrom_command_common(scsi_cdrom_t *dev)
     scsi_cdrom_log("CD-ROM %i: Current speed: %ix\n", dev->id, dev->drv->cur_speed);
 
     if (dev->packet_status == PHASE_COMPLETE)
-        // dev->callback = 0;
+#if 0
+        dev->callback = 0;
+#endif
         goto phase_complete;
     else {
         switch (dev->current_cdb[0]) {

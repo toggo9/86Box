@@ -597,7 +597,9 @@ svga_recalctimings(svga_t *svga)
     svga->htotal         = svga->crtc[0];
     svga->hblankstart    = svga->crtc[4] + 1;
     svga->hblank_end_val = (svga->crtc[3] & 0x1f) | ((svga->crtc[5] & 0x80) ? 0x20 : 0x00);
-    // pclog("htotal = %i, hblankstart = %i, hblank_end_val = %02X\n", svga->htotal, svga->hblankstart, svga->hblank_end_val);
+#if 0
+    pclog("htotal = %i, hblankstart = %i, hblank_end_val = %02X\n", svga->htotal, svga->hblankstart, svga->hblank_end_val);
+#endif
     svga->hblank_end_len  = 0x00000040;
     svga->hblank_overscan = 1;
 
@@ -986,7 +988,9 @@ svga_poll(void *p)
             if (svga->vsync_callback)
                 svga->vsync_callback(svga);
         }
-        // if (svga->vc == lines_num) {
+#if 0
+        if (svga->vc == lines_num) {
+#endif
         if (svga->vc == svga->vtotal) {
             svga->vc       = 0;
             svga->sc       = 0;
