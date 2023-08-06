@@ -1025,6 +1025,7 @@ static void
 pci_slots_clear(void)
 {
     uint8_t i;
+
     last_pci_card = last_normal_pci_card = 0;
     last_pci_bus                         = 1;
 
@@ -1240,8 +1241,8 @@ pci_register_bus_slot(int bus, int card, int type, int inta, int intb, int intc,
 uint8_t
 pci_find_slot(uint8_t add_type, uint8_t ignore_slot)
 {
-    pci_card_t *dev;
-    uint8_t     ret = 0xff;
+    const pci_card_t *dev;
+    uint8_t           ret = 0xff;
 
     for (uint8_t i = 0; i < last_pci_card; i++) {
         dev = &pci_cards[i];
