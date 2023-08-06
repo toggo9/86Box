@@ -259,8 +259,8 @@ pci_writel(uint16_t port, uint32_t val, UNUSED(void *priv))
             if (!pci_enable)
                 return;
 
-            slot = pci_card_to_slot_mapping[pci_bus_number_to_index_mapping[pci_bus]][pci_card];
             pci_log("Writing %08X to PCI card on bus %i, slot %02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_bus, pci_card, slot, pci_func, pci_index | (port & 3));
+            slot = pci_card_to_slot_mapping[pci_bus_number_to_index_mapping[pci_bus]][pci_card];
             if (slot != 0xff) {
                 if (pci_cards[slot].write) {
                     pci_log("Writing to PCI card on slot %02X (pci_cards[%i]) (%02X:%02X)...\n", pci_card, slot, pci_func, pci_index | (port & 3));
@@ -468,64 +468,21 @@ pci_type2_write_reg(uint16_t port, uint8_t val)
     pci_card  = (port >> 8) & 0xf;
     pci_index = port & 0xff;
 
-        if (!pci_key && (val & 0xf0)) {
-            io_removehandler(pci_base, pci_size,
-                             pci_type2_read, NULL, NULL,
-                             pci_type2_write, NULL, NULL, NULL);
-            io_sethandler(pci_base, pci_size,
-                          pci_type2_read, NULL, NULL,
-                          pci_type2_write, NULL, NULL, NULL);
-        } else if (pci_key && !(val & 0xf0))
-            io_removehandler(pci_base, pci_size,
-                             pci_type2_read, NULL, NULL,
-                             pci_type2_write, NULL, NULL, NULL);
+    slot = pci_card_to_slot_mapping[pci_bus_number_to_index_mapping[pci_bus]][pci_card];
+    if (slot != 0xff) {
+        if (pci_cards[slot].write) {
+            pci_log("Writing %02X to PCI card on slot %02X:$%02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_bus, pci_card, slot, pci_func, pci_index | (port & 3));
 
-        pci_key = val & 0xf0;
-    } else if (port == 0xcfa) {
-#if 0
-        pci_bus = val;
-#endif
-        pci_bus = (val == 0xf0) ? 0x00 : val;
-
-        pci_log("Allocating ports %04X-%04X...\n", pci_base, pci_base + pci_size - 1);
-
-        /* Evidently, writing here, we should also enable the
-           configuration space. */
-        io_removehandler(pci_base, pci_size,
-                         pci_type2_read, NULL, NULL,
-                         pci_type2_write, NULL, NULL, NULL);
-        io_sethandler(pci_base, pci_size,
-                      pci_type2_read, NULL, NULL,
-                      pci_type2_write, NULL, NULL, NULL);
-
-        /* Mark as enabled. */
-        pci_key |= 0x100;
-    } else if (port == 0xcfb) {
-        pci_log("Write %02X to port 0CFB\n", val);
-        pci_set_pmc(val);
-    } else {
-        pci_card  = (port >> 8) & 0xf;
-        pci_index = port & 0xff;
-
-        slot = pci_card_to_slot_mapping[pci_bus_number_to_index_mapping[pci_bus]][pci_card];
-        if (slot != 0xff) {
-            if (pci_cards[slot].write) {
-                pci_log("Writing %02X to PCI card on slot %02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_card, slot, pci_func, pci_index | (port & 3));
-                pci_cards[slot].write(pci_func, pci_index | (port & 3), val, pci_cards[slot].priv);
-            }
-#ifdef ENABLE_PCI_LOG
-            else
-                pci_log("Writing %02X to empty PCI card on slot %02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_card, slot, pci_func, pci_index);
-#endif
+            pci_cards[slot].write(pci_func, pci_index | (port & 3), val, pci_cards[slot].priv);
         }
 #ifdef ENABLE_PCI_LOG
         else
-            pci_log("Writing %02X to unassigned PCI card on slot %02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_card, slot, pci_func, pci_index);
+            pci_log("Writing %02X to empty PCI card on slot %02X:%02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_bus, pci_card, slot, pci_func, pci_index);
 #endif
     }
 #ifdef ENABLE_PCI_LOG
     else
-        pci_log("Writing to unassigned PCI card on slot %02X:%02X (pci_cards[%i]) (%02X:%02X)...\n", pci_bus, pci_card, slot, pci_func, pci_index);
+        pci_log("Writing %02X to unassigned PCI card on slot %02X:%02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_bus, pci_card, slot, pci_func, pci_index);
 #endif
 }
 
@@ -547,7 +504,10 @@ pci_type2_write(uint16_t port, uint8_t val, UNUSED(void *priv))
             pci_key = val & 0xf0;
             break;
         case 0xcfa:
+#if 0
             pci_bus = val;
+#endif
+            pci_bus = (val == 0xf0) ? 0x00 : val;
 
             pci_log("CFA: Allocating ports %04X-%04X...\n", pci_base, pci_base + pci_size - 1);
 
