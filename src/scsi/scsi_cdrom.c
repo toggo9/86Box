@@ -940,10 +940,7 @@ scsi_cdrom_command_common(scsi_cdrom_t *dev)
     scsi_cdrom_log("CD-ROM %i: Current speed: %ix\n", dev->id, dev->drv->cur_speed);
 
     if (dev->packet_status == PHASE_COMPLETE)
-#if 0
         dev->callback = 0;
-#endif
-        goto phase_complete;
     else {
         switch (dev->current_cdb[0]) {
             case GPCMD_REZERO_UNIT:
@@ -1026,7 +1023,6 @@ scsi_cdrom_command_common(scsi_cdrom_t *dev)
                 break;
 
             default:
-phase_complete:
                 bytes_per_second = scsi_cdrom_bus_speed(dev);
                 if (bytes_per_second == 0.0) {
                     dev->callback = -1; /* Speed depends on SCSI controller */

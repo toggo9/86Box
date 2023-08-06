@@ -178,8 +178,8 @@ pci_write(uint16_t port, uint8_t val, UNUSED(void *priv))
             if (!pci_enable)
                 return;
 
-            slot = pci_card_to_slot_mapping[pci_bus_number_to_index_mapping[pci_bus]][pci_card];
             pci_log("Writing %02X to PCI card on bus %i, slot %02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_bus, pci_card, slot, pci_func, pci_index | (port & 3));
+            slot = pci_card_to_slot_mapping[pci_bus_number_to_index_mapping[pci_bus]][pci_card];
             if (slot != 0xff) {
                 if (pci_cards[slot].write) {
                     pci_log("Writing to PCI card on slot %02X (pci_cards[%i]) (%02X:%02X)...\n", pci_card, slot, pci_func, pci_index | (port & 3));
@@ -218,8 +218,8 @@ pci_writew(uint16_t port, uint16_t val, UNUSED(void *priv))
             if (!pci_enable)
                 return;
 
-            slot = pci_card_to_slot_mapping[pci_bus_number_to_index_mapping[pci_bus]][pci_card];
             pci_log("Writing %04X to PCI card on bus %i, slot %02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_bus, pci_card, slot, pci_func, pci_index | (port & 3));
+            slot = pci_card_to_slot_mapping[pci_bus_number_to_index_mapping[pci_bus]][pci_card];
             if (slot != 0xff) {
                 if (pci_cards[slot].write) {
                     pci_log("Writing to PCI card on slot %02X (pci_cards[%i]) (%02X:%02X)...\n", pci_card, slot, pci_func, pci_index | (port & 3));
@@ -470,19 +470,16 @@ pci_type2_write_reg(uint16_t port, uint8_t val)
 
     slot = pci_card_to_slot_mapping[pci_bus_number_to_index_mapping[pci_bus]][pci_card];
     if (slot != 0xff) {
-        if (pci_cards[slot].write) {
-            pci_log("Writing %02X to PCI card on slot %02X:$%02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_bus, pci_card, slot, pci_func, pci_index | (port & 3));
-
+        if (pci_cards[slot].write)
             pci_cards[slot].write(pci_func, pci_index | (port & 3), val, pci_cards[slot].priv);
-        }
 #ifdef ENABLE_PCI_LOG
         else
-            pci_log("Writing %02X to empty PCI card on slot %02X:%02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_bus, pci_card, slot, pci_func, pci_index);
+            pci_log("Writing to empty PCI card on slot %02X:%02X (pci_cards[%i]) (%02X:%02X)...\n", pci_bus, pci_card, slot, pci_func, pci_index);
 #endif
     }
 #ifdef ENABLE_PCI_LOG
     else
-        pci_log("Writing %02X to unassigned PCI card on slot %02X:%02X (pci_cards[%i]) (%02X:%02X)...\n", val, pci_bus, pci_card, slot, pci_func, pci_index);
+        pci_log("Writing to unassigned PCI card on slot %02X:%02X (pci_cards[%i]) (%02X:%02X)...\n", pci_bus, pci_card, slot, pci_func, pci_index);
 #endif
 }
 
@@ -504,10 +501,7 @@ pci_type2_write(uint16_t port, uint8_t val, UNUSED(void *priv))
             pci_key = val & 0xf0;
             break;
         case 0xcfa:
-#if 0
             pci_bus = val;
-#endif
-            pci_bus = (val == 0xf0) ? 0x00 : val;
 
             pci_log("CFA: Allocating ports %04X-%04X...\n", pci_base, pci_base + pci_size - 1);
 
