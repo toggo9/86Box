@@ -734,9 +734,20 @@ path_normalize(char *path)
 void
 path_slash(char *path)
 {
-    if ((path[strlen(path) - 1] != '\\') && (path[strlen(path) - 1] != '/')) {
+    if ((path[strlen(path) - 1] != '\\') && (path[strlen(path) - 1] != '/'))
         strcat(path, "\\");
-    }
+}
+
+/* Return a trailing (back)slash if necessary. */
+char *
+path_get_slash(char *path)
+{
+    char *ret = "";
+
+    if ((path[strlen(path) - 1] != '\\') && (path[strlen(path) - 1] != '/'))
+        ret =  "\\";
+
+    return ret;
 }
 
 /* Check if the given path is absolute or not. */
@@ -1251,6 +1262,12 @@ plat_language_code_r(uint32_t lcid, char *outbuf, int len)
 }
 
 void
+plat_get_cpu_string(char *outbuf, uint8_t len) {
+    char cpu_string[] = "Unknown";
+    strncpy(outbuf, cpu_string, len);
+}
+
+void
 take_screenshot(void)
 {
     startblit();
@@ -1279,4 +1296,12 @@ void /* plat_ */
 endblit(void)
 {
     ReleaseMutex(ghMutex);
+}
+
+double
+plat_get_dpi(void)
+{
+    UINT dpi = win_get_dpi(hwndRender);
+
+    return ((double) dpi) / 96.0;
 }

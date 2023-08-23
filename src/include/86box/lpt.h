@@ -53,13 +53,13 @@ extern void lpt1_remove_ams(void);
 #define lpt4_remove() lpt_port_remove(3)
 
 #if 0
-#define lpt5_init(a)	lpt_port_init(4, a)
-#define lpt5_irq(a)	lpt_port_irq(4, a)
-#define lpt5_remove()	lpt_port_remove(4)
+#define lpt5_init(a)  lpt_port_init(4, a)
+#define lpt5_irq(a)   lpt_port_irq(4, a)
+#define lpt5_remove() lpt_port_remove(4)
 
-#define lpt6_init(a)	lpt_port_init(5, a)
-#define lpt6_irq(a)	lpt_port_irq(5, a)
-#define lpt6_remove()	lpt_port_remove(5)
+#define lpt6_init(a)  lpt_port_init(5, a)
+#define lpt6_irq(a)   lpt_port_irq(5, a)
+#define lpt6_remove() lpt_port_remove(5)
 #endif
 
 void lpt_devices_init(void);
@@ -83,7 +83,8 @@ extern lpt_port_t lpt_ports[PARALLEL_MAX];
 extern void    lpt_write(uint16_t port, uint8_t val, void *priv);
 extern uint8_t lpt_read(uint16_t port, void *priv);
 
-extern void lpt_irq(void *priv, int raise);
+extern uint8_t lpt_read_status(int port);
+extern void    lpt_irq(void *priv, int raise);
 
 extern char *lpt_device_get_name(int id);
 extern char *lpt_device_get_internal_name(int id);
