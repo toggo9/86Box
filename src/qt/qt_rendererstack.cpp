@@ -108,6 +108,7 @@ RendererStack::RendererStack(QWidget *parent, int monitor_index)
         extern void xinput2_exit();
         xinput2_init();
         this->mouse_exit_func = xinput2_exit;
+        raw = 1;
     }
 #endif
 
