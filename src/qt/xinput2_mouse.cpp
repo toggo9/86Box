@@ -54,6 +54,7 @@ static int                 x_raw                   = 0;
 static double              prev_coords[2]          = { 0.0 };
 static double              coords[2]               = { 0.0 };
 static Time                prev_time               = 0;
+staic const XIValuatorClassInfo *v;
 
 /* Based on SDL2. */
 static void
@@ -158,8 +159,7 @@ xinput2_proc()
         const XIDeviceEvent       *devev;
         int                        i;
         int                        axis;
-        XIDeviceInfo              *xidevinfo
-        const XIValuatorClassInfo *v;
+        XIDeviceInfo              *xidevinfo;
         int                        disp_screen;
         double                     abs_div;
 
