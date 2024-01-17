@@ -165,7 +165,8 @@ xinput2_proc()
 
         XNextEvent(disp, (XEvent *) &ev);
 
-        if (XGetEventData(disp, cookie) && (cookie->type == GenericEvent) && (cookie->extension == xi2opcode)) {
+        if (XGetEventData(disp, cookie) && (cookie->type == GenericEvent) &&
+            (cookie->extension == xi2opcode)) {
             const XIRawEvent *rawev     = (const XIRawEvent *) cookie->data;
 
             switch (cookie->evtype) {
