@@ -162,6 +162,7 @@ xinput2_proc()
         XIDeviceInfo              *xidevinfo;
         int                        disp_screen;
         double                     abs_div;
+        XWindowAttributes          winattrib {};
 
         XNextEvent(disp, (XEvent *) &ev);
 
@@ -216,7 +217,7 @@ common_motion:
                                        relative, but in practice, the injected absolute coordinates
                                        are already in pixels. */
                                     if (v->mode == XIModeRelative)
-                                        raw = 0;
+                                        x_raw = 0;
 
                                     abs_div = convert_mickeys(disp_screen, 1, axis);
 
@@ -234,7 +235,6 @@ common_motion:
                     prev_time = rawev->time;
                     if (!mouse_capture)
                         break;
-                    XWindowAttributes winattrib {};
                     if (XGetWindowAttributes(disp, main_window->winId(), &winattrib)) {
                         auto globalPoint = main_window->mapToGlobal(QPoint(main_window->width() / 2,
                                                                            main_window->height() / 2));
