@@ -44,14 +44,16 @@ extern "C" {
 #include <86box/plat.h>
 }
 
-static Display            *disp       = nullptr;
-static QThread            *procThread = nullptr;
+static Display            *disp                    = nullptr;
+static QThread            *procThread              = nullptr;
 static XIEventMask         ximask;
-static std::atomic<bool>   exitfromthread = false;
-static std::atomic<double> xi2_mouse_abs_x = 0, xi2_mouse_abs_y = 0;
-static int                 xi2opcode      = 0;
-static double              prev_coords[2] = { 0.0 };
-static Time                prev_time      = 0;
+static std::atomic<bool>   exitfromthread          = false;
+static std::atomic<double> xi2_mouse_abs_coords[2] = { 0.0 };
+static int                 xi2opcode               = 0;
+static int                 x_raw                   = 0;
+static double              prev_coords[2]          = { 0.0 };
+static double              coords[2]               = { 0.0 };
+static Time                prev_time               = 0;
 
 /* Based on SDL2. */
 static void
@@ -108,6 +110,29 @@ xinput2_get_xtest_pointer()
     return -1;
 }
 
+static double
+convert_mickeys(int disp_screen, int to, int axis)
+{
+    double abs_div;
+    double hs;
+
+    if (to == x_raw)
+        abs_div = coords[axis];
+    else {
+        hs = (double) ((axis == 1) ? XDisplayHeight(disp, disp_screen) : XDisplayWidth(disp, disp_screen));
+
+        if (to)
+            abs_div = hs / (v->max - v->min);
+        else
+            abs_div = (v->max - v->min) / hs;
+        if (abs_div <= 0.0)
+            abs_div = 1.0;
+        abs_div = (coords[axis] - v->min) / abs_div;
+    }
+
+    return abs_div;
+}
+
 void
 xinput2_proc()
 {
@@ -128,111 +153,102 @@ xinput2_proc()
 
     XSync(disp, False);
     while (true) {
-        XEvent               ev;
-        XGenericEventCookie *cookie = (XGenericEventCookie *) &ev.xcookie;
+        XEvent                     ev;
+        XGenericEventCookie       *cookie = (XGenericEventCookie *) &ev.xcookie;
+        const XIDeviceEvent       *devev;
+        int                        i;
+        int                        axis;
+        XIDeviceInfo              *xidevinfo
+        const XIValuatorClassInfo *v;
+        int                        disp_screen;
+        double                     abs_div;
+
         XNextEvent(disp, (XEvent *) &ev);
 
         if (XGetEventData(disp, cookie) && (cookie->type == GenericEvent) && (cookie->extension == xi2opcode)) {
             const XIRawEvent *rawev     = (const XIRawEvent *) cookie->data;
-            double            coords[2] = { 0.0 };
 
             switch (cookie->evtype) {
                 case XI_Motion:
-                    {
-                        const XIDeviceEvent *devev = (const XIDeviceEvent *) cookie->data;
-                        parse_valuators(devev->valuators.values, devev->valuators.mask, devev->valuators.mask_len, coords, 2);
+                    x_raw = 0;
+                    devev = (const XIDeviceEvent *) cookie->data;
+                    parse_valuators(devev->valuators.values, devev->valuators.mask,
+                                    devev->valuators.mask_len, coords, 2);
 
-                        /* XIDeviceEvent and XIRawEvent share the XIEvent base struct, which
-                           doesn't contain deviceid, but that's at the same offset on both. */
-                        goto common_motion;
-                    }
+                    /* XIDeviceEvent and XIRawEvent share the XIEvent base struct, which
+                       doesn't contain deviceid, but that's at the same offset on both. */
+                    goto common_motion;
 
                 case XI_RawMotion:
-                    {
-                        parse_valuators(rawev->raw_values, rawev->valuators.mask, rawev->valuators.mask_len, coords, 2);
+                    x_raw = 1;
+                    parse_valuators(rawev->raw_values, rawev->valuators.mask,
+                                    rawev->valuators.mask_len, coords, 2);
 common_motion:
-                        /* Ignore duplicated events. */
-                        if ((rawev->time == prev_time) && (coords[0] == prev_coords[0]) && (coords[1] == prev_coords[1]))
-                            break;
+                    /* Ignore duplicated events. */
+                    if ((rawev->time == prev_time) && (coords[0] == prev_coords[0]) &&
+                        (coords[1] == prev_coords[1]))
+                        break;
 
-                        /* SDL2 queries the device on every event, so doing that should be fine. */
-                        int           i;
-                        XIDeviceInfo *xidevinfo = XIQueryDevice(disp, rawev->deviceid, &i);
-                        if (xidevinfo) {
-                            /* Process the device's axes. */
-                            int axis = 0;
-                            for (i = 0; i < xidevinfo->num_classes; i++) {
-                                const XIValuatorClassInfo *v = (const XIValuatorClassInfo *) xidevinfo->classes[i];
-                                if (v->type == XIValuatorClass) {
-                                    /* Is this an absolute or relative axis? */
-                                    if ((v->mode == XIModeRelative) && (rawev->sourceid != xtest_pointer)) {
-                                        /* Set relative coordinates. */
-                                        if (axis == 0)
-                                            mouse_scale_x(coords[axis]);
-                                        else
-                                            mouse_scale_y(coords[axis]);
-                                    } else {
-                                        /* Convert absolute value range to pixel granularity, then to relative coordinates. */
-                                        int    disp_screen = XDefaultScreen(disp);
-                                        double abs_div;
-                                        if (axis == 0) {
-                                            if (v->mode == XIModeRelative) {
-                                                /* XTEST axes have dummy min/max values because they're nominally relative,
-                                                   but in practice, the injected absolute coordinates are already in pixels. */
-                                                abs_div = coords[axis];
-                                            } else {
-                                                abs_div = (v->max - v->min) / (double) XDisplayWidth(disp, disp_screen);
-                                                if (abs_div <= 0)
-                                                    abs_div = 1;
-                                                abs_div = (coords[axis] - v->min) / abs_div;
-                                            }
+                    /* SDL2 queries the device on every event, so doing that should be fine. */
+                    xidevinfo = XIQueryDevice(disp, rawev->deviceid, &i);
+                    if (xidevinfo) {
+                        /* Process the device's axes. */
+                        axis = 0;
+                        for (i = 0; i < xidevinfo->num_classes; i++) {
+                            v = (const XIValuatorClassInfo *) xidevinfo->classes[i];
+                            if (v->type == XIValuatorClass) {
+                                /* Is this an absolute or relative axis? */
+                                if ((v->mode == XIModeRelative) && (rawev->sourceid != xtest_pointer)) {
+                                    /* Ignore zero motion events. */
+                                    if ((coords[0] == 0.0) && (coords[1] == 0.0))
+                                        continue;
 
-                                            if (xi2_mouse_abs_x != 0)
-                                                mouse_scale_x(abs_div - xi2_mouse_abs_x);
-                                            xi2_mouse_abs_x = abs_div;
-                                        } else {
-                                            if (v->mode == XIModeRelative) {
-                                                /* Same as above. */
-                                                abs_div = coords[axis];
-                                            } else {
-                                                abs_div = (v->max - v->min) / (double) XDisplayHeight(disp, disp_screen);
-                                                if (abs_div <= 0)
-                                                    abs_div = 1;
-                                                abs_div = (coords[axis] - v->min) / abs_div;
-                                            }
+                                    /* Set relative coordinates. */
+                                    abs_div = convert_mickeys(disp_screen, 1, axis);
+                                    mouse_scale_axis(axis, abs_div);
+                                } else {
+                                    /* Convert absolute value range to pixel granularity, then to
+                                       relative coordinates. */
+                                    disp_screen = XDefaultScreen(disp);
 
-                                            if (xi2_mouse_abs_y != 0)
-                                                mouse_scale_y(abs_div - xi2_mouse_abs_y);
-                                            xi2_mouse_abs_y = abs_div;
-                                        }
-                                    }
-                                    prev_coords[axis] = coords[axis];
-                                    if (++axis >= 2) /* stop after X and Y processed */
-                                        break;
+                                    /* XTEST axes have dummy min/max values because they're nominally
+                                       relative, but in practice, the injected absolute coordinates
+                                       are already in pixels. */
+                                    if (v->mode == XIModeRelative)
+                                        raw = 0;
+
+                                    abs_div = convert_mickeys(disp_screen, 1, axis);
+
+                                    if (xi2_mouse_abs_coords[axis] != 0)
+                                        mouse_scale_axis(axis, abs_div - xi2_mouse_abs_coords[axis]);
+                                    xi2_mouse_abs_coords[axis] = abs_div;
                                 }
+                                prev_coords[axis] = coords[axis];
+                                if (++axis >= 2) /* stop after X and Y processed */
+                                    break;
                             }
                         }
-
-                        prev_time = rawev->time;
-                        if (!mouse_capture)
-                            break;
-                        XWindowAttributes winattrib {};
-                        if (XGetWindowAttributes(disp, main_window->winId(), &winattrib)) {
-                            auto globalPoint = main_window->mapToGlobal(QPoint(main_window->width() / 2, main_window->height() / 2));
-                            XWarpPointer(disp, XRootWindow(disp, XScreenNumberOfScreen(winattrib.screen)), XRootWindow(disp, XScreenNumberOfScreen(winattrib.screen)), 0, 0, 0, 0, globalPoint.x(), globalPoint.y());
-                            XFlush(disp);
-                        }
-
-                        break;
                     }
+
+                    prev_time = rawev->time;
+                    if (!mouse_capture)
+                        break;
+                    XWindowAttributes winattrib {};
+                    if (XGetWindowAttributes(disp, main_window->winId(), &winattrib)) {
+                        auto globalPoint = main_window->mapToGlobal(QPoint(main_window->width() / 2,
+                                                                           main_window->height() / 2));
+                        XWarpPointer(disp, XRootWindow(disp, XScreenNumberOfScreen(winattrib.screen)),
+                                     XRootWindow(disp, XScreenNumberOfScreen(winattrib.screen)), 0, 0,
+                                     0, 0, globalPoint.x(), globalPoint.y());
+                        XFlush(disp);
+                    }
+                    break;
 
                 case XI_DeviceChanged:
-                    {
-                        /* Re-scan for XTEST pointer, just in case. */
-                        xtest_pointer = xinput2_get_xtest_pointer();
+                    /* Re-scan for XTEST pointer, just in case. */
+                    xtest_pointer = xinput2_get_xtest_pointer();
 
-                        break;
-                    }
+                    break;
             }
         }
 
