@@ -36,6 +36,7 @@
 #include <86box/flash.h>
 #include <86box/nvr.h>
 #include <86box/scsi_ncr53c8xx.h>
+#include <86box/sound.h>
 #include <86box/sio.h>
 #include <86box/video.h>
 #include <86box/machine.h>
@@ -345,7 +346,8 @@ machine_at_pt2000_init(const machine_t *model)
     pci_register_slot(0x0A, PCI_CARD_NORMAL,      3, 4, 1, 2);
     pci_register_slot(0x0B, PCI_CARD_NORMAL,      4, 1, 2, 3);
     pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
-    device_add(&keyboard_ps2_ami_pci_device);
+    /* Should be VIA, but we do not emulate that yet. */
+    device_add(&keyboard_ps2_holtek_device);
     device_add(&i430fx_device);
     device_add(&piix_device);
     device_add(&pc87332_398_device);
@@ -370,7 +372,7 @@ machine_at_pat54pv_init(const machine_t *model)
     device_add(&opti5x7_device);
     device_add(&keyboard_ps2_intel_ami_pci_device);
 
-    if (fdc_type == FDC_INTERNAL)
+    if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
 
     return ret;
@@ -400,7 +402,7 @@ machine_at_hot543_init(const machine_t *model)
     device_add(&sst_flash_29ee010_device);
     device_add(&keyboard_at_device);
 
-    if (fdc_type == FDC_INTERNAL)
+    if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
 
     return ret;
@@ -604,6 +606,37 @@ machine_at_hot539_init(const machine_t *model)
     device_add(&sst_flash_29ee010_device);
     device_add(&keyboard_ps2_ami_pci_device);
     device_add(&um8663af_device);
+
+    return ret;
+}
+
+int
+machine_at_presario7100_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/presario7100/presario7100.bin",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+	return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
+	pci_register_slot(0x0C, PCI_CARD_NORMAL,      1, 2, 3, 4); /* Slot 01 */
+	pci_register_slot(0x0D, PCI_CARD_NORMAL,      4, 1, 2, 3); /* Slot 02 */
+	pci_register_slot(0x12, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0); /* Onboard */
+	pci_register_slot(0x13, PCI_CARD_NORMAL,      0, 0, 0, 0); /* Onboard */
+    device_add(&umc_8890_device);
+    device_add(&umc_8886af_device);
+    device_add(&sst_flash_29ee010_device);
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&um8663af_device);
+	
+	if (sound_card_current[0] == SOUND_INTERNAL)
+        device_add(&ess_1688_device);
 
     return ret;
 }

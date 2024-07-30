@@ -206,6 +206,29 @@ machine_at_opti560l_init(const machine_t *model)
 }
 
 int
+machine_at_d818_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear_combined("roms/machines/d818/1008AU0_.BIO",
+                                    "roms/machines/d818/1008AU0_.BI1",
+                                    0x1c000, 128);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_premiere_common_init(model, 0);
+    device_add(&ide_pci_2ch_device);
+	
+    device_add(&i430lx_device);
+	
+	 if (gfxcard[0] == VID_INTERNAL)
+             device_add(&mach32_pci_device);
+
+    return ret;
+}
+
+int
 machine_at_ambradp60_init(const machine_t *model)
 {
     int ret;
@@ -293,7 +316,7 @@ machine_at_award_common_init(const machine_t *model)
     pci_register_slot(0x07, PCI_CARD_SCSI,        1, 2, 3, 4); /* 07 = SCSI   */
     pci_register_slot(0x02, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
 
-    if (fdc_type == FDC_INTERNAL)
+    if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
 
     device_add(&keyboard_ps2_ami_pci_device);
@@ -402,7 +425,7 @@ machine_at_p5vl_init(const machine_t *model)
     device_add(&sst_flash_29ee010_device);
     device_add(&keyboard_at_ami_device);
 
-    if (fdc_type == FDC_INTERNAL)
+    if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
 
     return ret;
