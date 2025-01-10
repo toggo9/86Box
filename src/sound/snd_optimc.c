@@ -394,7 +394,7 @@ optimc_init(const device_t *info)
     optimc->fm_type = (info->local & OPTIMC_OPL4) ? FM_YMF278B : FM_YMF262;
 
     sb_dsp_set_real_opl(&optimc->sb->dsp, optimc->fm_type != FM_YMF278B);
-    sb_dsp_init(&optimc->sb->dsp, SBPRO2, SB_SUBTYPE_DEFAULT, optimc);
+    sb_dsp_init(&optimc->sb->dsp, SBPRO2_DSP_302, SB_SUBTYPE_DEFAULT, optimc);
     sb_dsp_setaddr(&optimc->sb->dsp, optimc->cur_addr);
     sb_dsp_setirq(&optimc->sb->dsp, optimc->cur_irq);
     sb_dsp_setdma8(&optimc->sb->dsp, optimc->cur_dma);
@@ -482,7 +482,7 @@ const device_t acermagic_s20_device = {
     .init          = optimc_init,
     .close         = optimc_close,
     .reset         = NULL,
-    { .available = NULL },
+    .available     = NULL,
     .speed_changed = optimc_speed_changed,
     .force_redraw  = NULL,
     .config        = optimc_config
@@ -496,7 +496,7 @@ const device_t mirosound_pcm10_device = {
     .init          = optimc_init,
     .close         = optimc_close,
     .reset         = NULL,
-    { .available = mirosound_pcm10_available },
+    .available     = mirosound_pcm10_available,
     .speed_changed = optimc_speed_changed,
     .force_redraw  = NULL,
     .config        = optimc_config
