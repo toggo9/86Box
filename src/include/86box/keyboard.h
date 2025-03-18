@@ -15,7 +15,7 @@
  *          Fred N. van Kempen, <decwiz@yahoo.com>
  *
  *          Copyright 2008-2019 Sarah Walker.
- *          Copyright 2016-2019 Miran Grca.
+ *          Copyright 2016-2025 Miran Grca.
  *          Copyright 2017-2019 Fred N. van Kempen.
  */
 
@@ -54,16 +54,16 @@ typedef struct kbc_at_port_t {
 typedef struct atkbc_dev_t {
     const char *name; /* name of this device */
 
-    uint8_t type;
-    uint8_t command;
-    uint8_t last_scan_code;
-    uint8_t state;
-    uint8_t resolution;
-    uint8_t rate;
-    uint8_t cmd_queue_start;
-    uint8_t cmd_queue_end;
-    uint8_t queue_start;
-    uint8_t queue_end;
+    uint8_t     type;
+    uint8_t     command;
+    uint8_t     last_scan_code;
+    uint8_t     state;
+    uint8_t     resolution;
+    uint8_t     rate;
+    uint8_t     cmd_queue_start;
+    uint8_t     cmd_queue_end;
+    uint8_t     queue_start;
+    uint8_t     queue_end;
 
     uint16_t flags;
 
@@ -194,8 +194,8 @@ typedef struct scancode {
 extern "C" {
 #endif
 
-extern uint8_t  keyboard_mode;
-extern int      keyboard_scan;
+extern uint8_t keyboard_mode;
+extern int     keyboard_scan;
 
 extern uint16_t scancode_map[768];
 
@@ -232,26 +232,26 @@ extern const device_t keyboard_xt_zenith_device;
 extern const device_t keyboard_xt_hyundai_device;
 extern const device_t keyboard_xtclone_device;
 extern const device_t keyboard_at_device;
-extern const device_t keyboard_at_siemens_device;
 extern const device_t keyboard_at_ami_device;
+extern const device_t keyboard_at_compaq_device;
+extern const device_t keyboard_at_ncr_device;
+extern const device_t keyboard_at_olivetti_device;
+extern const device_t keyboard_at_siemens_device;
 extern const device_t keyboard_at_tg_ami_device;
 extern const device_t keyboard_at_toshiba_device;
-extern const device_t keyboard_at_olivetti_device;
-extern const device_t keyboard_at_ncr_device;
-extern const device_t keyboard_at_compaq_device;
 extern const device_t keyboard_ps2_device;
 extern const device_t keyboard_ps2_ps1_device;
 extern const device_t keyboard_ps2_ps1_pci_device;
 extern const device_t keyboard_ps2_xi8088_device;
 extern const device_t keyboard_ps2_ami_device;
 extern const device_t keyboard_ps2_holtek_device;
-extern const device_t keyboard_ps2_tg_ami_device;
-extern const device_t keyboard_ps2_tg_ami_green_device;
-extern const device_t keyboard_ps2_olivetti_device;
-extern const device_t keyboard_ps2_phoenix_device;
 extern const device_t keyboard_ps2_mca_1_device;
 extern const device_t keyboard_ps2_mca_2_device;
+extern const device_t keyboard_ps2_olivetti_device;
+extern const device_t keyboard_ps2_phoenix_device;
 extern const device_t keyboard_ps2_quadtel_device;
+extern const device_t keyboard_ps2_tg_ami_device;
+extern const device_t keyboard_ps2_tg_ami_green_device;
 extern const device_t keyboard_ps2_pci_device;
 extern const device_t keyboard_ps2_ami_pci_device;
 extern const device_t keyboard_ps2_intel_ami_pci_device;
@@ -269,6 +269,7 @@ extern void     keyboard_poll_host(void);
 extern void     keyboard_process(void);
 extern uint16_t keyboard_convert(int ch);
 extern void     keyboard_input(int down, uint16_t scan);
+extern void     keyboard_all_up(void);
 extern void     keyboard_update_states(uint8_t cl, uint8_t nl, uint8_t sl);
 extern uint8_t  keyboard_get_shift(void);
 extern void     keyboard_get_states(uint8_t *cl, uint8_t *nl, uint8_t *sl);

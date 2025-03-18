@@ -54,7 +54,9 @@
 #include <stdlib.h>
 #include <wchar.h>
 #include <time.h>
+#ifndef _MSC_VER
 #include <sys/time.h>
+#endif
 #include <stdbool.h>
 #define HAVE_STDARG_H
 #include <86box/86box.h>
@@ -94,7 +96,7 @@ static const NETWORK_CARD net_cards[] = {
     { &ne1000_device              },
     { &ne2000_device              },
     { &pcnet_am79c960_eb_device   },
-    { &rtl8019as_device           },
+    { &rtl8019as_pnp_device       },
     { &wd8003e_device             },
     { &wd8003eb_device            },
     { &wd8013ebt_device           },
@@ -637,6 +639,43 @@ network_rx_put(netcard_t *card, uint8_t *bufp, int len)
     thread_wait_mutex(card->rx_mutex);
     ret = network_queue_put(&card->queues[NET_QUEUE_RX], bufp, len);
     thread_release_mutex(card->rx_mutex);
+
+    return ret;
+}
+
+int
+network_rx_on_tx_popv(netcard_t *card, netpkt_t *pkt_vec, int vec_size)
+{
+    int pkt_count = 0;
+
+    netqueue_t *queue = &card->queues[NET_QUEUE_RX_ON_TX];
+    for (int i = 0; i < vec_size; i++) {
+        if (!network_queue_get_swap(queue, pkt_vec))
+            break;
+        network_dump_packet(pkt_vec);
+        pkt_count++;
+        pkt_vec++;
+    }
+
+    return pkt_count;
+}
+
+int
+network_rx_on_tx_put(netcard_t *card, uint8_t *bufp, int len)
+{
+    int ret = 0;
+
+    ret = network_queue_put(&card->queues[NET_QUEUE_RX_ON_TX], bufp, len);
+
+    return ret;
+}
+
+int
+network_rx_on_tx_put_pkt(netcard_t *card, netpkt_t *pkt)
+{
+    int ret = 0;
+
+    ret = network_queue_put_swap(&card->queues[NET_QUEUE_RX_ON_TX], pkt);
 
     return ret;
 }

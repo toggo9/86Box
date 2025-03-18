@@ -209,6 +209,7 @@ int is286;
 int is386;
 int is6117;
 int is486 = 1;
+int is586 = 0;
 int cpu_isintel;
 int cpu_iscyrix;
 int hascache;
@@ -279,13 +280,14 @@ uint8_t do_translate2 = 0;
 
 void (*cpu_exec)(int32_t cycs);
 
-static uint8_t ccr0;
-static uint8_t ccr1;
-static uint8_t ccr2;
-static uint8_t ccr3;
-static uint8_t ccr4;
-static uint8_t ccr5;
-static uint8_t ccr6;
+uint8_t ccr0;
+uint8_t ccr1;
+uint8_t ccr2;
+uint8_t ccr3;
+uint8_t ccr4;
+uint8_t ccr5;
+uint8_t ccr6;
+uint8_t ccr7;
 
 static int cyrix_addr;
 
@@ -381,6 +383,14 @@ cpu_is_eligible(const cpu_family_t *cpu_family, int cpu, int machine)
     /* Partial override. */
     if (cpu_override)
         return 1;
+
+    /* Cyrix 6x86MX on the NuPRO 592. */
+    if (((cpu_s->cyrix_id & 0xff00) == 0x0400) && (strstr(machine_s->internal_name, "nupro") != NULL))
+        return 0;
+
+    /* Cyrix 6x86MX or MII on the P5MMS98. */
+    if ((cpu_s->cpu_type == CPU_Cx6x86MX) && (strstr(machine_s->internal_name, "p5mms98") != NULL))
+        return 0;
 
     /* Check CPU blocklist. */
     if (machine_s->cpu.block) {
@@ -551,13 +561,16 @@ cpu_set(void)
     cpu_16bitbus = (cpu_s->cpu_type == CPU_286) || (cpu_s->cpu_type == CPU_386SX) || (cpu_s->cpu_type == CPU_486SLC) || (cpu_s->cpu_type == CPU_IBM386SLC) || (cpu_s->cpu_type == CPU_IBM486SLC);
     cpu_64bitbus = (cpu_s->cpu_type >= CPU_WINCHIP);
 
+    is586    = cpu_64bitbus || (cpu_s->cpu_type == CPU_P24T);
+
     if (cpu_s->multi)
         cpu_busspeed = cpu_s->rspeed / cpu_s->multi;
     else
         cpu_busspeed = cpu_s->rspeed;
     cpu_multi  = (int) ceil(cpu_s->multi);
     cpu_dmulti = cpu_s->multi;
-    ccr0 = ccr1 = ccr2 = ccr3 = ccr4 = ccr5 = ccr6 = 0;
+    ccr0 = ccr1 = ccr2 = ccr3 = ccr4 = ccr5 = ccr6 = ccr7 = 0;
+    ccr4 = 0x85;
 
     cpu_update_waitstates();
 
@@ -1418,7 +1431,6 @@ cpu_set(void)
 #endif /* USE_DYNAREC */
             break;
 
-#ifdef USE_CYRIX_6X86
         case CPU_Cx6x86:
         case CPU_Cx6x86L:
         case CPU_CxGX1:
@@ -1442,19 +1454,27 @@ cpu_set(void)
                 }
 #    endif /* USE_DYNAREC */
                 if (fpu_softfloat) {
+                    x86_opcodes_d9_a16 = ops_sf_fpu_cyrix_d9_a16;
+                    x86_opcodes_d9_a32 = ops_sf_fpu_cyrix_d9_a32;
                     x86_opcodes_da_a16 = ops_sf_fpu_686_da_a16;
                     x86_opcodes_da_a32 = ops_sf_fpu_686_da_a32;
-                    x86_opcodes_db_a16 = ops_sf_fpu_686_db_a16;
-                    x86_opcodes_db_a32 = ops_sf_fpu_686_db_a32;
-                    x86_opcodes_df_a16 = ops_sf_fpu_686_df_a16;
-                    x86_opcodes_df_a32 = ops_sf_fpu_686_df_a32;
+                    x86_opcodes_db_a16 = ops_sf_fpu_cyrix_686_db_a16;
+                    x86_opcodes_db_a32 = ops_sf_fpu_cyrix_686_db_a32;
+                    x86_opcodes_dd_a16 = ops_sf_fpu_cyrix_dd_a16;
+                    x86_opcodes_dd_a32 = ops_sf_fpu_cyrix_dd_a32;
+                    x86_opcodes_df_a16 = ops_sf_fpu_cyrix_686_df_a16;
+                    x86_opcodes_df_a32 = ops_sf_fpu_cyrix_686_df_a32;
                 } else {
+                    x86_opcodes_d9_a16 = ops_fpu_cyrix_d9_a16;
+                    x86_opcodes_d9_a32 = ops_fpu_cyrix_d9_a32;
                     x86_opcodes_da_a16 = ops_fpu_686_da_a16;
                     x86_opcodes_da_a32 = ops_fpu_686_da_a32;
-                    x86_opcodes_db_a16 = ops_fpu_686_db_a16;
-                    x86_opcodes_db_a32 = ops_fpu_686_db_a32;
-                    x86_opcodes_df_a16 = ops_fpu_686_df_a16;
-                    x86_opcodes_df_a32 = ops_fpu_686_df_a32;
+                    x86_opcodes_db_a16 = ops_fpu_cyrix_686_db_a16;
+                    x86_opcodes_db_a32 = ops_fpu_cyrix_686_db_a32;
+                    x86_opcodes_dd_a16 = ops_fpu_cyrix_dd_a16;
+                    x86_opcodes_dd_a32 = ops_fpu_cyrix_dd_a32;
+                    x86_opcodes_df_a16 = ops_fpu_cyrix_686_df_a16;
+                    x86_opcodes_df_a32 = ops_fpu_cyrix_686_df_a32;
                 }
             }
 
@@ -1462,22 +1482,16 @@ cpu_set(void)
             if (cpu_s->cpu_type == CPU_Cx6x86MX)
                 x86_setopcodes(ops_386, ops_c6x86mx_0f, dynarec_ops_386, dynarec_ops_c6x86mx_0f);
             else if (cpu_s->cpu_type == CPU_Cx6x86L)
-                x86_setopcodes(ops_386, ops_pentium_0f, dynarec_ops_386, dynarec_ops_pentium_0f);
+                x86_setopcodes(ops_386, ops_c6x86l_0f, dynarec_ops_386, dynarec_ops_c6x86l_0f);
             else
-                x86_setopcodes(ops_386, ops_c6x86mx_0f, dynarec_ops_386, dynarec_ops_c6x86mx_0f);
-#        if 0
                 x86_setopcodes(ops_386, ops_c6x86_0f, dynarec_ops_386, dynarec_ops_c6x86_0f);
-#        endif
 #    else
             if (cpu_s->cpu_type == CPU_Cx6x86MX)
                 x86_setopcodes(ops_386, ops_c6x86mx_0f);
             else if (cpu_s->cpu_type == CPU_Cx6x86L)
-                x86_setopcodes(ops_386, ops_pentium_0f);
+                x86_setopcodes(ops_386, ops_c6x86l_0f);
             else
-                x86_setopcodes(ops_386, ops_c6x86mx_0f);
-#        if 0
                 x86_setopcodes(ops_386, ops_c6x86_0f);
-#        endif
 #    endif /* USE_DYNAREC */
 
             timing_rr  = 1; /* register dest - register src */
@@ -1537,7 +1551,6 @@ cpu_set(void)
             else if (CPU_Cx6x86)
                 CPUID = 0; /* Disabled on powerup by default */
             break;
-#endif /* USE_CYRIX_6X86 */
 
 #ifdef USE_AMD_K5
         case CPU_K5:
@@ -2382,7 +2395,6 @@ cpu_CPUID(void)
                 EAX = EBX = ECX = EDX = 0;
             break;
 
-#ifdef USE_CYRIX_6X86
         case CPU_Cx6x86:
             if (!EAX) {
                 EAX = 0x00000001;
@@ -2443,7 +2455,6 @@ cpu_CPUID(void)
             } else
                 EAX = EBX = ECX = EDX = 0;
             break;
-#endif /* USE_CYRIX_6X86 */
 
         case CPU_PENTIUMPRO:
             if (!EAX) {
@@ -3120,7 +3131,6 @@ pentium_invalid_rdmsr:
             cpu_log("RDMSR: ECX = %08X, val = %08X%08X\n", ECX, EDX, EAX);
             break;
 
-#ifdef USE_CYRIX_6X86
         case CPU_Cx6x86:
         case CPU_Cx6x86L:
         case CPU_CxGX1:
@@ -3160,7 +3170,6 @@ pentium_invalid_rdmsr:
             }
             cpu_log("RDMSR: ECX = %08X, val = %08X%08X\n", ECX, EDX, EAX);
             break;
-#endif /* USE_CYRIX_6X86 */
 
         case CPU_PENTIUMPRO:
         case CPU_PENTIUM2:
@@ -3941,7 +3950,6 @@ pentium_invalid_wrmsr:
             }
             break;
 
-#ifdef USE_CYRIX_6X86
         case CPU_Cx6x86:
         case CPU_Cx6x86L:
         case CPU_CxGX1:
@@ -3951,12 +3959,15 @@ pentium_invalid_wrmsr:
                 /* Test Data */
                 case 0x03:
                     msr.tr3 = EAX;
+                    break;
                 /* Test Address */
                 case 0x04:
                     msr.tr4 = EAX;
+                    break;
                 /* Test Command/Status */
                 case 0x05:
                     msr.tr5 = EAX & 0x008f0f3b;
+                    break;
                 /* Time Stamp Counter */
                 case 0x10:
                     timer_set_new_tsc(EAX | ((uint64_t) EDX << 32));
@@ -3975,7 +3986,6 @@ pentium_invalid_wrmsr:
                     break;
             }
             break;
-#endif /* USE_CYRIX_6X86 */
 
         case CPU_PENTIUMPRO:
         case CPU_PENTIUM2:
@@ -4279,14 +4289,12 @@ cpu_write(uint16_t addr, uint8_t val, UNUSED(void *priv))
             case 0xe8: /* CCR4 */
                 if ((ccr3 & 0xf0) == 0x10) {
                     ccr4 = val;
-#ifdef USE_CYRIX_6X86
                     if (cpu_s->cpu_type >= CPU_Cx6x86) {
                         if (val & 0x80)
                             CPUID = cpu_s->cpuid_model;
                         else
                             CPUID = 0;
                     }
-#endif /* USE_CYRIX_6X86 */
                 }
                 break;
             case 0xe9: /* CCR5 */
@@ -4297,51 +4305,56 @@ cpu_write(uint16_t addr, uint8_t val, UNUSED(void *priv))
                 if ((ccr3 & 0xf0) == 0x10)
                     ccr6 = val;
                 break;
+            case 0xeb: /* CCR7 */
+                ccr7 = val & 5;
+                break;
         }
 }
 
 static uint8_t
 cpu_read(uint16_t addr, UNUSED(void *priv))
 {
+    uint8_t ret = 0xff;
+
     if (addr == 0xf007)
-        return 0x7f;
+        ret = 0x7f;
+    else if ((addr < 0xf0) && (addr & 1))  switch (cyrix_addr) {
+        case 0xc0:
+            ret = ccr0;
+            break;
+        case 0xc1:
+            ret = ccr1;
+            break;
+        case 0xc2:
+            ret = ccr2;
+            break;
+        case 0xc3:
+            ret = ccr3;
+            break;
+        case 0xe8:
+            ret = ((ccr3 & 0xf0) == 0x10) ? ccr4 : 0xff;
+            break;
+        case 0xe9:
+            ret = ((ccr3 & 0xf0) == 0x10) ? ccr5 : 0xff;
+            break;
+        case 0xea:
+            ret = ((ccr3 & 0xf0) == 0x10) ? ccr6 : 0xff;
+            break;
+        case 0xeb:
+            ret = ccr7;
+            break;
+        case 0xfe:
+            ret = cpu_s->cyrix_id & 0xff;
+            break;
+        case 0xff:
+            ret = cpu_s->cyrix_id >> 8;
+            break;
 
-    if (addr >= 0xf0)
-        return 0xff; /* FPU stuff */
-
-    if (addr & 1) {
-        switch (cyrix_addr) {
-            case 0xc0:
-                return ccr0;
-            case 0xc1:
-                return ccr1;
-            case 0xc2:
-                return ccr2;
-            case 0xc3:
-                return ccr3;
-            case 0xe8:
-                return ((ccr3 & 0xf0) == 0x10) ? ccr4 : 0xff;
-            case 0xe9:
-                return ((ccr3 & 0xf0) == 0x10) ? ccr5 : 0xff;
-            case 0xea:
-                return ((ccr3 & 0xf0) == 0x10) ? ccr6 : 0xff;
-            case 0xfe:
-                return cpu_s->cyrix_id & 0xff;
-            case 0xff:
-                return cpu_s->cyrix_id >> 8;
-
-            default:
-                break;
-        }
-
-        if ((cyrix_addr & 0xf0) == 0xc0)
-            return 0xff;
-
-        if (cyrix_addr == 0x20 && (cpu_s->cpu_type == CPU_Cx5x86))
-            return 0xff;
+        default:
+            break;
     }
-
-    return 0xff;
+ 
+    return ret;
 }
 
 void

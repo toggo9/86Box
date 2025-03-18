@@ -15,6 +15,8 @@
 
 #include "qt_renderercommon.hpp"
 
+#include <atomic>
+
 namespace Ui {
 class RendererStack;
 }
@@ -69,6 +71,8 @@ public:
     void reloadOptions() const { return rendererWindow->reloadOptions(); }
     /* Returns options dialog for current renderer */
     QDialog *getOptions(QWidget *parent) { return rendererWindow ? rendererWindow->getOptions(parent) : nullptr; }
+    /* Reload the renderer itself */
+    bool reloadRendererOption() { return rendererWindow ? rendererWindow->reloadRendererOption() : false; }
 
     void setFocusRenderer();
     void onResize(int width, int height);
@@ -107,6 +111,9 @@ private:
 
     RendererCommon          *rendererWindow { nullptr };
     std::unique_ptr<QWidget> current;
+
+    std::atomic_bool rendererTakesScreenshots;
+    std::atomic_bool switchInProgress{false};
 };
 
 #endif // QT_RENDERERCONTAINER_HPP
