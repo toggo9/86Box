@@ -58,6 +58,10 @@ machine_at_acerv35n_init(const machine_t *model)
         return ret;
 
     machine_at_common_init_ex(model, 2);
+    /* Yes, it's called amstrad_mega_pc_nvr_device, but it's basically the
+       standard AT NVR, just initialized to 0x00's (perhaps that should be the
+       default behavior?). */
+    device_add(&amstrad_megapc_nvr_device);
 
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
@@ -137,6 +141,108 @@ machine_at_p55t2p4_init(const machine_t *model)
 
     return ret;
 }
+
+static void ga586dx_setup(void);
+
+int
+machine_at_ga586dx_init(const machine_t *model)
+
+{
+    int ret;
+    const char *fn;
+
+    if (!device_available(model->device)) {
+        return 0;
+    }
+
+    device_context(model->device);
+    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
+
+    if (!fn) {
+        fn = device_get_bios_file(model->device, "ga586dx", 0);
+    }
+
+    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
+    device_context_restore();
+
+    if (bios_only || !ret) {
+        return ret;
+    }
+	
+	machine_at_common_init(model);
+
+    ga586dx_setup();  
+
+    return ret;
+}
+
+
+static void ga586dx_setup(void)
+{
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
+	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x08, PCI_CARD_NORMAL,      1, 2, 3, 4); /* Slot 01 */
+	pci_register_slot(0x09, PCI_CARD_NORMAL, 	  2, 3, 4, 1); /* Slot 02 */
+	pci_register_slot(0x0A, PCI_CARD_NORMAL,      3, 4, 1, 2); /* Slot 03 */
+	pci_register_slot(0x0B, PCI_CARD_NORMAL,      4, 1, 2, 3); /* Slot 04 */
+	pci_register_slot(0x0C, PCI_CARD_NORMAL,      0, 0, 0, 0); /* Onboard */
+    
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&i430hx_device);
+    device_add(&piix3_ioapic_device);
+    device_add(&um8669f_device);
+	device_add(&ioapic_device);
+	device_add(&intel_flash_bxt_device);
+   
+}
+
+static const device_config_t ga586dx_config[] = {
+    // clang-format off
+    {
+        .name = "bios_versions",
+        .description = "BIOS Versions",
+        .type = CONFIG_BIOS,
+        .default_string = "ga586dx",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 }, /*W1*/
+        .bios = {
+            { .name = "Version 4.51PG Revision 2.35 (09/16/1996)", .internal_name = "ga586dx", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/ga586dx/ga586dx.bin", "" } },
+            { .name = "Version 4.51PG Revision 2.36 (11/29/1996)", .internal_name = "ga586dx_nov96", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/ga586dx/ga586dx_nov96.bin", "" } },
+            { .name = "Version 4.51PG Revision 2.40 (01/20/1997)", .internal_name = "ga586dx_jan97", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/ga586dx/ga586dx_jan97.bin", "" } },
+			{ .name = "Version 4.51PG Revision 2.40J.1 (01/20/1997, unofficial)", .internal_name = "ga586dx_jan972", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/ga586dx/ga586dx_jan972.bin", "" } },
+			{ .name = "Version 4.51PG Revision 3.36 (11/29/1996)", .internal_name = "ga586dx_nov962", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/ga586dx/ga586dx_nov962.bin", "" } },
+			{ .name = "Version 4.51PG Revision 3.43 (04/03/1997)", .internal_name = "ga586dx_apr97", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/ga586dx/ga586dx_apr97.bin", "" } },
+            
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+
+
+const device_t ga586dx_device = {
+    .name          = "Gigabyte GA-586DX",
+    .internal_name = "ga586dx",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = &ga586dx_config[0]
+};
+
 
 int
 machine_at_m7shi_init(const machine_t *model)
@@ -792,6 +898,63 @@ machine_at_mb520n_init(const machine_t *model)
 }
 
 int
+machine_at_m520_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/m520/5200601l.bin",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x08, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x09, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x0A, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    device_add(&i430vx_device);
+    device_add(&piix3_device);
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&um8663bf_device);
+    device_add(&sst_flash_29ee010_device);
+
+    return ret;
+}
+
+int
+machine_at_lgibmx52_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/lgibmx52/BIOS.ROM",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4);
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x0E, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x0F, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x10, PCI_CARD_NORMAL,      4, 1, 2, 3);
+    device_add(&i430vx_device);
+    device_add(&piix3_device);
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&w83877tf_device);
+    device_add(&intel_flash_bxt_device);
+
+    return ret;
+}
+
+int
 machine_at_i430vx_init(const machine_t *model)
 {
     int ret;
@@ -845,10 +1008,6 @@ machine_at_gw2kte_init(const machine_t *model)
     pci_register_slot(0x0F, PCI_CARD_NORMAL,      3, 4, 1, 2);
     pci_register_slot(0x10, PCI_CARD_NORMAL,      4, 1, 2, 3);
     pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4);
-
-    if ((sound_card_current[0] == SOUND_INTERNAL) && machine_get_snd_device(machine)->available())
-        machine_snd = device_add(machine_get_snd_device(machine));
-
     device_add(&i430vx_device);
     device_add(&piix3_device);
     device_add(&fdc37c932fr_device);
@@ -1172,6 +1331,135 @@ machine_at_richmond_init(const machine_t *model)
 }
 
 int
+machine_at_hurricane_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/hurricane/161420sw.bin",
+                           0x000c0000, 262144, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+	pci_register_slot(0x04, PCI_CARD_NORMAL,      4, 0, 0, 0);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4); /* PIIX4 */
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x0E, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    device_add(&i430tx_device);
+    device_add(&piix4_device);
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&fdc37c67x_device);
+    device_add(&intel_flash_bxt_device);
+    spd_register(SPD_TYPE_SDRAM, 0x3, 128);
+    device_add(&lm78_device);      /* fans: Thermal, CPU, Chassis; temperature: unused */
+    device_add(&lm75_1_4a_device); /* temperature: CPU */
+
+    return ret;
+}
+
+static void trimond_spitfire_setup(void);
+
+int
+machine_at_trimond_spitfire_init(const machine_t *model)
+
+{
+    int ret;
+    const char *fn;
+
+    if (!device_available(model->device)) {
+        return 0;
+    }
+
+    device_context(model->device);
+    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
+
+    if (!fn) {
+        fn = device_get_bios_file(model->device, "trimond_spitfire_aug98", 0);
+    }
+
+    ret = bios_load_linear(fn, 0x000c0000, 262144, 0);
+    device_context_restore();
+
+    if (bios_only || !ret) {
+        return ret;
+    }
+	
+	machine_at_common_init_ex(model, 2);
+
+    trimond_spitfire_setup();  
+
+    return ret;
+}
+
+
+static void trimond_spitfire_setup(void)
+{
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x04, PCI_CARD_NORMAL,      0, 0, 0, 0); 
+	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0); /* PIIX4 */
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,      0, 0, 0, 0);
+    pci_register_slot(0x0E, PCI_CARD_NORMAL,      0, 0, 0, 0);
+    pci_register_slot(0x0F, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x10, PCI_CARD_NORMAL,      4, 1, 2, 3);
+
+    device_add(&i430tx_device);
+    device_add(&piix4_device);
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&fdc37c67x_device);
+    device_add(&intel_flash_bxt_device);
+    spd_register(SPD_TYPE_SDRAM, 0x3, 128);
+    device_add(&w83781d_device);    /* fans: CPU1, unused, unused; temperatures: System, CPU1, unused */
+    hwm_values.temperatures[2] = 0; /* unused */
+    hwm_values.fans[1]         = 0; /* unused */
+    hwm_values.fans[2]         = 0; /* unused */
+    /* -5V is not reported by the BIOS, but leave it set */
+   
+}
+
+static const device_config_t trimond_spitfire_config[] = {
+    // clang-format off
+    {
+        .name = "bios_versions",
+        .description = "BIOS Versions",
+        .type = CONFIG_BIOS,
+        .default_string = "trimond_spitfire_aug98",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 }, /*W1*/
+        .bios = {
+            { .name = "Version 4.0 Release 6.0 Version 10.08.01 (08/03/1998)", .internal_name = "trimond_spitfire_aug98", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 262144, .files = { "roms/machines/trimond_spitfire/trimond_spitfire_aug98.bin", "" } },
+            { .name = "Version 4.0 Release 6.0 Version 10.08 (03/04/1999)", .internal_name = "trimond_spitfire_mar99", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 262144, .files = { "roms/machines/trimond_spitfire/trimond_spitfire_mar99.bin", "" } },
+            
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+
+
+const device_t trimond_spitfire_device = {
+    .name          = "Trimond Spitfire",
+    .internal_name = "trimond_spitfire",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = &trimond_spitfire_config[0]
+};
+
+int
 machine_at_tomahawk_init(const machine_t *model)
 {
     int ret;
@@ -1336,6 +1624,102 @@ machine_at_r534f_init(const machine_t *model)
     return ret;
 }
 
+static void ga586s_setup(void);
+
+int
+machine_at_ga586s_init(const machine_t *model)
+
+{
+    int ret;
+    const char *fn;
+
+    if (!device_available(model->device)) {
+        return 0;
+    }
+
+    device_context(model->device);
+    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
+
+    if (!fn) {
+        fn = device_get_bios_file(model->device, "ga586s", 0);
+    }
+
+    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
+    device_context_restore();
+
+    if (bios_only || !ret) {
+        return ret;
+    }
+	
+	machine_at_common_init_ex(model, 2);
+
+    ga586s_setup();  
+
+    return ret;
+}
+
+static void ga586s_setup(void)
+{
+    pci_init(PCI_CONFIG_TYPE_1 | FLAG_TRC_CONTROLS_CPURST);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4);
+    pci_register_slot(0x08, PCI_CARD_NORMAL,      0, 0, 0, 0);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x0F, PCI_CARD_NORMAL,      3, 4, 1, 2);
+	pci_register_slot(0x11, PCI_CARD_NORMAL,      4, 1, 2, 3);
+
+    device_add(&sis_5571_device);
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&um8663bf_device);
+    device_add(&intel_flash_bxt_device);
+
+}
+
+static const device_config_t ga586s_config[] = {
+    // clang-format off
+    {
+        .name = "bios_versions",
+        .description = "BIOS Versions",
+        .type = CONFIG_BIOS,
+        .default_string = "ga586s",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 }, /*W1*/
+        .bios = {
+            { .name = "Version 4.51PG Revision 1.02 (11/29/1996)", .internal_name = "ga586s", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/ga586s/ga586s.bin", "" } },
+            { .name = "Version 4.51PG Revision 1.04 (01/24/1997)", .internal_name = "ga586s_jan97", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/ga586s/ga586s_jan97.bin", "" } },
+            { .name = "Version 4.51PG Revision 1.05 (02/12/1997)", .internal_name = "ga586s_feb97", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/ga586s/ga586s_feb97.bin", "" } },
+			{ .name = "Version 4.51PG Revision 1.20 (03/25/1997)", .internal_name = "ga586s_mar97", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/ga586s/ga586s_mar97.bin", "" } },
+			{ .name = "Version 4.51PG Revision MD2.33P (06/30/1997)", .internal_name = "ga586s_jun97", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/ga586s/ga586s_jun97.bin", "" } },
+            
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+
+
+const device_t ga586s_device = {
+    .name          = "Gigabyte GA-586S",
+    .internal_name = "ga586s",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = &ga586s_config[0]
+};
+
 int
 machine_at_ms5146_init(const machine_t *model)
 {
@@ -1361,6 +1745,38 @@ machine_at_ms5146_init(const machine_t *model)
     device_add(&keyboard_ps2_ami_pci_device);
     device_add(&w83877f_device);
     device_add(&sst_flash_29ee010_device);
+
+    return ret;
+}
+
+int
+machine_at_monorailaio_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/monorailaio/amiboot.rom",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1 | FLAG_TRC_CONTROLS_CPURST);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4);
+    pci_register_slot(0x0A, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x0C, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,      4, 1, 2, 3);
+
+    device_add(&sis_5511_device);
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&fdc37c935_no_nvr_device);
+    device_add(&winbond_flash_w29c010_device);
+	
+	if (sound_card_current[0] == SOUND_INTERNAL)
+        device_add(&cs4236_onboard_device);
 
     return ret;
 }
@@ -1393,6 +1809,36 @@ machine_at_cb52xsi_init(const machine_t *model)
 
     return ret;
 }
+
+int
+machine_at_586step_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/586step/philips-586step-6320984e16208966750114.bin",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1 | FLAG_TRC_CONTROLS_CPURST);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
+    pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x07, PCI_CARD_NORMAL,      4, 1, 2, 3);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x0F, PCI_CARD_NORMAL,      3, 4, 1, 2);
+
+    device_add(&sis_5571_device);
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&um8669f_device);
+    device_add(&sst_flash_29ee010_device);
+
+    return ret;
+}
+
 
 int
 machine_at_sp97xv_init(const machine_t *model)
