@@ -634,7 +634,6 @@ static void d858_setup(void)
     device_add(&piix_rev02_device);
     device_add(&fdc37c665_device);
 	device_add(&intel_flash_bxt_device);
-	device_add(&apm_pci_acpi_device);
 	
 	
 	if (sound_card_current[0] == SOUND_INTERNAL)
