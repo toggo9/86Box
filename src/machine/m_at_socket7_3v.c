@@ -1049,7 +1049,6 @@ static void d943_setup(void)
     device_add(&keyboard_ps2_pci_device);
     device_add(&fdc37c665_device);
     device_add(&intel_flash_bxt_device);
-	device_add(&apm_pci_acpi_device);
 	spd_register(SPD_TYPE_EDO, 0x7, 256);
 	
 	
