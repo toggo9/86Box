@@ -2008,43 +2008,35 @@ machine_at_hot433a_init(const machine_t *model)
 }
 
 int
-machine_at_pl4600c_init(const machine_t *model)
+machine_at_presario7100486_init(const machine_t *model)
 {
     int ret;
 
-    ret = bios_load_linear("roms/machines/pl4600c/SST29EE010.BIN",
+    ret = bios_load_linear("roms/machines/presario7100486/SST29EE010.BIN",
                            0x000e0000, 131072, 0);
 
     if (bios_only || !ret)
         return ret;
-
     machine_at_common_init(model);
 
     pci_init(PCI_CONFIG_TYPE_1);
-
-    pci_register_slot(0x0C, PCI_CARD_NORMAL,      1, 2, 3, 4); /* Slot 01 */
-    pci_register_slot(0x0D, PCI_CARD_NORMAL,      4, 1, 2, 3); /* Slot 02 */
-    pci_register_slot(0x10, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
-    pci_register_slot(0x12, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0); /* Onboard */
-    pci_register_slot(0x13, PCI_CARD_VIDEO,       0, 0, 0, 0); /* Onboard */ 
-
+    pci_register_slot(0x0C, PCI_CARD_NORMAL,		1, 2, 3, 4); /* Slot 01 */
+	pci_register_slot(0x0D, PCI_CARD_NORMAL,		4, 1, 2, 3); /* Slot 02 */
+	pci_register_slot(0x10, PCI_CARD_NORTHBRIDGE,	0, 0, 0, 0);
+	pci_register_slot(0x12, PCI_CARD_SOUTHBRIDGE,	1, 2, 3, 4); /* Onboard */
+	pci_register_slot(0x13, PCI_CARD_VIDEO,			0, 0, 0, 0); /* Onboard */
 
     device_add(&umc_hb4_device);
     device_add(&umc_8886af_device);
     device_add(&um8663af_device);
     device_add(&sst_flash_29ee010_device);
     device_add(&keyboard_ps2_ami_pci_device);
-
-    if (gfxcard[0] == VID_INTERNAL)
+   
+	if (gfxcard[0] == VID_INTERNAL)
         device_add(&gd5430_onboard_pci_device);
-
-    if (sound_card_current[0] == SOUND_INTERNAL)
+	
+	if (sound_card_current[0] == SOUND_INTERNAL)
         device_add(&ess_1688_device);
-
-    if (fdc_current[0] == FDC_INTERNAL){
-        fdd_set_turbo(0, 1);
-        fdd_set_turbo(1, 1);
-    }
 
     return ret;
 }
