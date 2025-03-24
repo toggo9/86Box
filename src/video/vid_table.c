@@ -68,7 +68,7 @@ video_cards[] = {
     { .device = &ati18800_wonder_device,                        .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &cga_device,                                    .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &sega_device,                                   .flags = VIDEO_FLAG_TYPE_NONE },
-    { .device = &jega_device,                                   .flags = VIDEO_FLAG_TYPE_NONE },
+	{ .device = &jega_device,                                   .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &gd5401_isa_device,                             .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &gd5402_isa_device,                             .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &gd5420_isa_device,                             .flags = VIDEO_FLAG_TYPE_NONE },
@@ -142,10 +142,10 @@ video_cards[] = {
     { .device = &chips_69000_device,                            .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &gd5430_pci_device,                             .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &gd5434_pci_device,                             .flags = VIDEO_FLAG_TYPE_NONE },
-    { .device = &gd5436_pci_device,                             .flags = VIDEO_FLAG_TYPE_SECONDARY },
+    { .device = &gd5436_pci_device,                             .flags = VIDEO_FLAG_TYPE_SPECIAL },
     { .device = &gd5440_pci_device,                             .flags = VIDEO_FLAG_TYPE_NONE },
-    { .device = &gd5446_pci_device,                             .flags = VIDEO_FLAG_TYPE_SECONDARY },
-    { .device = &gd5446_stb_pci_device,                         .flags = VIDEO_FLAG_TYPE_SECONDARY },
+    { .device = &gd5446_pci_device,                             .flags = VIDEO_FLAG_TYPE_SPECIAL },
+    { .device = &gd5446_stb_pci_device,                         .flags = VIDEO_FLAG_TYPE_SPECIAL },
     { .device = &gd5480_pci_device,                             .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &et4000w32p_videomagic_revb_pci_device,         .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &et4000w32p_revc_pci_device,                    .flags = VIDEO_FLAG_TYPE_NONE },
@@ -173,10 +173,12 @@ video_cards[] = {
     { .device = &s3_phoenix_vision868_pci_device,               .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &s3_cardex_trio64vplus_pci_device,              .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &s3_phoenix_trio64vplus_pci_device,             .flags = VIDEO_FLAG_TYPE_NONE },
+	{ .device = &s3_mirocrystal_v22sd_t64plus_device,           .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &s3_trio64v2_dx_pci_device,                     .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &s3_virge_325_pci_device,                       .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &s3_diamond_stealth_2000_pci_device,            .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &s3_mirocrystal_3d_pci_device,                  .flags = VIDEO_FLAG_TYPE_NONE },
+	{ .device = &s3_mirocrystal_vr2000_pci_device,              .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &s3_diamond_stealth_3000_pci_device,            .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &s3_stb_velocity_3d_pci_device,                 .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &s3_virge_375_pci_device,                       .flags = VIDEO_FLAG_TYPE_NONE },
@@ -203,6 +205,8 @@ video_cards[] = {
     { .device = &et4000w32p_videomagic_revb_vlb_device,         .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &et4000w32p_revc_vlb_device,                    .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &et4000w32p_cardex_vlb_device,                  .flags = VIDEO_FLAG_TYPE_NONE },
+	{ .device = &et4000w32p_imascan_vlb_device,                 .flags = VIDEO_FLAG_TYPE_NONE },
+	{ .device = &et4000w32p_mirovideo20td_vlb_device,           .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &et4000w32p_vlb_device,                         .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &et4000w32p_noncardex_vlb_device,               .flags = VIDEO_FLAG_TYPE_NONE },
     { .device = &gd5424_vlb_device,                             .flags = VIDEO_FLAG_TYPE_NONE },
@@ -369,9 +373,10 @@ video_post_reset(void)
 
     if (xga_standalone_enabled)
         xga_device_add();
-
-    if (da2_standalone_enabled)
+	
+	if (da2_standalone_enabled)
         da2_device_add();
+
     /* Reset the graphics card (or do nothing if it was already done
        by the machine's init function). */
     video_reset(gfxcard[0]);
