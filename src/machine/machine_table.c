@@ -8881,11 +8881,11 @@ const machine_t machines[] = {
     /* Compaq Presario 7100 / 7200 Series, using MiTAC/Trigon PL4600C (486). */
     /* Has a VIA VT82C42N KBC. */
     {
-        .name = "[UMC 8881] Compaq Presario 7100/7200 Series 486",
-        .internal_name = "pl4600c",
+        .name = "[UMC 8881] Compaq Presario 71xx/72xx 486",
+        .internal_name = "presario7100486",
         .type = MACHINE_TYPE_486_S3_PCI,
         .chipset = MACHINE_CHIPSET_UMC_UM8881,
-        .init = machine_at_pl4600c_init,
+        .init = machine_at_presario7100486_init,
         .p1_handler = NULL,
         .gpio_handler = NULL,
         .available_flag = MACHINE_AVAILABLE,
