@@ -416,8 +416,6 @@ extern const device_t et4000w32_device;
 extern const device_t et4000w32_onboard_device;
 extern const device_t et4000w32i_isa_device;
 extern const device_t et4000w32i_vlb_device;
-extern const device_t et4000w32p_imascan_vlb_device;
-extern const device_t et4000w32p_mirovideo20td_vlb_device;
 extern const device_t et4000w32p_videomagic_revb_vlb_device;
 extern const device_t et4000w32p_videomagic_revb_pci_device;
 extern const device_t et4000w32p_revc_vlb_device;
@@ -458,6 +456,9 @@ extern const device_t millennium_ii_device;
 #ifdef USE_G100
 extern const device_t productiva_g100_device;
 #endif /* USE_G100 */
+
+/* JEGA */
+extern const device_t if386jega_device;
 
 /* Oak OTI-0x7 */
 extern const device_t oti037c_device;
@@ -511,7 +512,6 @@ extern const device_t s3_phoenix_trio64_pci_device;
 extern const device_t s3_stb_powergraph_64_video_vlb_device;
 extern const device_t s3_phoenix_trio64vplus_pci_device;
 extern const device_t s3_phoenix_trio64vplus_onboard_pci_device;
-extern const device_t s3_mirocrystal_v22sd_t64plus_device;
 extern const device_t s3_cardex_trio64vplus_pci_device;
 extern const device_t s3_mirocrystal_20sv_964_vlb_device;
 extern const device_t s3_mirocrystal_20sv_964_pci_device;
@@ -540,7 +540,6 @@ extern const device_t s3_virge_325_pci_device;
 extern const device_t s3_virge_325_onboard_pci_device;
 extern const device_t s3_diamond_stealth_2000_pci_device;
 extern const device_t s3_mirocrystal_3d_pci_device;
-extern const device_t s3_mirocrystal_vr2000_pci_device;
 extern const device_t s3_diamond_stealth_3000_pci_device;
 extern const device_t s3_stb_velocity_3d_pci_device;
 extern const device_t s3_virge_375_pci_device;
