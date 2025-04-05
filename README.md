@@ -80,7 +80,6 @@ You can also support the project on Patreon:
 
 
 Special thanks to
-
 -----------------
 
 Veit Kannegieser for the PHOEDECO Tool
