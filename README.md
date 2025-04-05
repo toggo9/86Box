@@ -83,6 +83,6 @@ Special thanks to
 -----------------
 
 Veit Kannegieser for the PHOEDECO Tool
-and RichardG for the 86Bot.
+and RichardG (@richardg867) for the 86Bot.
 
 Without their work, the Siemens-Nixdorf machines wouldn't have been possible.
