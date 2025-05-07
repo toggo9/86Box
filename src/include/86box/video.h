@@ -189,6 +189,7 @@ extern uint32_t     pal_lookup[256];
 #endif
 extern int          video_fullscreen;
 extern int          video_fullscreen_scale;
+extern int          video_fullscreen_first;
 extern uint8_t      fontdat[2048][8];
 extern uint8_t      fontdatm[2048][16];
 extern uint8_t      fontdat2[2048][8];
@@ -312,6 +313,7 @@ extern const device_t mach32_isa_device;
 extern const device_t mach32_vlb_device;
 extern const device_t mach32_mca_device;
 extern const device_t mach32_pci_device;
+extern const device_t mach32_onboard_vlb_device;
 extern const device_t mach32_onboard_pci_device;
 
 /* IBM Display Adapter (PS/55) */
@@ -319,6 +321,7 @@ extern void da2_device_add(void);
 
 /* ATi Mach64 */
 extern const device_t mach64gx_isa_device;
+extern const device_t mach64gx_vlb_device;
 extern const device_t mach64gx_vlb_device;
 extern const device_t mach64gx_pci_device;
 extern const device_t mach64vt2_device;
@@ -348,6 +351,7 @@ extern const device_t chips_69000_onboard_device;
 
 /* Cirrus Logic GD54xx */
 extern const device_t gd5401_isa_device;
+extern const device_t gd5401_onboard_device;
 extern const device_t gd5402_isa_device;
 extern const device_t gd5402_onboard_device;
 extern const device_t gd5420_isa_device;
@@ -415,12 +419,15 @@ extern const device_t et4000w32_device;
 extern const device_t et4000w32_onboard_device;
 extern const device_t et4000w32i_isa_device;
 extern const device_t et4000w32i_vlb_device;
+extern const device_t et4000w32p_imascan_vlb_device;
+extern const device_t et4000w32p_mirovideo20td_vlb_device;
 extern const device_t et4000w32p_videomagic_revb_vlb_device;
 extern const device_t et4000w32p_videomagic_revb_pci_device;
 extern const device_t et4000w32p_revc_vlb_device;
 extern const device_t et4000w32p_revc_pci_device;
 extern const device_t et4000w32p_vlb_device;
 extern const device_t et4000w32p_pci_device;
+extern const device_t et4000w32p_revcd_onboard_pci_device;
 extern const device_t et4000w32p_noncardex_vlb_device;
 extern const device_t et4000w32p_noncardex_pci_device;
 extern const device_t et4000w32p_cardex_vlb_device;
@@ -511,6 +518,7 @@ extern const device_t s3_phoenix_trio64_pci_device;
 extern const device_t s3_stb_powergraph_64_video_vlb_device;
 extern const device_t s3_phoenix_trio64vplus_pci_device;
 extern const device_t s3_phoenix_trio64vplus_onboard_pci_device;
+extern const device_t s3_mirocrystal_v22sd_t64plus_device;
 extern const device_t s3_cardex_trio64vplus_pci_device;
 extern const device_t s3_mirocrystal_20sv_964_vlb_device;
 extern const device_t s3_mirocrystal_20sv_964_pci_device;
@@ -539,6 +547,7 @@ extern const device_t s3_virge_325_pci_device;
 extern const device_t s3_virge_325_onboard_pci_device;
 extern const device_t s3_diamond_stealth_2000_pci_device;
 extern const device_t s3_mirocrystal_3d_pci_device;
+extern const device_t s3_mirocrystal_vr2000_pci_device;
 extern const device_t s3_diamond_stealth_3000_pci_device;
 extern const device_t s3_stb_velocity_3d_pci_device;
 extern const device_t s3_virge_375_pci_device;
