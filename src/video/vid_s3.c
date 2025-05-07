@@ -67,6 +67,7 @@
 #define ROM_STB_POWERGRAPH_64_VIDEO    "roms/video/s3/VBIOS.BIN"
 #define ROM_PHOENIX_TRIO64VPLUS        "roms/video/s3/64V1506.ROM"
 #define ROM_CARDEX_TRIO64VPLUS         "roms/video/s3/S3T64VP.VBI"
+#define ROM_MIROCRYSTALV22SD_T64PLUS   "roms/video/s3/m27c256b-at-dip28-679646f57cbd4573445222.bin"
 #define ROM_DIAMOND_STEALTH_SE         "roms/video/s3/DiamondStealthSE.VBI"
 #define ROM_ELSAWIN2KPROX_964          "roms/video/s3/elsaw20004m.BIN"
 #define ROM_ELSAWIN2KPROX              "roms/video/s3/elsaw20008m.BIN"
@@ -101,6 +102,7 @@ enum {
     S3_PHOENIX_TRIO64VPLUS,
     S3_PHOENIX_TRIO64VPLUS_ONBOARD,
     S3_CARDEX_TRIO64VPLUS,
+	S3_MIROCRYSTALV22SD_T64PLUS,
     S3_DIAMOND_STEALTH_SE,
     S3_DIAMOND_STEALTH_VRAM,
     S3_ELSAWIN2KPROX_964,
@@ -3225,6 +3227,7 @@ s3_in(uint16_t addr, void *priv)
                 /* This is needed for the Intel Advanced/ATX's built-in S3 Trio64V+ BIOS to not
                    get stuck in an infinite loop. */
                 if (((s3->card_type == S3_STB_POWERGRAPH_64_VIDEO) ||
+					(s3->card_type == S3_MIROCRYSTALV22SD_T64PLUS) && (svga->seqaddr == 0x17) ||
                     (s3->card_type == S3_PHOENIX_TRIO64VPLUS_ONBOARD) ||
                     (s3->card_type == S3_CARDEX_TRIO64VPLUS)) && (svga->seqaddr == 0x17))
                     svga->seqregs[svga->seqaddr] ^= 0x01;
@@ -10049,6 +10052,12 @@ s3_init(const device_t *info)
             chip    = S3_TRIO64V;
             video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64vp_cardex_pci);
             break;
+		case S3_MIROCRYSTALV22SD_T64PLUS:
+            bios_fn = NULL;
+            chip    = S3_TRIO64V;
+            if (info->flags & DEVICE_PCI)
+                video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64_pci);
+            break;			
         case S3_DIAMOND_STEALTH64_764:
             bios_fn = ROM_DIAMOND_STEALTH64_764;
             chip    = S3_TRIO64;
@@ -10498,6 +10507,7 @@ s3_init(const device_t *info)
         case S3_PHOENIX_TRIO64VPLUS:
         case S3_PHOENIX_TRIO64VPLUS_ONBOARD:
         case S3_CARDEX_TRIO64VPLUS:
+		case S3_MIROCRYSTALV22SD_T64PLUS:
         case S3_DIAMOND_STEALTH64_764:
         case S3_SPEA_MIRAGE_P64:
         case S3_NUMBER9_9FX:
@@ -10762,6 +10772,12 @@ static int
 s3_cardex_trio64vplus_available(void)
 {
     return rom_present(ROM_PHOENIX_TRIO64VPLUS);
+}
+
+static int
+s3_mirocrystal_v22sd_t64plus_available(void)
+{
+    return rom_present(ROM_MIROCRYSTALV22SD_T64PLUS);
 }
 
 static int
@@ -11518,6 +11534,20 @@ const device_t s3_cardex_trio64vplus_pci_device = {
     .close         = s3_close,
     .reset         = s3_reset,
     .available     = s3_cardex_trio64vplus_available,
+    .speed_changed = s3_speed_changed,
+    .force_redraw  = s3_force_redraw,
+    .config        = s3_standard_config
+};
+
+const device_t s3_mirocrystal_v22sd_t64plus_device = {
+    .name          = "S3 Trio64V+ PCI (MiroCRYSTAL V22SD)",
+    .internal_name = "mirocrystalv22sd_pci",
+    .flags         = DEVICE_PCI,
+    .local         = S3_MIROCRYSTALV22SD_T64PLUS,
+    .init          = s3_init,
+    .close         = s3_close,
+    .reset         = s3_reset,
+    .available     = s3_mirocrystal_v22sd_t64plus_available,
     .speed_changed = s3_speed_changed,
     .force_redraw  = s3_force_redraw,
     .config        = s3_standard_config
