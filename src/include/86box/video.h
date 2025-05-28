@@ -71,6 +71,11 @@ enum {
 
 #define VIDEO_FLAG_TYPE_SECONDARY VIDEO_FLAG_TYPE_SPECIAL
 
+#define FONT_IBM_MDA_437_PATH        "roms/video/mda/mda.rom"
+#define FONT_IBM_MDA_437_NORDIC_PATH "roms/video/mda/4733197.bin"
+#define FONT_KAM_PATH                "roms/video/mda/kam.bin"
+#define FONT_KAMCL16_PATH            "roms/video/mda/kamcl16.bin"
+
 typedef struct video_timings_t {
     int type;
     int write_b;
@@ -355,6 +360,7 @@ extern const device_t gd5401_onboard_device;
 extern const device_t gd5402_isa_device;
 extern const device_t gd5402_onboard_device;
 extern const device_t gd5420_isa_device;
+extern const device_t gd5420_onboard_device;
 extern const device_t gd5422_isa_device;
 extern const device_t gd5424_vlb_device;
 extern const device_t gd5426_isa_device;
@@ -369,6 +375,7 @@ extern const device_t gd5428_boca_isa_device;
 extern const device_t gd5428_mca_device;
 extern const device_t gd5426_mca_device;
 extern const device_t gd5428_onboard_device;
+extern const device_t gd5428_onboard_vlb_device;
 extern const device_t gd5429_isa_device;
 extern const device_t gd5429_vlb_device;
 extern const device_t gd5430_diamond_speedstar_pro_se_a8_vlb_device;
