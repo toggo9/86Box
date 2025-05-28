@@ -157,7 +157,9 @@ machine_at_dellxp60_init(const machine_t *model)
     if (bios_only || !ret)
         return ret;
 
-    machine_at_common_init(model);
+    machine_at_common_init_ex(model, 2);
+
+    device_add(&amstrad_megapc_nvr_device);
     device_add(&ide_pci_device);
 
     pci_init(PCI_CONFIG_TYPE_2);
@@ -170,7 +172,7 @@ machine_at_dellxp60_init(const machine_t *model)
     pci_register_slot(0x06, PCI_CARD_NORMAL,      2, 1, 3, 4);
     pci_register_slot(0x02, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
     device_add(&i430lx_device);
-    device_add(&keyboard_ps2_intel_ami_pci_device);
+    device_add(&keyboard_ps2_phoenix_device);
     device_add(&sio_zb_device);
     device_add(&fdc37c665_device);
     device_add(&intel_flash_bxt_ami_device);
@@ -189,8 +191,10 @@ machine_at_opti560l_init(const machine_t *model)
     if (bios_only || !ret)
         return ret;
 
-    machine_at_common_init(model);
-    device_add(&ide_pci_2ch_device);
+     machine_at_common_init_ex(model, 2);
+
+    device_add(&amstrad_megapc_nvr_device);
+    device_add(&ide_pci_device);
 
     pci_init(PCI_CONFIG_TYPE_2);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
@@ -199,7 +203,7 @@ machine_at_opti560l_init(const machine_t *model)
     pci_register_slot(0x08, PCI_CARD_NORMAL,      2, 1, 3, 4);
     pci_register_slot(0x02, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
     device_add(&i430lx_device);
-    device_add(&keyboard_ps2_intel_ami_pci_device);
+    device_add(&keyboard_ps2_phoenix_device);
     device_add(&sio_zb_device);
     device_add(&i82091aa_device);
     device_add(&intel_flash_bxt_ami_device);
@@ -207,42 +211,24 @@ machine_at_opti560l_init(const machine_t *model)
     return ret;
 }
 
-static void d841_setup(void);
-
 int
 machine_at_d841_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "d841", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    d841_setup();  
-
-    return ret;
-}
-
-static void d841_setup(void)
-{
     device_add(&ide_rz1000_pci_device);
     pci_init(PCI_CONFIG_TYPE_2 | PCI_NO_IRQ_STEERING);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
@@ -257,6 +243,8 @@ static void d841_setup(void)
 	
 	if (gfxcard[0] == VID_INTERNAL)
         device_add(&et4000w32p_revcd_onboard_pci_device);
+
+    return ret;
 }
 
 static const device_config_t d841_config[] = {

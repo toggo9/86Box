@@ -73,6 +73,27 @@ machine_at_acc386_init(const machine_t *model)
 }
 
 int
+machine_at_asus386_3364k_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/asus386_3364k/am27c512dip28-64b53c26be3d8160533563.bin",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+    device_add(&rabbit_device);
+    device_add(&keyboard_at_ami_device);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
 machine_at_asus386_init(const machine_t *model)
 {
     int ret;
@@ -260,6 +281,169 @@ machine_at_tandy4000_init(const machine_t *model)
 }
 
 int
+machine_at_apcpredatoriplus_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/apcpredatoriplus/PRED1PLUS.BIN",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+    device_add(&sl82c461_device);
+    device_add(&keyboard_ps2_ami_device);
+	device_add(&ide_isa_device);
+	device_add(&fdc37c651_ide_device);
+
+    return ret;
+}
+
+int
+machine_at_dtk461_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/dtk461/DTK.BIO",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+    device_add(&sl82c461_device);
+    device_add(&keyboard_at_ami_device);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
+machine_at_dt423s4l_init(const machine_t *model)
+
+{
+    int ret = 0;
+    const char* fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
+    ret = bios_load_linear(fn, 0x000f0000, 65536, 0);
+    device_context_restore();
+	
+	machine_at_common_init(model);
+	
+	device_add(&sl82c461_device);
+    device_add(&keyboard_at_ami_device);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+	
+    return ret;
+}
+
+static const device_config_t dt423s4l_config[] = {
+    // clang-format off
+    {
+        .name = "bios_versions",
+        .description = "BIOS Versions",
+        .type = CONFIG_BIOS,
+        .default_string = "dt423s4l_ami",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 }, /*W1*/
+        .bios = {
+            { .name = "AMIBIOS (07/07/1991)", .internal_name = "dt423s4l_ami", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 65536, .files = { "roms/machines/dt423s4l/dt423s4l_ami.bin", "" } },
+            { .name = "Mr. BIOS 1.45 (04/18/1994)", .internal_name = "dt423s4l_mrbios", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 65536, .files = { "roms/machines/dt423s4l/dt423s4l_mrbios.bin", "" } },
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+};
+
+const device_t dt423s4l_device = {
+    .name          = "DD & TT Enterprise DT-423S4L",
+    .internal_name = "dt423s4l",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = &dt423s4l_config[0]
+};
+
+int
+machine_at_pck486dx_init(const machine_t *model)
+
+{
+    int ret = 0;
+    const char* fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
+    ret = bios_load_linear(fn, 0x000f0000, 65536, 0);
+    device_context_restore();
+	
+	machine_at_common_init(model);
+
+    device_add(&sl82c461_device);
+    device_add(&keyboard_at_ami_device);
+	device_add(&fdc37c651_ide_device);
+	device_add(&ide_isa_device);
+    
+
+    return ret;
+}
+
+static const device_config_t pck486dx_config[] = {
+    // clang-format off
+    {
+        .name = "bios_versions",
+        .description = "BIOS Versions",
+        .type = CONFIG_BIOS,
+        .default_string = "pck486dx_13",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 }, /*W1*/
+        .bios = {
+            { .name = "AMIBIOS Core Version 121291 BIOS Version 1.3 (10/01/1992)", .internal_name = "pck486dx_13", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 65536, .files = { "roms/machines/pck486dx/PCK_P486DX_1.3.bin", "" } },
+            { .name = "AMIBIOS Core Version 060692 BIOS Version 2.0 (11/30/1992)", .internal_name = "pck486dx_20", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 65536, .files = { "roms/machines/pck486dx/PCK486DX.bin", "" } },
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+};
+
+const device_t pck486dx_device = {
+    .name          = "Peacock PCK486 DX",
+    .internal_name = "pck486dx",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = &pck486dx_config[0]
+};
+
+int
 machine_at_d525_init(const machine_t *model)
 {
     int ret;
@@ -389,29 +573,75 @@ machine_at_av4_init(const machine_t *model)
 
 int
 machine_at_netplex486_init(const machine_t *model)
+
 {
-    int ret;
+    int ret = 0;
+    const char* fn;
 
-    ret = bios_load_linear("roms/machines/netplex486/netplex486.bin",
-                           0x000e0000, 131072, 0);
-
-    if (bios_only || !ret)
+    /* No ROMs available */
+    if (!device_available(model->device))
         return ret;
 
-    machine_at_common_init(model);
-
-    device_add(&sis_85c461_device);
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
+    ret = bios_load_linear(fn, 0x000c0000, 262144, 0);
+    device_context_restore();
+	
+	machine_at_common_init(model);
+	
+	device_add(&sis_85c461_device);
 
     if (gfxcard[0] == VID_INTERNAL)
-        device_add(&gd5428_onboard_device);
+        device_add(machine_get_vid_device(machine));
+    else {
+        for (uint16_t i = 0; i < 32768; i++)
+            rom[i] = mem_readb_phys(0x000c0000 + i);
+    }
+    mem_mapping_set_addr(&bios_mapping, 0x0c0000, 0x40000);
+    mem_mapping_set_exec(&bios_mapping, rom);
+	
+    device_add(&keyboard_ps2_phoenix_pci_device);
 
-    /* TODO: Phoenix MultiKey KBC */
-    device_add(&keyboard_ps2_ami_pci_device);
-    device_add(&ide_isa_2ch_device);
-    device_add(&fdc37c651_device);
-
+    device_add(&ide_isa_device);
+    device_add(&fdc37c661_ide_device);
+   
     return ret;
 }
+
+static const device_config_t netplex486_config[] = {
+    // clang-format off
+    {
+        .name = "bios_versions",
+        .description = "BIOS Versions",
+        .type = CONFIG_BIOS,
+        .default_string = "netplex486_sep93",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 }, /*W1*/
+        .bios = {
+            { .name = "Phoenix ROM BIOS PLUS 1.10 Revision A01 (09/02/1993)", .internal_name = "netplex486_sep93", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 262144, .files = { "roms/machines/netplex486/netplex486_sep93.bin", "" } },
+            { .name = "Phoenix ROM BIOS PLUS 1.10 Revision A02 (03/24/1994)", .internal_name = "netplex486_mar94", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 262144, .files = { "roms/machines/netplex486/netplex486_mar94.bin", "" } },
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+};
+
+const device_t netplex486_device = {
+    .name          = "Dell System 4XX/P NetPlex",
+    .internal_name = "netplex486",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = &netplex486_config[0]
+};
+
 
 int
 machine_at_valuepoint433_init(const machine_t *model) // hangs without the PS/2 mouse
@@ -881,7 +1111,7 @@ machine_at_pb410a_init(const machine_t *model)
     device_add(&phoenix_486_jumper_device);
 
     if (gfxcard[0] == VID_INTERNAL)
-        device_add(&ht216_32_pb410a_device);
+       device_add(machine_get_vid_device(machine));
 
     return ret;
 }
@@ -897,14 +1127,16 @@ machine_at_vect486vl_init(const machine_t *model) // has HDC problems
     if (bios_only || !ret)
         return ret;
 
-    machine_at_common_ide_init(model);
-
-    device_add(&vl82c480_device);
-
     if (gfxcard[0] == VID_INTERNAL)
         device_add(&gd5428_onboard_device);
 
+    machine_at_common_init_ex(model, 2);
+
+    device_add(&vl82c480_device);
+
     device_add(&vl82c113_device);
+
+    device_add(&ide_isa_device);
     device_add(&fdc37c651_ide_device);
 
     return ret;
@@ -921,17 +1153,45 @@ machine_at_d824_init(const machine_t *model)
     if (bios_only || !ret)
         return ret;
 
-    machine_at_common_init(model);
-
-    device_add(&vl82c480_device);
-
     if (gfxcard[0] == VID_INTERNAL)
         device_add(&gd5428_onboard_device);
 
-    device_add(&keyboard_ps2_device);
+    machine_at_common_init_ex(model, 2);
+
+    device_add(&vl82c480_device);
+
+    /*
+       Technically, it should be the VL82C114 but we do not have
+       a proper datasheet of it that tells us the registers.
+     */
+    device_add(&vl82c113_device);
 
     device_add(&ide_isa_device);
     device_add(&fdc37c651_device);
+    
+    return ret;
+}
+
+int
+machine_at_martin_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/martin/NONSCSI.ROM",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    device_add(&vl82c480_device);
+    device_add(&vl82c113_device);
+
+    device_add(&ide_vlb_device);
+    device_add(&fdc37c651_ide_device);
+
+    device_add(&intel_flash_bxt_device);
     
     return ret;
 }
@@ -961,50 +1221,32 @@ machine_at_acera1g_init(const machine_t *model)
     return ret;
 }
 
-static void acerv10_setup(void);
-
 int
 machine_at_acerv10_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "acerv10_oct93", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    acerv10_setup();  
-
-    return ret;
-}
-
-
-static void acerv10_setup(void)
-{
-	device_add(&sis_85c461_device);
+    device_add(&sis_85c461_device);
     device_add(&keyboard_ps2_acer_pci_device);
     device_add(&ide_isa_device);
 
     if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
-    
+
+    return ret;
 }
 
 static const device_config_t acerv10_config[] = {
@@ -1041,47 +1283,29 @@ const device_t acerv10_device = {
     .config        = &acerv10_config[0]
 };
 
-static void geminivlbus_setup(void);
-
 int
 machine_at_geminivlbus_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "geminivlbus_aug92", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000f0000, 65536, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    geminivlbus_setup();  
+    device_add(&cs4031_device);
+    device_add(&pc87311_ide_device);
+    device_add(&keyboard_at_phoenix_device); 
 
     return ret;
-}
-
-
-static void geminivlbus_setup(void)
-{
-	device_add(&cs4031_device);
-    device_add(&pc87311_ide_device);
-    device_add(&keyboard_at_phoenix_device);
-    
 }
 
 static const device_config_t geminivlbus_config[] = {
@@ -1212,7 +1436,6 @@ machine_at_evoiv_init(const machine_t *model)
     return ret;
 }
 
-
 int
 machine_at_ms4130_init(const machine_t *model)
 {
@@ -1272,11 +1495,9 @@ machine_at_decpclpv_init(const machine_t *model)
 
     device_add(&sis_85c461_device);
 
-    if (gfxcard[0] == VID_INTERNAL)
-        device_add(&s3_86c805_onboard_vlb_device);
+    device_add(machine_get_vid_device(machine));
 
-    /* TODO: Phoenix MultiKey KBC */
-    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&keyboard_ps2_phoenix_pci_device);
     device_add(&ide_isa_2ch_device);
     device_add(&fdc37c663_ide_device);
 
@@ -1506,54 +1727,35 @@ machine_at_403tg_d_mr_init(const machine_t *model)
     return ret;
 }
 
-static void d819_setup(void);
-
-
-
-
 int
 machine_at_d819_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "v334819", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
-	machine_at_common_init(model);
-
-    d819_setup();  
-
-    return ret;
-}
-
-// Definition of the setup function for D819
-static void d819_setup(void)
-{
-    device_add(&vl82c480_device); 
+	machine_at_common_init_ex(model, 2);
+	
+	device_add(&vl82c480_device);
+    device_add(&vl82c113_device);	
 
     if (gfxcard[0] == VID_INTERNAL)
         device_add(&s3_phoenix_86c805_vlb_device);
     
-    device_add(&keyboard_ps2_device); 
+  
     device_add(&ide_isa_device);       
-    device_add(&fdc37c651_device); 
+    device_add(&fdc37c651_ide_device); 
+
+    return ret;
 }
 
 static const device_config_t d819_config[] = {
@@ -1611,17 +1813,16 @@ machine_at_d802a_init(const machine_t *model)
     if (bios_only || !ret)
         return ret;
 
-    machine_at_common_init(model);
+    machine_at_common_init_ex(model, 2);
 
     device_add(&vl82c480_device);
+	device_add(&vl82c113_device);
 
     if (gfxcard[0] == VID_INTERNAL)
         device_add(&s3_phoenix_86c805_vlb_device);
-
-    device_add(&keyboard_ps2_device);
-
+ 
     device_add(&ide_isa_device);
-    device_add(&fdc37c651_device);
+    device_add(&fdc37c651_ide_device);
     
     return ret;
 }
@@ -1702,48 +1903,30 @@ machine_at_sensationii_init(const machine_t *model)
     return ret;
 }
 
-static void fic486giovt2_setup(void);
-
 int
 machine_at_fic486giovt2_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "fic486giovt2_jul94", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000f0000, 65536, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    fic486giovt2_setup();  
-
-    return ret;
-}
-
-
-static void fic486giovt2_setup(void)
-{
-	device_add(&ide_vlb_2ch_device);
+    device_add(&ide_vlb_2ch_device);
     device_add(&via_vt82c49x_device); /* actually uses a VT82C486, but not implemented yet. */
     device_add(&keyboard_at_ami_device);
     device_add(&w83787f_device);
-    
+
+    return ret;
 }
 
 static const device_config_t fic486giovt2_config[] = {
@@ -2066,6 +2249,35 @@ machine_at_pc330_6573_init(const machine_t *model)
 }
 
 int
+machine_at_ibmvaluepointperformance_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/ibmvaluepointperformance/$IMAGE.FLH",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x10, PCI_CARD_NORTHBRIDGE,  0,  0,  0,  0);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,       1,  2,  3,  4);
+    pci_register_slot(0x0C, PCI_CARD_NORMAL,       5,  6,  7,  8);
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,       9, 10, 11, 12);
+
+    device_add(&opti601_device);
+    device_add(&opti802g_device);
+    device_add(&opti822_device);
+    device_add(&keyboard_ps2_ami_device);
+    device_add(&pc87332_device);
+    device_add(&intel_flash_bxt_device);
+
+    return ret;
+}
+
+int
 machine_at_mvi486_init(const machine_t *model)
 {
     int ret;
@@ -2085,47 +2297,31 @@ machine_at_mvi486_init(const machine_t *model)
     return ret;
 }
 
-static void decpclp_setup(void);
-
 int
 machine_at_decpclp_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "decpclp_v108", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    decpclp_setup();  
+    device_add(&opti495_device);
+    device_add(&keyboard_ps2_phoenix_device);
+    device_add(&pc87311_ide_device);  
 
     return ret;
 }
 
-static void decpclp_setup(void)
-{
-	
-    device_add(&opti495_device);
-    device_add(&keyboard_ps2_phoenix_device);
-    device_add(&pc87311_ide_device);
-}
 
 static const device_config_t decpclp_config[] = {
     // clang-format off
@@ -2165,49 +2361,32 @@ const device_t decpclp_device = {
     .config        = &decpclp_config[0]
 };
 
-static void d756_setup(void);
-
 int
 machine_at_d756_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "d756_nov93", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    d756_setup();  
-
-    return ret;
-}
-
-static void d756_setup(void)
-{
-    if (gfxcard[0] == VID_INTERNAL)
+     if (gfxcard[0] == VID_INTERNAL)
         device_add(&gd5426_onboard_device);
 	
 	device_add(&ide_isa_device);
     device_add(&opti495_device);
     device_add(&keyboard_ps2_device);
     device_add(&fdc37c651_device);
+    return ret;
 }
 
 static const device_config_t d756_config[] = {
@@ -2353,11 +2532,12 @@ machine_at_decpclpxplus_init(const machine_t *model)
 
     if (bios_only || !ret)
         return ret;
-
-    machine_at_common_init(model);
-	device_add(&sis_85c471_device);
-    device_add(&fdc37c665_device);
-	device_add(&keyboard_ps2_phoenix_device);
+	
+	machine_at_common_init(model);
+    device_add(&sis_85c461_device);
+    device_add(&ide_isa_device);
+    device_add(&fdc37c665_ide_pri_device);
+    device_add(&keyboard_ps2_phoenix_device);
 
     return ret;
 }
@@ -3112,44 +3292,25 @@ machine_at_g486ip_init(const machine_t *model)
     return ret;
 }
 
-static void d800_setup(void);
-
 int
 machine_at_d800_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "d800", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    d800_setup();  
-
-    return ret;
-}
-
-
-static void d800_setup(void)
-{
-   device_add(&ide_rz1000_pci_device);
+    device_add(&ide_rz1000_pci_device);
     pci_init(PCI_CONFIG_TYPE_2 | PCI_NO_IRQ_STEERING | PCI_CAN_SWITCH_TYPE);
 	pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
 	pci_register_slot(0x02, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0); /* Onboard */
@@ -3163,8 +3324,10 @@ static void d800_setup(void)
 	
 	if (gfxcard[0] == VID_INTERNAL)
         device_add(&et4000w32p_revcd_onboard_pci_device);
-    
+
+    return ret;
 }
+
 
 static const device_config_t d800_config[] = {
     // clang-format off
@@ -3236,6 +3399,90 @@ machine_at_486sp3g_init(const machine_t *model)
 
     device_add(&i420zx_device);
     device_add(&ncr53c810_onboard_pci_device);
+
+    return ret;
+}
+
+static const device_config_t sb486pv_config[] = {
+    // clang-format off
+    {
+        .name = "bios",
+        .description = "BIOS Version",
+        .type = CONFIG_BIOS,
+        .default_string = "sb486pv",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 },
+        .bios = {
+            { .name = "AMI 062594 (0108)", .internal_name = "sb486pv", .bios_type = BIOS_NORMAL, 
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/sb486pv/41-0108-062594-SATURN2.rom", "" } },
+            { .name = "AMI 062594 (0301)", .internal_name = "sb486pv_94", .bios_type = BIOS_NORMAL, 
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/sb486pv/0301-062594-SATURN2.rom", "" } },
+            { .name = "AMI 071595 (1301)", .internal_name = "sb486pv_95", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/sb486pv/amiboot.rom", "" } },
+            { .files_no = 0 }
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+const device_t sb486pv_device = {
+    .name          = "ICS SB486PV",
+    .internal_name = "sb486pv_device",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = sb486pv_config
+};
+
+int
+machine_at_sb486pv_init(const machine_t *model)
+{
+    int ret = 0;
+    const char* fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 0);
+    if (!strcmp(fn, "roms/machines/sb486pv/amiboot.rom"))
+        ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
+    else
+        ret = bios_load_linear_inverted(fn, 0x000e0000, 131072, 0);
+    device_context_restore();
+
+    machine_at_common_init(model);
+    // machine_at_common_init_ex(model, 2);
+
+    // device_add(&amstrad_megapc_nvr_device);
+
+    pci_init(PCI_CONFIG_TYPE_2);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x0e, PCI_CARD_IDE,         0, 0, 0, 0);
+    pci_register_slot(0x0f, PCI_CARD_VIDEO,       1, 2, 3, 4);
+    pci_register_slot(0x02, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+
+    if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&sio_zb_device);
+    device_add(&ide_rz1000_pci_single_channel_device);
+    device_add(&i82091aa_26e_device);
+    if (!strcmp(fn, "roms/machines/sb486pv/amiboot.rom"))
+        device_add(&intel_flash_bxt_device);
+    else
+        device_add(&intel_flash_bxt_ami_device);
+
+    device_add(&i420zx_device);
 
     return ret;
 }
@@ -3384,43 +3631,25 @@ machine_at_win486pci_init(const machine_t *model)
     return ret;
 }
 
-static void ga5486al_setup(void);
-
 int
 machine_at_ga5486al_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "ga5486al_jan96", 0);
-    }
-
-    ret = bios_load_linear(fn, 0x000e0000, 262144, 0);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
+    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    ga5486al_setup();  
-
-    return ret;
-}
-
-static void ga5486al_setup(void)
-{
-	pci_init(PCI_CONFIG_TYPE_1);
+    pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 	  0, 0, 0, 0); /* Onboard */
     pci_register_slot(0x03, PCI_CARD_NORMAL, 	  	  1, 2, 3, 4); /* Slot 1 */
 	pci_register_slot(0x04, PCI_CARD_VIDEO,           2, 3, 4, 1); /* Slot 2 */
@@ -3429,6 +3658,8 @@ static void ga5486al_setup(void)
 	device_add(&um8663bf_ide_device);
     device_add(&sst_flash_29ee010_device);
     device_add(&keyboard_at_ami_device);
+
+    return ret;
 }
 
 static const device_config_t ga5486al_config[] = {
@@ -3738,42 +3969,23 @@ machine_at_pcm5330_init(const machine_t *model)
     return ret;
 }
 
-static void ecs486_setup(void);
-
 int
 machine_at_ecs486_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "ecs486_lastest", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
-
-    ecs486_setup();  
-
-    return ret;
-}
-
-static void ecs486_setup(void)
-{
 
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x10, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
@@ -3790,6 +4002,7 @@ static void ecs486_setup(void)
     device_add(&intel_flash_bxt_device);
     device_add(&keyboard_ps2_ami_device);
 
+    return ret;
 }
 
 static const device_config_t ecs486_config[] = {
@@ -3846,43 +4059,26 @@ const device_t ecs486_device = {
     .config        = &ecs486_config[0]
 };
 
-static void d882_setup(void);
 
 int
 machine_at_d882_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "d882", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 262144, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    d882_setup();  
-
-    return ret;
-}
-
-static void d882_setup(void)
-{
-	pci_init(PCI_CONFIG_TYPE_1);
+    pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x10, PCI_CARD_NORTHBRIDGE, 	  0, 0, 0, 0); /* Onboard */
     pci_register_slot(0x12, PCI_CARD_SOUTHBRIDGE, 	  1, 2, 3, 4); /* Onboard */
 	pci_register_slot(0x13, PCI_CARD_VIDEO,           4, 0, 0, 0); /* Onboard */
@@ -3894,7 +4090,10 @@ static void d882_setup(void)
 	device_add(&pc87332_device);
     device_add(&intel_flash_bxt_device);
     device_add(&keyboard_ps2_pci_device);
+
+    return ret;
 }
+
 
 static const device_config_t d882_config[] = {
     // clang-format off
@@ -4029,43 +4228,25 @@ machine_at_atc1415_init(const machine_t *model)
     return ret;
 }
 
-static void mb8425uuda_setup(void);
 
 int
 machine_at_mb8425uuda_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "mb8425uuda_nov95", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    mb8425uuda_setup();  
-
-    return ret;
-}
-
-
-static void mb8425uuda_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x10, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
     pci_register_slot(0x12, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4);
@@ -4078,7 +4259,8 @@ static void mb8425uuda_setup(void)
     device_add(&um8663bf_device);
     device_add(&sst_flash_29ee010_device);
     device_add(&keyboard_at_ami_device);
-    
+
+    return ret;
 }
 
 static const device_config_t mb8425uuda_config[] = {
@@ -4187,43 +4369,24 @@ machine_at_actiontower8400_init(const machine_t *model)
     return ret;
 }
 
-static void ga486am_setup(void);
-
 int
 machine_at_ga486am_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "ga486am_feb95", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    ga486am_setup();  
-
-    return ret;
-}
-
-
-static void ga486am_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x10, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
     pci_register_slot(0x12, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4);
@@ -4236,9 +4399,11 @@ static void ga486am_setup(void)
     device_add(&umc_8886af_device);  
     device_add(&um8663af_device);
     device_add(&sst_flash_29ee010_device);
-    device_add(&keyboard_at_ami_device);
-    
+    device_add(&keyboard_at_ami_device);  
+
+    return ret;
 }
+
 
 static const device_config_t ga486am_config[] = {
     // clang-format off
@@ -4311,43 +4476,25 @@ machine_at_m919_init(const machine_t *model)
     return ret;
 }
 
-static void mp4p4u885g_setup(void);
-
 int
 machine_at_mp4p4u885g_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "mp4p4u885g_dec94", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    mp4p4u885g_setup();  
-
-    return ret;
-}
-
-static void mp4p4u885g_setup(void)
-{
-	pci_init(PCI_CONFIG_TYPE_1);
+    pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x10, PCI_CARD_NORTHBRIDGE, 	  0, 0, 0, 0); /* Onboard */
     pci_register_slot(0x12, PCI_CARD_SOUTHBRIDGE, 	  0, 0, 0, 0); /* Onboard */
 	pci_register_slot(0x0F, PCI_CARD_VIDEO,           4, 0, 0, 0); /* Onboard */
@@ -4361,7 +4508,9 @@ static void mp4p4u885g_setup(void)
     device_add(&keyboard_at_ami_device);
 	
 	if (fdc_current[0] == FDC_INTERNAL)
-        device_add(&fdc_at_device);
+        device_add(&fdc_at_device); 
+
+    return ret;
 }
 
 static const device_config_t mp4p4u885g_config[] = {
@@ -4507,7 +4656,8 @@ machine_at_tg486g_init(const machine_t *model)
     if (bios_only || !ret)
         return ret;
 
-    machine_at_common_init(model);
+    machine_at_common_init_ex(model, 2);
+    device_add(&amstrad_megapc_nvr_device);
     device_add(&sis_85c471_device);
     device_add(&ide_isa_device);
     device_add(&fdc37c651_ide_device);
@@ -4881,48 +5031,32 @@ machine_at_pkm3300_init(const machine_t *model)
     return ret;
 }
 
-static void d620_setup(void);
-
 int
 machine_at_d620_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "d620_nov90", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    d620_setup();  
-
-    return ret;
-}
-
-static void d620_setup(void)
-{
     device_add(&keyboard_at_siemens_device);
 	
 	mem_remap_top(384);
 
     if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
+
+    return ret;
 }
 
 static const device_config_t d620_config[] = {

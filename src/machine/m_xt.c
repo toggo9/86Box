@@ -607,9 +607,7 @@ machine_xt_gem10_init(const machine_t *model)
     if (bios_only || !ret)
         return ret;
 
-    device_add(&keyboard_xtclone_device);
-
-    machine_xt_clone_init(model, 1);
+    machine_xt_clone_init(model, 0);
 
     return ret;
 }
@@ -970,6 +968,24 @@ machine_xt_jumboturbo_init(const machine_t *model)
 
     ret = bios_load_linear("roms/machines/jumboturbo/CHENDAI_ROM2-0.BIN",
                            0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_xtclone_device);
+
+    machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
+int
+machine_xt_icl2500_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/icl2500/ICL_2500_BIOS_1.54.BIN",
+                           0x000fc000, 16384, 0);
 
     if (bios_only || !ret)
         return ret;
@@ -1459,6 +1475,22 @@ machine_xt_tulip_pccompact2_init(const machine_t *model)
 	
 	if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
+machine_xt_ls1720_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/ls1720/XT_LS-1720_U8.BIN.bin",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_xt_clone_init(model, 0);
 
     return ret;
 }

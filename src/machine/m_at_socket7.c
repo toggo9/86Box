@@ -24,7 +24,6 @@
 #include <86box/mem.h>
 #include <86box/io.h>
 #include <86box/rom.h>
-#include <86box/pci.h>
 #include <86box/device.h>
 #include <86box/chipset.h>
 #include <86box/hdc.h>
@@ -45,6 +44,7 @@
 #include <86box/scsi_ncr53c8xx.h>
 #include <86box/thread.h>
 #include <86box/network.h>
+#include <86box/pci.h>
 
 int
 machine_at_acerv35n_init(const machine_t *model)
@@ -139,43 +139,59 @@ machine_at_p55t2p4_init(const machine_t *model)
     return ret;
 }
 
-static void ga586dx_setup(void);
+int
+machine_at_delloptigxi_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/delloptigxi/DELL.ROM",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4);
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,      2, 1, 3, 4); /* Slot 02 */
+    pci_register_slot(0x0E, PCI_CARD_NORMAL,      3, 4, 2, 1); /* Slot 01 */
+    pci_register_slot(0x10, PCI_CARD_VIDEO,       0, 0, 0, 0); /* Onboard */
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      4, 0, 0, 0); /* Onboard */
+    device_add(&i430hx_device);
+    device_add(&piix3_device);
+	device_add(&dell_jumper_device);
+    device_add_params(&pc87307_device, (void *) (PCX730X_PHOENIX_42 | PCX7307_PC87307));
+    device_add(&intel_flash_bxt_device);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+	
+	if (sound_card_current[0] == SOUND_INTERNAL)
+        machine_snd = device_add(machine_get_snd_device(machine));
+
+    return ret;
+}
 
 int
 machine_at_ga586dx_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "ga586dx", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    ga586dx_setup();  
-
-    return ret;
-}
-
-
-static void ga586dx_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
 	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
@@ -191,8 +207,10 @@ static void ga586dx_setup(void)
     device_add(&um8669f_device);
 	device_add(&ioapic_device);
 	device_add(&intel_flash_bxt_device);
-   
+
+    return ret;
 }
+
 
 static const device_config_t ga586dx_config[] = {
     // clang-format off
@@ -264,8 +282,7 @@ machine_at_d969_init(const machine_t *model)
 	pci_register_slot(0x14, PCI_CARD_NORMAL,	  4, 1, 2, 3); /* Slot 04 */
     device_add(&i430hx_device);
 	device_add(&piix3_device);
-    device_add(&keyboard_ps2_ami_pci_device);
-    device_add(&pc97307_device);
+    device_add_params(&pc87307_device, (void *) (PCX730X_PHOENIX_42 | PCX7307_PC97307));
     device_add(&intel_flash_bxt_device);
 	spd_register(SPD_TYPE_EDO, 0x7, 256);
 	
@@ -1220,35 +1237,20 @@ machine_at_tx97xv_init(const machine_t *model)
     pci_register_slot(0x0D, PCI_CARD_NORMAL,      1, 0, 0, 0);
     device_add(&i430tx_device);
     device_add(&piix4_device);
-    device_add(&keyboard_ps2_ami_pci_device);
-    device_add(&pc87307_both_device);
+    device_add_params(&pc87307_device, (void *) (PCX730X_15C | PCX730X_PHOENIX_42 | PCX7307_PC97307));
     device_add(&winbond_flash_w29c020_device);
     spd_register(SPD_TYPE_SDRAM, 0x3, 128);
 
     return ret;
 }
 
-#ifdef USE_AN430TX
 int
-machine_at_an430tx_init(const machine_t *model)
+machine_at_delloptignplus_init(const machine_t *model)
 {
     int ret;
 
-#    if 1
-    ret = bios_load_linear_combined2("roms/machines/an430tx/P10-0095.BIO",
-                                     "roms/machines/an430tx/P10-0095.BI1",
-                                     "roms/machines/an430tx/P10-0095.BI2",
-                                     "roms/machines/an430tx/P10-0095.BI3",
-                                     "roms/machines/an430tx/P10-0095.RCV",
-                                     0x3a000, 160);
-#    else
-    ret = bios_load_linear_combined2("roms/machines/an430tx/P06-0062.BIO",
-                                     "roms/machines/an430tx/P06-0062.BI1",
-                                     "roms/machines/an430tx/P06-0062.BI2",
-                                     "roms/machines/an430tx/P06-0062.BI3",
-                                     "roms/machines/an430tx/P10-0095.RCV",
-                                     0x3a000, 160);
-#    endif
+    ret = bios_load_linear("roms/machines/delloptignplus/DELL.ROM",
+                           0x000c0000, 262144, 0);
 
     if (bios_only || !ret)
         return ret;
@@ -1257,22 +1259,66 @@ machine_at_an430tx_init(const machine_t *model)
 
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
-    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4); /* PIIX4 */
-    // pci_register_slot(0x08, PCI_CARD_VIDEO,       4, 0, 0, 0);
+	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4); /* PIIX4 */
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,      2, 1, 3, 4); /* Slot 02 */
+    pci_register_slot(0x0E, PCI_CARD_NORMAL,      3, 4, 2, 1); /* Slot 01 */
+	pci_register_slot(0x0F, PCI_CARD_BRIDGE,      1, 2, 3, 4);
+    pci_register_slot(0x10, PCI_CARD_VIDEO,       4, 0, 0, 0); /* Onboard */
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      4, 0, 0, 0); /* Onboard */
+    device_add(&i430tx_device);
+    device_add(&piix4_device);
+	device_add(&dec21152_device);
+    device_add_params(&pc87307_device, (void *) (PCX730X_PHOENIX_42 | PCX7307_PC87307));
+    device_add(&intel_flash_bxt_device);
+    spd_register(SPD_TYPE_SDRAM, 0x3, 128);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+
+    if (sound_card_current[0] == SOUND_INTERNAL)
+        machine_snd = device_add(machine_get_snd_device(machine));
+
+    return ret;
+}
+
+int
+machine_at_an430tx_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear_combined2("roms/machines/an430tx/ANP0911A.BIO",
+                                     "roms/machines/an430tx/ANP0911A.BI1",
+                                     "roms/machines/an430tx/ANP0911A.BI2",
+                                     "roms/machines/an430tx/ANP0911A.BI3",
+                                     "roms/machines/an430tx/ANP0911A.RCV",
+                                     0x3a000, 160);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4); /* PIIX4 */
     pci_register_slot(0x0D, PCI_CARD_NORMAL,      1, 2, 3, 4);
     pci_register_slot(0x0E, PCI_CARD_NORMAL,      2, 3, 4, 1);
     pci_register_slot(0x0F, PCI_CARD_NORMAL,      3, 4, 1, 2);
     pci_register_slot(0x10, PCI_CARD_NORMAL,      4, 1, 2, 3);
+    pci_register_slot(0x08, PCI_CARD_VIDEO,       4, 0, 0, 0);
     device_add(&i430tx_device);
     device_add(&piix4_device);
-    device_add(&keyboard_ps2_ami_pci_device);
-    device_add(&pc87307_both_device);
+#ifdef FOLLOW_THE_SPECIFICATION
+    device_add_params(&pc87307_device, (void *) (PCX730X_PHOENIX_42I | PCX7307_PC97307));
+#else
+    /* The technical specification says Phoenix, a real machnine HWINFO dump says AMI '5'. */
+    device_add_params(&pc87307_device, (void *) (PCX730X_AMI | PCX7307_PC97307));
+#endif
     device_add(&intel_flash_bxt_ami_device);
     spd_register(SPD_TYPE_SDRAM, 0x3, 128);
 
     return ret;
 }
-#endif /* USE_AN430TX */
 
 int
 machine_at_ym430tx_init(const machine_t *model)
@@ -1491,43 +1537,24 @@ machine_at_hurricane_init(const machine_t *model)
     return ret;
 }
 
-static void trimond_spitfire_setup(void);
-
 int
 machine_at_trimond_spitfire_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "trimond_spitfire_aug98", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000c0000, 262144, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init_ex(model, 2);
 
-    trimond_spitfire_setup();  
-
-    return ret;
-}
-
-
-static void trimond_spitfire_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
     pci_register_slot(0x04, PCI_CARD_NORMAL,      0, 0, 0, 0); 
@@ -1547,9 +1574,11 @@ static void trimond_spitfire_setup(void)
     hwm_values.temperatures[2] = 0; /* unused */
     hwm_values.fans[1]         = 0; /* unused */
     hwm_values.fans[2]         = 0; /* unused */
-    /* -5V is not reported by the BIOS, but leave it set */
-   
+    /* -5V is not reported by the BIOS, but leave it set */  
+
+    return ret;
 }
+
 
 static const device_config_t trimond_spitfire_config[] = {
     // clang-format off
@@ -1760,36 +1789,20 @@ int
 machine_at_ga586s_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+   int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "ga586s", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init_ex(model, 2);
 
-    ga586s_setup();  
-
-    return ret;
-}
-
-static void ga586s_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1 | FLAG_TRC_CONTROLS_CPURST);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
     pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4);
@@ -1804,6 +1817,7 @@ static void ga586s_setup(void)
     device_add(&um8663bf_device);
     device_add(&intel_flash_bxt_device);
 
+    return ret;
 }
 
 static const device_config_t ga586s_config[] = {

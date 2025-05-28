@@ -719,6 +719,30 @@ machine_at_px286_init(const machine_t *model)
 }
 
 int
+machine_at_dells200_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/dells200/dellL200256_LO_@DIP28.BIN",
+                                "roms/machines/dells200/Dell200256_HI_@DIP28.BIN",
+                                0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    device_add(&cs8220_device);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    device_add(&keyboard_at_phoenix_device);
+
+    return ret;
+}
+
+int
 machine_at_micronics386_init(const machine_t *model)
 {
     int ret;
@@ -795,47 +819,31 @@ machine_at_award286_init(const machine_t *model)
     return ret;
 }
 
-static void mb1212c_setup(void);
-
 int
 machine_at_mb1212c_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "amibios_jul91", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000f0000, 65536, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_scat_init(model, 0, 1);
+	
+	if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
 
-    mb1212c_setup();  
 
     return ret;
 }
 
-
-static void mb1212c_setup(void)
-{
-
-    if (fdc_current[0] == FDC_INTERNAL)
-        device_add(&fdc_at_device);
-}
 
 static const device_config_t mb1212c_config[] = {
     // clang-format off
@@ -1321,7 +1329,9 @@ machine_at_cmdsl386sx25_init(const machine_t *model)
     if (gfxcard[0] == VID_INTERNAL)
         device_add(&gd5402_onboard_device);
 
-    machine_at_common_ide_init(model);
+     machine_at_common_init_ex(model, 2);
+	 
+	device_add(&ide_isa_device);
 
     device_add(&ali5105_device);  /* The FDC is part of the ALi M5105. */
     device_add(&vl82c113_device); /* The keyboard controller is part of the VL82c113. */
@@ -1366,23 +1376,71 @@ machine_at_spc6033p_init(const machine_t *model)
     return ret;
 }
 
+static const device_config_t dells333sl_config[] = {
+    // clang-format off
+    {
+        .name = "bios",
+        .description = "BIOS Version",
+        .type = CONFIG_BIOS,
+        .default_string = "dells333sl",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 },
+        .bios = {
+            { .name = "J01 (Jostens Learning Corporation OEM)", .internal_name = "dells333sl_j01", .bios_type = BIOS_NORMAL, 
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/dells333sl/DELL386.BIN", "" } },
+            { .name = "A02", .internal_name = "dells333sl", .bios_type = BIOS_NORMAL, 
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/dells333sl/Dell_386SX_30807_UBIOS_B400_VLSI_VL82C311_Cirrus_Logic_GD5420.bin", "" } },
+            { .files_no = 0 }
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+const device_t dells333sl_device = {
+    .name          = "Dell System 333s/L",
+    .internal_name = "dells333sl_device",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = dells333sl_config
+};
+
 int
-machine_at_dell386sx_init(const machine_t *model)
+machine_at_dells333sl_init(const machine_t *model)
 {
-    int ret;
+    int ret = 0;
+    const char* fn;
 
-    ret = bios_load_linear("roms/machines/dell386sx/dell386sx.BIN",
-                           0x000e0000, 131072, 0);
-
-    if (bios_only || !ret)
+    /* No ROMs available */
+    if (!device_available(model->device))
         return ret;
-	
-	machine_at_common_ide_init(model);
-	
-	device_add(&pc87310_device);
-	device_add(&keyboard_ps2_ami_device);
-	device_add(&vlsi_scamp_device);
-    
+
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 0);
+    ret = bios_load_linear(fn, 0x000e0000, 262144, 0);
+    memcpy(rom, &(rom[0x00020000]), 131072);
+    mem_mapping_set_addr(&bios_mapping, 0x0c0000, 0x40000);
+    mem_mapping_set_exec(&bios_mapping, rom);
+    device_context_restore();
+
+    if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+
+    machine_at_common_init_ex(model, 2);
+
+    device_add(&ide_isa_device);
+
+    device_add(&pc87311_device);
+    device_add(&vl82c113_device); /* The keyboard controller is part of the VL82c113. */
+
+    device_add(&vlsi_scamp_device);
 
     return ret;
 }
@@ -1435,48 +1493,31 @@ machine_at_svc386sx_init(const machine_t *model)
     return ret;
 }
 
-static void p386sx_setup(void);
-
 int
 machine_at_p386sx_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "amibios_jul91", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000f0000, 65536, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
-
-    p386sx_setup();  
-
-    return ret;
-}
-
-
-static void p386sx_setup(void)
-{
-    device_add(&opti283_device);
+	
+	device_add(&opti283_device);
     device_add(&keyboard_at_ami_device);
 	
 	 if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
+
+    return ret;
 }
 
 static const device_config_t p386sx_config[] = {
@@ -1668,50 +1709,33 @@ machine_at_mr1217_init(const machine_t *model)
     return ret;
 }
 
-static void mill_magictronics386_setup(void);
-
 int
 machine_at_mill_magictronics386_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "amibios_milltronics", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000f0000, 65536, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
-
-    mill_magictronics386_setup();  
-
-    return ret;
-}
-
-
-static void mill_magictronics386_setup(void)
-{
-    device_add(&ali1217_device);
+	
+	device_add(&ali1217_device);
     device_add(&keyboard_at_ami_device);
 	
 	 if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
-}
 
+
+    return ret;
+}
 static const device_config_t mill_magictronics386_config[] = {
     // clang-format off
     {
@@ -1874,49 +1898,34 @@ machine_at_pc916sx_init(const machine_t *model)
     return ret;
 }
 
-static void ch386scd_setup(void);
-
 int
 machine_at_ch386scd_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "amibios_sep89", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000f0000, 65536, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
-
-    ch386scd_setup();  
-
-    return ret;
-}
-
-
-static void ch386scd_setup(void)
-{
-    device_add(&intel_82335_device);
+	
+	device_add(&intel_82335_device);
     device_add(&keyboard_at_ami_device);
 	
 	 if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
+	
+
+    return ret;
 }
+
 
 static const device_config_t ch386scd_config[] = {
     // clang-format off
@@ -2014,10 +2023,11 @@ machine_at_d508_init(const machine_t *model)
     machine_at_common_init(model);
 	device_add(&keyboard_at_device);
 	
-	mem_remap_top(384);
 
 	if (fdc_current[0] == FDC_INTERNAL) 
         device_add(&fdc_at_device); 
+	
+	device_add(&intel_82335_device);
 	
 
     return ret;
@@ -2046,49 +2056,33 @@ machine_at_d548_init(const machine_t *model)
     return ret;
 }
 
-static void tandon386sx_setup(void);
-
 int
 machine_at_tandon386sx_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "tandon_v316", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000f0000, 65536, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
-
-    tandon386sx_setup();  
-
-    return ret;
-}
-
-
-static void tandon386sx_setup(void)
-{
-    device_add(&keyboard_at_device);
+	
+	device_add(&keyboard_at_device);
 	
 	mem_remap_top(384);
 	
 	 if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
+ 
+
+    return ret;
 }
 
 static const device_config_t tandon386sx_config[] = {
@@ -2175,7 +2169,6 @@ machine_at_octek386sx_init(const machine_t *model)
     return ret;
 }
 
-#ifdef USE_OLIVETTI
 int
 machine_at_m290_init(const machine_t *model)
 {
@@ -2187,15 +2180,16 @@ machine_at_m290_init(const machine_t *model)
     if (bios_only || !ret)
         return ret;
 
-    machine_at_common_init_ex(model, 4);
-    device_add(&keyboard_at_olivetti_device);
+    machine_at_common_init_ex(model, 6);
+    device_add(&amstrad_megapc_nvr_device);
+    device_add(&olivetti_eva_device);
+
     device_add(&port_6x_olivetti_device);
 
     if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
-
-    device_add(&olivetti_eva_device);
+	
+	device_add(&keyboard_at_olivetti_device);
 
     return ret;
 }
-#endif /* USE_OLIVETTI */

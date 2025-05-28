@@ -424,7 +424,7 @@ machine_at_awo671r_init(const machine_t *model)
     pci_register_slot(0x0A, PCI_CARD_NORMAL,      2, 3, 4, 1);
     pci_register_slot(0x0B, PCI_CARD_NORMAL,      3, 4, 1, 2);
     pci_register_slot(0x0C, PCI_CARD_NORMAL,      4, 1, 2, 3);
-    pci_register_slot(0x0D, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x0D, PCI_CARD_VIDEO,       2, 3, 4, 1);
     pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4);
     device_add(&i440bx_device);
     device_add(&piix4e_device);
@@ -432,9 +432,9 @@ machine_at_awo671r_init(const machine_t *model)
     device_add_inst(&w83977ef_device, 2);
     device_add(&keyboard_ps2_pci_device);
     device_add(&sst_flash_39sf020_device);
-    if (gfxcard[0] == VID_INTERNAL) {
-        device_add(&chips_69000_onboard_device);
-    }
+    
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
     spd_register(SPD_TYPE_SDRAM, 0x3, 256);
 
     return ret;
@@ -644,42 +644,24 @@ machine_at_7sbb_init(const machine_t *model)
     return ret;
 }
 
-static void ms6323_setup(void);
-
 int
 machine_at_ms6323_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "ms6323_apr00", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000c0000, 262144, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init_ex(model, 2);
 
-    ms6323_setup();  
-
-    return ret;
-}
-
-static void ms6323_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
     pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 3, 4);
@@ -698,8 +680,9 @@ static void ms6323_setup(void)
     hwm_values.temperatures[2] = 0;  /* unused */
 
     if (sound_card_current[0] == SOUND_INTERNAL)
-        device_add(&ct5880_onboard_device);
-   
+        device_add(&ct5880_onboard_device);  
+
+    return ret;
 }
 
 static const device_config_t ms6323_config[] = {
@@ -790,42 +773,25 @@ machine_at_m6vct_init(const machine_t *model)
     return ret;
 }
 
-static void ms6318_setup(void);
 
 int
 machine_at_ms6318_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "ms6318_feb01", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000c0000, 262144, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init_ex(model, 2);
 
-    ms6318_setup();  
-
-    return ret;
-}
-
-static void ms6318_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
 	pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4); /* Onboard */
@@ -845,8 +811,9 @@ static void ms6318_setup(void)
     hwm_values.temperatures[2] = 0;  /* unused */
 
     if (sound_card_current[0] == SOUND_INTERNAL)
-        device_add(&ct5880_onboard_device);
-   
+        device_add(&ct5880_onboard_device);  
+
+    return ret;
 }
 
 static const device_config_t ms6318_config[] = {
@@ -919,7 +886,7 @@ machine_at_euro850_init(const machine_t *model)
     device_add(&via_vt82c686a_device); /* fans: CPU1, CPU2; temperatures: CPU, System, unused */
     device_add(&keyboard_ps2_ami_pci_device);
     device_add(ics9xxx_get(ICS9250_18));
-    device_add(&sst_flash_39sf020_device);
+    device_add(&sst_flash_39sf040_device);
     spd_register(SPD_TYPE_SDRAM, 0x7, 1024);
     hwm_values.temperatures[0] += 2; /* CPU offset */
     hwm_values.temperatures[1] += 2; /* System offset */
@@ -928,43 +895,25 @@ machine_at_euro850_init(const machine_t *model)
     return ret;
 }
 
-static void md2000_setup(void);
-
 int
 machine_at_md2000_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "md2000_jul00", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000c0000, 262144, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init_ex(model, 2);
 
-    md2000_setup();  
-
-    return ret;
-}
-
-static void md2000_setup(void)
-{
-    pci_init(PCI_CONFIG_TYPE_1);
+	pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
 	pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4); /* Onboard */
 	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 3, 4); /* Onboard */
@@ -984,7 +933,8 @@ static void md2000_setup(void)
 
     if (sound_card_current[0] == SOUND_INTERNAL)
         device_add(&ct5880_onboard_device);
-   
+
+    return ret;
 }
 
 static const device_config_t md2000_config[] = {
@@ -1031,42 +981,24 @@ const device_t md2000_device = {
     .config        = &md2000_config[0]
 };
 
-static void cuv4xcm_setup(void);
-
 int
 machine_at_cuv4xcm_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "md2001_sep00", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000c0000, 262144, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init_ex(model, 2);
 
-    cuv4xcm_setup();  
-
-    return ret;
-}
-
-static void cuv4xcm_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
 	pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4);
@@ -1086,8 +1018,9 @@ static void cuv4xcm_setup(void)
     hwm_values.temperatures[2] = 0;  /* unused */
 
     if (sound_card_current[0] == SOUND_INTERNAL)
-        device_add(&ct5880_onboard_device);
-   
+        device_add(&ct5880_onboard_device);  
+
+    return ret;
 }
 
 static const device_config_t cuv4xcm_config[] = {

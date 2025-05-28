@@ -150,42 +150,24 @@ machine_at_ms6109_init(const machine_t *model)
     return ret;
 }
 
-static void tahoeii_setup(void);
-
 int
 machine_at_tahoeii_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "tahoe_award", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    tahoeii_setup();  
-
-    return ret;
-}
-
-static void tahoeii_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0); /* Onboard */
 	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4); /* Onboard */
@@ -202,6 +184,8 @@ static void tahoeii_setup(void)
 	device_add(ics9xxx_get(ICS9150_08));
     device_add(&sst_flash_29ee010_device);
 	device_add(&ioapic_device);
+
+    return ret;
 }
 
 static const device_config_t tahoeii_config[] = {
@@ -277,6 +261,41 @@ machine_at_lx6_init(const machine_t *model)
     device_add(&w83977tf_device);
     device_add(&sst_flash_29ee010_device);
     spd_register(SPD_TYPE_SDRAM, 0xF, 256);
+
+    return ret;
+}
+
+int
+machine_at_optiplexgxa_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/optiplexgxa/DELL.ROM",
+                           0x000c0000, 262144, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
+    pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4);
+    pci_register_slot(0x11, PCI_CARD_NETWORK,     4, 0, 0, 0);
+    pci_register_slot(0x0E, PCI_CARD_NORMAL,      3, 4, 2, 1);
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,      2, 1, 3, 4);
+    pci_register_slot(0x0F, PCI_CARD_BRIDGE,      1, 2, 3, 4);
+
+    if (sound_card_current[0] == SOUND_INTERNAL)
+        device_add(machine_get_snd_device(machine));
+
+    device_add(&i440lx_device);
+    device_add(&piix4_device);
+    device_add(&dec21152_device);
+    device_add_params(&pc87307_device, (void *) (PCX730X_PHOENIX_42 | PCX7307_PC87307));
+    device_add(&intel_flash_bxt_device);
+    spd_register(SPD_TYPE_SDRAM, 0x7, 256);
 
     return ret;
 }
@@ -375,42 +394,25 @@ machine_at_ms6111_init(const machine_t *model)
     return ret;
 }
 
-static void tigercat_setup(void);
 
 int
 machine_at_tigercat_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "tigercat_oct97", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000c0000, 262144, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init_ex(model, 2);
 
-    tigercat_setup();  
-
-    return ret;
-}
-
-static void tigercat_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0); /* Onboard */
 	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4); /* Onboard */
@@ -430,6 +432,8 @@ static void tigercat_setup(void)
     hwm_values.fans[1]         = 3500;    /* unused */
     hwm_values.fans[2]         = 3300;    /* unused */
     hwm_values.temperatures[1] += 4; /* CPU offset */
+
+    return ret;
 }
 
 static const device_config_t tigercat_config[] = {
@@ -495,8 +499,7 @@ machine_at_legendv_init(const machine_t *model)
     pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4); /* Onboard */
     device_add(&i440lx_device);
     device_add(&piix4_device);
-    device_add(&keyboard_ps2_ami_pci_device);
-    device_add(&pc87309_device);
+    device_add_params(&pc87309_device, (void *) (PCX730X_PHOENIX_42 | PC87309_PC87309));
     device_add(&winbond_flash_w29c020_device);
     spd_register(SPD_TYPE_SDRAM, 0xF, 256);
     device_add(&lm78_device);     /* fans: CPU, unused, unused; temperatures: unused, CPU, unused */
@@ -530,8 +533,7 @@ machine_at_kl97a_init(const machine_t *model)
 	pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4); /* Onboard */
     device_add(&i440lx_device);
     device_add(&piix4_device);
-    device_add(&keyboard_ps2_ami_pci_device);
-    device_add(&pc87309_device);
+    device_add_params(&pc87309_device, (void *) (PCX730X_PHOENIX_42 | PC87309_PC87309));
     device_add(&winbond_flash_w29c020_device);
 	
 	if (gfxcard[0] == VID_INTERNAL)
@@ -573,8 +575,7 @@ machine_at_p2l98xv_init(const machine_t *model)
 	pci_register_slot(0x0E, PCI_CARD_VIDEO,       1, 0, 0, 0); /* Onboard */
     device_add(&i440lx_device);
     device_add(&piix4_device);
-    device_add(&keyboard_ps2_ami_pci_device);
-    device_add(&pc87309_device);
+    device_add_params(&pc87309_device, (void *) (PCX730X_PHOENIX_42 | PC87309_PC87309));
     device_add(&winbond_flash_w29c020_device);
 	
 	if (gfxcard[0] == VID_INTERNAL)
@@ -663,6 +664,34 @@ machine_at_ma30d_init(const machine_t *model)
     return ret;
 }
 
+int
+machine_at_optiplexe1_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/optiplexe1/DELL.ROM",
+                           0x000c0000, 262144, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0); /* Onboard */
+	pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4); /* Onboard */
+	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4); /* Onboard */
+	pci_register_slot(0x0D, PCI_CARD_NORMAL,      2, 1, 3, 4); /* Slot 01 */
+	pci_register_slot(0x0E, PCI_CARD_NORMAL, 	  3, 4, 2, 1); /* Slot 02 */
+	pci_register_slot(0x11, PCI_CARD_NORMAL, 	  4, 0, 0, 0); /* Onboard ATi Rage IIc AGP */
+    device_add(&i440ex_device);
+    device_add(&piix4_device);
+	device_add(ics9xxx_get(ICS9150_08));
+    device_add_params(&pc87309_device, (void *) (PCX730X_PHOENIX_42 | PC87309_PC87309));
+    device_add(&intel_flash_bxt_device);
+    spd_register(SPD_TYPE_SDRAM, 0x03, 256);
+    return ret;
+}
 
 int
 machine_at_vl603sni_init(const machine_t *model)
@@ -1059,7 +1088,7 @@ machine_at_686bx_init(const machine_t *model)
     pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4);
     device_add(&i440bx_device);
     device_add(&piix4e_device);
-    device_add(&keyboard_ps2_acer_pci_device);
+    device_add(&keyboard_ps2_ami_pci_device);
     device_add(&w83977f_device);
     device_add(&sst_flash_29ee020_device);
     spd_register(SPD_TYPE_SDRAM, 0xF, 256);
@@ -1214,8 +1243,7 @@ machine_at_s1846_init(const machine_t *model)
     pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4);
     device_add(&i440bx_device);
     device_add(&piix4e_device);
-    device_add(&pc87309_device);
-    device_add(&keyboard_ps2_ami_pci_device);
+	device_add_params(&pc87309_device, (void *) (PCX730X_AMI | PC87309_PC87309));
     device_add(&intel_flash_bxt_device);
     spd_register(SPD_TYPE_SDRAM, 0x7, 256);
 
@@ -1227,42 +1255,24 @@ machine_at_s1846_init(const machine_t *model)
     return ret;
 }
 
-static void d1161_setup(void);
-
 int
 machine_at_d1161_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "d1161", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000c0000, 262144, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init_ex(model, 2);
 
-    d1161_setup();  
-
-    return ret;
-}
-
-static void d1161_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0); /* Onboard */
 	pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 0, 0); /* Onboard */
@@ -1274,8 +1284,7 @@ static void d1161_setup(void)
 	pci_register_slot(0x14, PCI_CARD_NORMAL,      1, 2, 3, 4); /* Slot 05 */
     device_add(&i440bx_device);
     device_add(&piix4e_device);
-    device_add(&pc87309_device);
-    device_add(&keyboard_ps2_ami_pci_device);
+    device_add_params(&pc87309_device, (void *) (PCX730X_AMI | PC87309_PC87309));
 	device_add(ics9xxx_get(ICS9248_39));
     device_add(&sst_flash_29ee020_device);
 	device_add(&ioapic_device);
@@ -1286,8 +1295,11 @@ static void d1161_setup(void)
     hwm_values.voltages[1]     = 1500; /* IN1 (unknown purpose, assumed Vtt) */
     hwm_values.fans[1]         = 3500;    /* unused */
     hwm_values.fans[2]         = 3300;    /* unused */
-    hwm_values.temperatures[1] += 4; /* CPU offset */
+    hwm_values.temperatures[1] += 4; /* CPU offset */ 
+
+    return ret;
 }
+
 
 static const device_config_t d1161_config[] = {
     // clang-format off
@@ -1355,8 +1367,7 @@ machine_at_s1833d_init(const machine_t *model)
     pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 0, 0);
     device_add(&i440bx_device);
     device_add(&piix4e_device);
-    device_add(&pc87309_device);
-    device_add(&keyboard_ps2_ami_pci_device);
+    device_add_params(&pc87309_device, (void *) (PCX730X_AMI | PC87309_PC87309));
 	device_add(ics9xxx_get(ICS9248_39));
     device_add(&sst_flash_29ee020_device);
 	device_add(&ioapic_device);
@@ -1690,42 +1701,24 @@ machine_at_gt694va_init(const machine_t *model)
     return ret;
 }
 
-static void m6vbe_setup(void);
-
 int
 machine_at_m6vbe_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "tbird", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000c0000, 262144, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init_ex(model, 2);
 
-    m6vbe_setup();  
-
-    return ret;
-}
-
-static void m6vbe_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
 	pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4); /* Onboard */
@@ -1739,7 +1732,9 @@ static void m6vbe_setup(void)
     device_add(&fdc37m60x_device);
     device_add(&keyboard_ps2_ami_pci_device);
     device_add(&sst_flash_39sf020_device);
-    spd_register(SPD_TYPE_SDRAM, 0x7, 384);
+    spd_register(SPD_TYPE_SDRAM, 0x7, 384); 
+
+    return ret;
 }
 
 static const device_config_t m6vbe_config[] = {

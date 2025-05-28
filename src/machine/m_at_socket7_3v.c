@@ -228,56 +228,75 @@ machine_at_delloptigsplus_init(const machine_t *model)
 
     pci_init(PCI_CONFIG_TYPE_1);
 	pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
-	pci_register_slot(0x0D, PCI_CARD_NORMAL,      4, 1, 3, 2);
-	pci_register_slot(0x0E, PCI_CARD_NORMAL,      3, 4, 2, 1); /* Onboard */
-	pci_register_slot(0x0F, PCI_CARD_NORMAL,      1, 3, 2, 4); /* Slot 01 */
 	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0); /* Onboard */
-    device_add(&keyboard_ps2_ami_pci_device);
+	pci_register_slot(0x0D, PCI_CARD_NORMAL,      4, 1, 3, 2); /* Slot 02 */
+	pci_register_slot(0x0E, PCI_CARD_NORMAL,      3, 4, 2, 1); /* Slot 01 */
+	pci_register_slot(0x0F, PCI_CARD_NORMAL,      1, 3, 2, 4); /* Slot 03 */
+	pci_register_slot(0x10, PCI_CARD_VIDEO, 	  0, 0, 0, 0); /* Onboard */
     device_add(&i430fx_device);
     device_add(&piix_device);
-    device_add(&pc87307_device);
+	device_add(&dell_jumper_device);
+    device_add_params(&pc87307_device, (void *) (PCX730X_PHOENIX_42 | PCX7307_PC87307));
     device_add(&intel_flash_bxt_device);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
 
     return ret;
 }
 
-static void ga586atep_setup(void);
+int
+machine_at_delloptigmplus_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/delloptigmplus/delloptigmplus.rom",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+	pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0); /* Onboard */
+	pci_register_slot(0x0C, PCI_CARD_NORMAL,      4, 1, 3, 2); /* Slot 01 */
+	pci_register_slot(0x0D, PCI_CARD_NORMAL,      3, 4, 2, 1); /* Slot 02 */
+	pci_register_slot(0x10, PCI_CARD_VIDEO,       1, 3, 2, 4); /* Onboard  */
+    device_add(&i430fx_device);
+    device_add(&piix_device);
+	device_add(&dell_jumper_device);
+    device_add_params(&pc87307_device, (void *) (PCX730X_PHOENIX_42 | PCX7307_PC87307));
+    device_add(&intel_flash_bxt_device);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+
+    if (sound_card_current[0] == SOUND_INTERNAL)
+        machine_snd = device_add(machine_get_snd_device(machine));
+
+    return ret;
+}
 
 int
 machine_at_ga586atep_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "ga586atep_may98", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    ga586atep_setup();  
-
-    return ret;
-}
-
-
-static void ga586atep_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
 	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
@@ -290,9 +309,11 @@ static void ga586atep_setup(void)
     device_add(&i430fx_device);
     device_add(&piix_device);
     device_add(&fdc37c665_device);
-    device_add(&sst_flash_29ee010_device);
-   
+    device_add(&sst_flash_29ee010_device); 
+
+    return ret;
 }
+
 
 static const device_config_t ga586atep_config[] = {
     // clang-format off
@@ -376,43 +397,24 @@ machine_at_pwrmatep150166_init(const machine_t *model)
     return ret;
 }
 
-static void sy5tc_setup(void);
-
 int
 machine_at_sy5tc_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "5tc", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    sy5tc_setup();  
-
-    return ret;
-}
-
-
-static void sy5tc_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
 	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
@@ -426,8 +428,10 @@ static void sy5tc_setup(void)
     device_add(&piix_no_mirq_device);
     device_add(&um8669f_device);
     device_add(&sst_flash_29ee010_device);
-   
+
+    return ret;
 }
+
 
 static const device_config_t sy5tc_config[] = {
     // clang-format off
@@ -481,44 +485,24 @@ const device_t sy5tc_device = {
     .config        = &sy5tc_config[0]
 };
 
-
-static void sy5td2_setup(void);
-
 int
 machine_at_sy5td2_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "5td2", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    sy5td2_setup();  
-
-    return ret;
-}
-
-
-static void sy5td2_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
 	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
@@ -532,7 +516,8 @@ static void sy5td2_setup(void)
     device_add(&piix_no_mirq_device);
     device_add(&pc87332_398_ide_device);
     device_add(&sst_flash_29ee010_device);
-   
+
+    return ret;
 }
 
 static const device_config_t sy5td2_config[] = {
@@ -1026,44 +1011,25 @@ machine_at_8500tuc_init(const machine_t *model)
     return ret;
 }
 
-static void d943_setup(void);
-
 int
 machine_at_d943_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "d943", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 262144, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init_ex(model, 2);
 	device_add(&amstrad_megapc_nvr_device);
 
-    d943_setup();  
-
-    return ret;
-}
-
-
-static void d943_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 	  0, 0, 0, 0);
 	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 	  0, 0, 0, 0);
@@ -1084,8 +1050,9 @@ static void d943_setup(void)
         device_add(&gd5436_onboard_pci_device);
 
     if (sound_card_current[0] == SOUND_INTERNAL)
-        device_add(&sb_vibra16s_onboard_device);
-   
+        device_add(&sb_vibra16s_onboard_device); 
+
+    return ret;
 }
 
 static const device_config_t d943_config[] = {
@@ -1254,43 +1221,25 @@ machine_at_ap5s_init(const machine_t *model)
     return ret;
 }
 
-static void ms5118_setup(void);
-
 int
 machine_at_ms5118_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "ms5118_sep95", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init_ex(model, 2);
 
-    ms5118_setup();  
-
-    return ret;
-}
-
-static void ms5118_setup(void)
-{
-	pci_init(PCI_CONFIG_TYPE_1 | FLAG_TRC_CONTROLS_CPURST);
+    pci_init(PCI_CONFIG_TYPE_1 | FLAG_TRC_CONTROLS_CPURST);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
     pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
     pci_register_slot(0x10, PCI_CARD_NORMAL,      1, 3, 2, 4);
@@ -1300,7 +1249,9 @@ static void ms5118_setup(void)
     device_add(&sis_5511_device);
     device_add(&keyboard_ps2_ami_device);
     device_add(&w83787f_ide_device);
-    device_add(&winbond_flash_w29c010_device);
+    device_add(&winbond_flash_w29c010_device); 
+
+    return ret;
 }
 
 static const device_config_t ms5118_config[] = {
@@ -1438,13 +1389,58 @@ machine_at_vectra54_init(const machine_t *model)
     return ret;
 }
 
+static const device_config_t c5sbm2_config[] = {
+    // clang-format off
+    {
+        .name = "bios",
+        .description = "BIOS Version",
+        .type = CONFIG_BIOS,
+        .default_string = "5sbm2",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 },
+        .bios = {
+            { .name = "4.50GP (07/17/1995)", .internal_name = "5sbm2", .bios_type = BIOS_NORMAL, 
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/5sbm2/5SBM0717.BIN", "" } },
+            { .name = "4.50PG (03/21/1996)", .internal_name = "5sbm2_450pg", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/5sbm2/5SBM0326.BIN", "" } },
+            { .name = "4.51PG (03/15/2000 Unicore Upgrade)", .internal_name = "5sbm2_451pg", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/5sbm2/2A5ICC3A.BIN", "" } },
+            { .files_no = 0 }
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+const device_t c5sbm2_device = {
+    .name          = "Chaintech 5SBM/5SBM2 (M103)",
+    .internal_name = "5sbm2_device",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = c5sbm2_config
+};
+
 int
 machine_at_5sbm2_init(const machine_t *model)
 {
-    int ret;
+    int ret = 0;
+    const char* fn;
 
-    ret = bios_load_linear("roms/machines/5sbm2/5SBM0717.BIN",
-                           0x000e0000, 131072, 0);
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 0);
+    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
+    device_context_restore();
 
     if (bios_only || !ret)
         return ret;

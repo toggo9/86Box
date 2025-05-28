@@ -82,44 +82,25 @@ machine_at_dellplato_init(const machine_t *model)
     return ret;
 }
 
-static void d842_setup(void);
-
 int
 machine_at_d842_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "d842", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    d842_setup();  
-
-    return ret;
-}
-
-
-static void d842_setup(void)
-{
-	device_add(&ide_rz1000_pci_device);
+    device_add(&ide_rz1000_pci_device);
     pci_init(PCI_CONFIG_TYPE_2 | PCI_NO_IRQ_STEERING);
 	pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
 	pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0); /* Onboard */
@@ -135,8 +116,9 @@ static void d842_setup(void)
     device_add(&apm_pci_device);
 	
 	if (gfxcard[0] == VID_INTERNAL)
-        device_add(&et4000w32p_revcd_onboard_pci_device);
-   
+        device_add(&et4000w32p_revcd_onboard_pci_device);  
+
+    return ret;
 }
 
 static const device_config_t d842_config[] = {
@@ -235,6 +217,86 @@ machine_at_p54np4_init(const machine_t *model)
 }
 
 int
+machine_at_pn2000_init(const machine_t *model)
+
+{
+    int ret = 0;
+    const char* fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
+    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
+    device_context_restore();
+	
+	machine_at_common_init(model);
+
+    device_add(&ide_cmd640_pci_device);
+	pci_init(PCI_CONFIG_TYPE_2 | PCI_NO_IRQ_STEERING);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+	pci_register_slot(0x01, PCI_CARD_IDE, 		  0, 0, 0, 0);
+    pci_register_slot(0x06, PCI_CARD_NORMAL,      4, 1, 2, 3); /* 06 = Slot 1 */
+    pci_register_slot(0x05, PCI_CARD_NORMAL,      3, 2, 4, 1); /* 05 = Slot 2 */
+    pci_register_slot(0x04, PCI_CARD_NORMAL,      2, 3, 4, 1); /* 04 = Slot 3 */
+    pci_register_slot(0x03, PCI_CARD_NORMAL,      1, 4, 3, 2); /* 03 = Slot 4 */
+    pci_register_slot(0x02, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+
+    device_add(&keyboard_ps2_pci_device);
+    device_add(&i430nx_device);
+    device_add(&sio_zb_device);
+    device_add(&pc87332_device);
+	device_add(&intel_flash_bxt_device);
+    device_add(&apm_pci_device);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(&et4000w32p_revcd_onboard_pci_device);
+
+    return ret;
+}
+
+
+static const device_config_t pn2000_config[] = {
+    // clang-format off
+    {
+        .name = "bios_versions",
+        .description = "BIOS Versions",
+        .type = CONFIG_BIOS,
+        .default_string = "pn2000_dec94",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 }, /*W1*/
+        .bios = {
+            { .name = "Core Version 4.50G Version 1.54 (12/14/1994)", .internal_name = "pn2000_dec94", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/pn2000/pn2000_dec94.bin", "" } },
+            { .name = "Core Version 4.50G Version 1.56 (03/27/1995)", .internal_name = "pn2000_mar95", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/pn2000/pn2000_mar95.bin", "" } },	  
+            
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+
+
+const device_t pn2000_device = {
+    .name          = "FIC PN-2000",
+    .internal_name = "pn2000",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = &pn2000_config[0]
+};
+
+int
 machine_at_586ip_init(const machine_t *model)
 {
     int ret;
@@ -258,23 +320,23 @@ machine_at_m54pi_init(const machine_t *model)
     int ret;
 
     ret = bios_load_linear("roms/machines/m54pi/BIOS.N19",
-                           0x000e0000, 131072, 0);
+                           0x000c0000, 262144, 0);
 
     if (bios_only || !ret)
         return ret;
     
     machine_at_common_init(model);
 
-    pci_init(PCI_CONFIG_TYPE_2 | PCI_NO_IRQ_STEERING);
+    pci_init(PCI_CONFIG_TYPE_1 | PCI_NO_IRQ_STEERING);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
     pci_register_slot(0x02, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
 	pci_register_slot(0x0D, PCI_CARD_NORMAL,      1, 3, 2, 4); /* Slot 01 */
     pci_register_slot(0x0E, PCI_CARD_NORMAL,      2, 3, 4, 1); /* Slot 02 */
 	pci_register_slot(0x0F, PCI_CARD_NORMAL,      2, 1, 3, 4); /* Slot 03 */
-    device_add(&keyboard_ps2_intel_ami_pci_device);
+    device_add(&keyboard_ps2_ami_pci_device);
     device_add(&i430nx_device);
     device_add(&sio_zb_device);
-    device_add(&fdc37c665_device);
+    device_add(&pc87332_398_device);
     device_add(&ide_cmd640_pci_device);
     device_add(&intel_flash_bxt_device);
 
@@ -312,6 +374,35 @@ machine_at_tek932_init(const machine_t *model)
 }
 
 int
+machine_at_coralmax3_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/coralmax3/003102.BIN",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+    
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_2 | PCI_NO_IRQ_STEERING);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x02, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+	pci_register_slot(0x0D, PCI_CARD_NORMAL,      1, 3, 2, 4); /* Slot 01 */
+    pci_register_slot(0x0E, PCI_CARD_NORMAL,      2, 3, 4, 1); /* Slot 02 */
+	pci_register_slot(0x0F, PCI_CARD_NORMAL,      2, 1, 3, 4); /* Slot 03 */
+    device_add(&keyboard_ps2_intel_ami_pci_device);
+    device_add(&i430nx_device);
+    device_add(&sio_zb_device);
+    device_add(&fdc37c665_device);
+    device_add(&ide_rz1000_pci_device);
+    device_add(&intel_flash_bxt_device);
+
+    return ret;
+}
+
+int
 machine_at_acerv30_init(const machine_t *model)
 {
     int ret;
@@ -342,6 +433,38 @@ machine_at_acerv30_init(const machine_t *model)
 }
 
 int
+machine_at_acerv30l_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/acerv30l/V30L_1F4.BIN",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x09, PCI_CARD_NORMAL,      0, 0, 0, 0);
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      4, 1, 2, 3);
+    pci_register_slot(0x12, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x13, PCI_CARD_NORMAL,      2, 3, 4, 1);
+	pci_register_slot(0x14, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    device_add(&i430fx_device);
+    device_add(&piix_device);
+    device_add(&keyboard_ps2_acer_pci_device);
+    device_add(&fdc37c665_device);
+
+    device_add(&sst_flash_29ee010_device);
+
+    return ret;
+}
+
+
+int
 machine_at_apollo_init(const machine_t *model)
 {
     int ret;
@@ -367,6 +490,194 @@ machine_at_apollo_init(const machine_t *model)
     device_add(&piix_device);
     device_add(&pc87332_398_device);
     device_add(&intel_flash_bxt_device);
+
+    return ret;
+}
+
+static const device_config_t optiglplus_config[] = {
+    // clang-format off
+    {
+        .name = "bios",
+        .description = "BIOS Version",
+        .type = CONFIG_BIOS,
+        .default_string = "optiglplus_sep95",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 },
+        .bios = {
+            { .name = "Version A02 (09/20/1995)", .internal_name = "optiglplus_sep95", .bios_type = BIOS_NORMAL, 
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/optiglplus/optiglplus_sep95.rom", "" } },
+            { .name = "Version A03 (10/03/1995, released 10/19/1995)", .internal_name = "optiglplus_oct95", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/optiglplus/optiglplus_oct95.rom", "" } },
+            { .name = "Version A06 (10/30/1995, released 11/03/1995)", .internal_name = "optiglplus_nov95", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/optiglplus/optiglplus_nov95.rom", "" } },
+            { .files_no = 0 }
+		},
+	},	
+    {
+        .name = "dell_model_select",
+        .description = "Machine type",
+        .type = CONFIG_SELECTION,
+        .default_int = 2,  // z. B. GXMT als Standard
+        .selection = {
+            { .description = "GL+",  .value = 0 },
+            { .description = "GMT",  .value = 1 },
+            { .description = "GXMT", .value = 2 },
+            { .description = "" }  // Terminator
+        }
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+const device_t optiglplus_device = {
+    .name          = "Dell OptiPlex GL/GL+",
+    .internal_name = "optiglplus",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = optiglplus_config
+};
+
+int
+machine_at_optiglplus_init(const machine_t *model)
+{
+    int ret = 0;
+    const char* fn;
+	int model_select;
+	model_select = machine_get_config_int("dell_model_select");
+
+switch (model_select) {
+    case 0:
+        device_add(&dell_jumper_gl_device);
+        break;
+    case 1:
+        device_add(&dell_jumper_gmt_device);
+        break;
+    case 2:
+        device_add(&dell_jumper_gxmt_device);
+        break;
+}
+	
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 0);
+    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
+    device_context_restore();
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x0C, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,      3, 4, 2, 1);
+    pci_register_slot(0x10, PCI_CARD_VIDEO,       0, 0, 0, 0);
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&i430fx_device);
+    device_add(&piix_device);
+    device_add(&pc87332_398_device);
+    device_add(&intel_flash_bxt_device);
+	
+	 if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+
+    return ret;
+}
+
+static const device_config_t optigxlgxm_config[] = {
+    // clang-format off
+    {
+        .name = "bios",
+        .description = "BIOS Version",
+        .type = CONFIG_BIOS,
+        .default_string = "optigxlgxm_dec95",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 },
+        .bios = {
+            { .name = "Version A10 (12/28/1995)", .internal_name = "optigxlgxm_dec95", .bios_type = BIOS_NORMAL, 
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/optigxlgxm/optigxlgxm_dec95.rom", "" } },
+            { .name = "Version A11 (01/12/1996)", .internal_name = "optigxlgxm_jan96", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/optigxlgxm/optigxlgxm_jan96.rom", "" } },
+            { .name = "Version A15 (02/15/1996)", .internal_name = "optigxlgxm_feb96", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/optigxlgxm/optigxlgxm_feb96.rom", "" } },
+			{ .name = "Version A18 (07/29/1996)", .internal_name = "optigxlgxm_jul96", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/optigxlgxm/optigxlgxm_jul96.rom", "" } },
+			{ .name = "Version A19 (09/19/1996)", .internal_name = "optigxlgxm_sep96", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/optigxlgxm/optigxlgxm_sep96.rom", "" } },
+            { .files_no = 0 }
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+const device_t optigxlgxm_device = {
+    .name          = "Dell OptiPlex GXL/GXM",
+    .internal_name = "optigxlgxm",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = optigxlgxm_config
+};
+
+int
+machine_at_optigxlgxm_init(const machine_t *model)
+{
+    int ret = 0;
+    const char* fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 0);
+    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
+    device_context_restore();
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+	device_add(&amstrad_megapc_nvr_device);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x0C, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,      3, 4, 2, 1);
+    pci_register_slot(0x10, PCI_CARD_VIDEO,       0, 0, 0, 0);
+    device_add(&keyboard_ps2_phoenix_pci_device);
+    device_add(&i430fx_device);
+    device_add(&piix_device);
+	device_add(&dell_jumper_device);
+    device_add(&pc87332_device);
+    device_add(&intel_flash_bxt_device);
+	
+	 if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+
+    if (sound_card_current[0] == SOUND_INTERNAL)
+        machine_snd = device_add(machine_get_snd_device(machine));
 
     return ret;
 }
@@ -435,6 +746,73 @@ machine_at_zappa_init(const machine_t *model)
 }
 
 static void
+machine_at_morrison32_hp_gpio_init(void)
+{
+    uint32_t gpio = 0xffffe6ff;
+
+    /* Register 0x0079: */
+    /* Bit 7: 0 = Clear password, 1 = Keep password. */
+    /* Bit 6: 0 = NVRAM cleared by jumper, 1 = NVRAM normal. */
+    /* Bit 5: 0 = CMOS Setup disabled, 1 = CMOS Setup enabled. */
+    /* Bit 4: External CPU clock (Switch 8). */
+    /* Bit 3: External CPU clock (Switch 7). */
+    /*        50 MHz: Switch 7 = Off, Switch 8 = Off. */
+    /*        60 MHz: Switch 7 = On, Switch 8 = Off. */
+    /*        66 MHz: Switch 7 = Off, Switch 8 = On. */
+    /* Bit 2: No Connect. */
+    /* Bit 1: No Connect. */
+    /* Bit 0: 2x multiplier, 1 = 1.5x multiplier (Switch 6). */
+    /* NOTE: A bit is read as 1 if switch is off, and as 0 if switch is on. */
+    if (cpu_busspeed <= 50000000)
+        gpio |= 0xffff00ff;
+    else if ((cpu_busspeed > 50000000) && (cpu_busspeed <= 60000000))
+        gpio |= 0xffff08ff;
+    else if (cpu_busspeed > 60000000)
+        gpio |= 0xffff10ff;
+
+    if (cpu_dmulti <= 1.5)
+        gpio |= 0xffff01ff;
+    else
+        gpio |= 0xffff00ff;
+
+    machine_set_gpio_default(gpio);
+}
+
+int
+machine_at_morrison32_hp_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear_combined("roms/machines/morrison32_hp/1011BT0L.BIO",
+									"roms/machines/morrison32_hp/1011BT0L.BI1",
+									0x20000, 128);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+    machine_at_morrison32_hp_gpio_init();
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x08, PCI_CARD_VIDEO,       4, 0, 0, 0);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      1, 3, 2, 4);
+    pci_register_slot(0x13, PCI_CARD_NORMAL, 	  2, 1, 3, 4);
+    device_add(&keyboard_ps2_intel_ami_pci_device);
+    device_add(&i430fx_device);
+    device_add(&piix_device);
+    device_add(&pc87306_device);
+    device_add(&intel_flash_bxt_ami_device);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+
+    return ret;
+}
+
+static void
 machine_at_advt8100p_gpio_init(void)
 {
     uint32_t gpio = 0xffffe6ff;
@@ -496,7 +874,7 @@ machine_at_advt8100p_init(const machine_t *model)
     device_add(&intel_flash_bxt_ami_device);
 	
 	if (gfxcard[0] == VID_INTERNAL)
-        device_add(&s3_phoenix_trio32_onboard_pci_device);
+        device_add(machine_get_vid_device(machine));
 
     return ret;
 }
@@ -539,8 +917,9 @@ machine_at_morrison64_init(const machine_t *model)
 {
     int ret;
 
-    ret = bios_load_linear("roms/machines/morrison64/intel-62e972703c2a1699749636.bin",
-                            0x000e0000, 131072, 0);
+   ret = bios_load_linear_combined("roms/machines/morrison64/1006CA2L.BIO",
+								   "roms/machines/morrison64/1006CA2L.BI1",
+									0x20000, 128);
 
     if (bios_only || !ret)
         return ret;
@@ -562,7 +941,107 @@ machine_at_morrison64_init(const machine_t *model)
     device_add(&intel_flash_bxt_ami_device);
 	
 	if (gfxcard[0] == VID_INTERNAL)
-        device_add(&s3_phoenix_trio64_onboard_pci_device);
+        device_add(machine_get_vid_device(machine));
+
+    return ret;
+}
+
+static void
+machine_at_morrisonmc_gpio_init(void)
+{
+    uint32_t gpio = 0xffffe6ff;
+
+    /* Register 0x0079: */
+    /* Bit 7: 0 = Clear password, 1 = Keep password. */
+    /* Bit 6: 0 = NVRAM cleared by jumper, 1 = NVRAM normal. */
+    /* Bit 5: 0 = CMOS Setup disabled, 1 = CMOS Setup enabled. */
+    /* Bit 4: External CPU clock (Switch 8). */
+    /* Bit 3: External CPU clock (Switch 7). */
+    /*        50 MHz: Switch 7 = Off, Switch 8 = Off. */
+    /*        60 MHz: Switch 7 = On, Switch 8 = Off. */
+    /*        66 MHz: Switch 7 = Off, Switch 8 = On. */
+    /* Bit 2: No Connect. */
+    /* Bit 1: No Connect. */
+    /* Bit 0: 2x multiplier, 1 = 1.5x multiplier (Switch 6). */
+    /* NOTE: A bit is read as 1 if switch is off, and as 0 if switch is on. */
+    if (cpu_busspeed <= 50000000)
+        gpio |= 0xffff00ff;
+    else if ((cpu_busspeed > 50000000) && (cpu_busspeed <= 60000000))
+        gpio |= 0xffff08ff;
+    else if (cpu_busspeed > 60000000)
+        gpio |= 0xffff10ff;
+
+    if (cpu_dmulti <= 1.5)
+        gpio |= 0xffff01ff;
+    else
+        gpio |= 0xffff00ff;
+
+    machine_set_gpio_default(gpio);
+}
+
+int
+machine_at_morrisonmc_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear_combined("roms/machines/morrisonmc/1002CH0L.BIO",
+									"roms/machines/morrisonmc/1002CH0L.BI1",
+									0x20000, 128);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+    machine_at_morrisonmc_gpio_init();
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x08, PCI_CARD_VIDEO,       4, 0, 0, 0);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      1, 3, 2, 4);
+    pci_register_slot(0x13, PCI_CARD_NORMAL, 	  2, 1, 3, 4);
+    device_add(&keyboard_ps2_intel_ami_pci_device);
+    device_add(&i430fx_device);
+    device_add(&piix_device);
+    device_add(&pc87306_device);
+    device_add(&intel_flash_bxt_ami_device);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+
+    return ret;
+}
+
+int
+machine_at_pc330_65x6_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/pc330_65x6/intel.bin",
+                            0x000c0000, 262144, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+    machine_at_morrison64_gpio_init();
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x08, PCI_CARD_VIDEO,       4, 0, 0, 0);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      1, 3, 2, 4);
+    pci_register_slot(0x13, PCI_CARD_NORMAL, 	  2, 1, 3, 4);
+    device_add(&keyboard_ps2_intel_ami_pci_device);
+    device_add(&i430fx_device);
+    device_add(&piix_device);
+    device_add(&pc87306_device);
+    device_add(&intel_flash_bxt_ami_device);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
 
     return ret;
 }
@@ -716,44 +1195,26 @@ machine_at_hawk_init(const machine_t *model)
     return ret;
 }
 
-static void d858_setup(void);
 
 int
 machine_at_d858_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "d858", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init_ex(model, 2);
 	device_add(&amstrad_megapc_nvr_device);
 
-    d858_setup();  
-
-    return ret;
-}
-
-
-static void d858_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
 	pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
@@ -768,9 +1229,11 @@ static void d858_setup(void)
 	
 	
 	if (sound_card_current[0] == SOUND_INTERNAL)
-        device_add(&sb_vibra16s_onboard_device);
-   
+        device_add(&sb_vibra16s_onboard_device); 
+
+    return ret;
 }
+
 
 static const device_config_t d858_config[] = {
     // clang-format off
@@ -1209,43 +1672,24 @@ machine_at_mb8500urc_init(const machine_t *model)
     return ret;
 }
 
-static void presario7100_setup(void);
-
 int
 machine_at_presario7100_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "presario7100_oct95", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    presario7100_setup();  
-
-    return ret;
-}
-
-
-static void presario7100_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
 	pci_register_slot(0x0C, PCI_CARD_NORMAL,      1, 2, 3, 4); /* Slot 01 */
@@ -1262,8 +1706,9 @@ static void presario7100_setup(void)
         device_add(&s3_phoenix_trio64_onboard_pci_device);
 	
 	if (sound_card_current[0] == SOUND_INTERNAL)
-        device_add(&ess_1688_device);
-   
+        device_add(&ess_1688_device);  
+
+    return ret;
 }
 
 static const device_config_t presario7100_config[] = {
@@ -1304,43 +1749,24 @@ const device_t presario7100_device = {
     .config        = &presario7100_config[0]
 };
 
-static void ga586am_setup(void);
-
 int
 machine_at_ga586am_init(const machine_t *model)
 
 {
-    int ret;
-    const char *fn;
+    int ret = 0;
+    const char* fn;
 
-    if (!device_available(model->device)) {
-        return 0;
-    }
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
 
     device_context(model->device);
-    fn = device_get_bios_file(model->device, device_get_config_bios("bios_versions"), 0);
-
-    if (!fn) {
-        fn = device_get_bios_file(model->device, "ga586am_sept95", 0);
-    }
-
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
     ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
     device_context_restore();
-
-    if (bios_only || !ret) {
-        return ret;
-    }
 	
 	machine_at_common_init(model);
 
-    ga586am_setup();  
-
-    return ret;
-}
-
-
-static void ga586am_setup(void)
-{
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
 	pci_register_slot(0x12, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
@@ -1353,9 +1779,8 @@ static void ga586am_setup(void)
     device_add(&sst_flash_29ee010_device);
     device_add(&keyboard_ps2_ami_pci_device);
     device_add(&um8663af_device);
-	
-	
-   
+
+    return ret;
 }
 
 static const device_config_t ga586am_config[] = {
