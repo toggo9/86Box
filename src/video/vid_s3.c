@@ -1313,7 +1313,7 @@ s3_accel_out_fifo(s3_t *s3, uint16_t port, uint8_t val)
         case 0xb148:
         case 0xb2e8:
             s3_log("[%04X:%08X] OUT PORTB=%04x, val=%02x, CMD=%04x, C(%d,%d).\n", CS, cpu_state.pc, port, val, s3->accel.cmd, s3->accel.cur_x, s3->accel.cur_y);
-            if (s3->accel.multifunc[0xe] & 0x100) {
+            if ((s3->accel.multifunc[0xe] & 0x100) || (s3->chip >= S3_VISION964)) {
                 s3->accel.b2e8_pix = 0;
                 if (s3->bpp == 3) {
                     if ((s3->chip >= S3_86C928) && (s3->chip < S3_VISION964)) {
@@ -1355,7 +1355,7 @@ s3_accel_out_fifo(s3_t *s3, uint16_t port, uint8_t val)
         case 0xb149:
         case 0xb2e9:
             s3_log("[%04X:%08X] OUT PORTB=%04x, val=%02x, CMD=%04x, C(%d,%d).\n", CS, cpu_state.pc, port, val, s3->accel.cmd, s3->accel.cur_x, s3->accel.cur_y);
-            if (s3->accel.multifunc[0xe] & 0x100) {
+            if ((s3->accel.multifunc[0xe] & 0x100) || (s3->chip >= S3_VISION964)) {
                 s3->accel.b2e8_pix = 0;
                 if (s3->bpp == 3) {
                     if ((s3->chip >= S3_86C928) && (s3->chip < S3_VISION964)) {
@@ -3227,8 +3227,8 @@ s3_in(uint16_t addr, void *priv)
                 /* This is needed for the Intel Advanced/ATX's built-in S3 Trio64V+ BIOS to not
                    get stuck in an infinite loop. */
                 if (((s3->card_type == S3_STB_POWERGRAPH_64_VIDEO) ||
-					(s3->card_type == S3_MIROCRYSTALV22SD_T64PLUS) && (svga->seqaddr == 0x17) ||
                     (s3->card_type == S3_PHOENIX_TRIO64VPLUS_ONBOARD) ||
+					(s3->card_type == S3_MIROCRYSTALV22SD_T64PLUS) && (svga->seqaddr == 0x17) ||
                     (s3->card_type == S3_CARDEX_TRIO64VPLUS)) && (svga->seqaddr == 0x17))
                     svga->seqregs[svga->seqaddr] ^= 0x01;
                 return temp;
@@ -8045,7 +8045,7 @@ s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat, voi
 
                 s3->accel.sy = s3->accel.maj_axis_pcnt;
                 if ((s3->bpp == 0) && s3->color_16bit) {
-                    s3->accel.rd_mask_16bit_check = ((rd_mask & 0xff00) != 0xff00);
+                    s3->accel.rd_mask_16bit_check = ((rd_mask & 0xff00) != 0xff00) && rd_mask;
                     if (s3->accel.rd_mask_16bit_check) {
                         if ((s3->accel.cur_x_overflow & 0xc00) == 0xc00)
                             s3->accel.start = 1;
@@ -8356,7 +8356,7 @@ s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat, voi
                 s3->accel.dest = dstbase + s3->accel.cy * s3->width;
 
                 if ((s3->bpp == 0) && s3->color_16bit) {
-                    s3->accel.rd_mask_16bit_check = ((rd_mask & 0xff00) != 0xff00);
+                    s3->accel.rd_mask_16bit_check = ((rd_mask & 0xff00) != 0xff00) && rd_mask;
                     if (s3->accel.rd_mask_16bit_check) {
                         if (s3->accel.cmd == 0x41b3) {
                             if (frgd_mix == 0) {
@@ -8416,7 +8416,6 @@ s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat, voi
                     return;
                 }
             }
-
 
             if (s3->accel.b2e8_pix && s3_cpu_src(s3) && (count == 16)) { /*Pattern on pixtrans (911/924)*/
                 count              = s3->accel.maj_axis_pcnt + 1;
@@ -8482,9 +8481,10 @@ s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat, voi
                             if ((s3_cpu_src(s3)) && !(s3->accel.cmd & 0x200)) {
                                 s3_log("FIXME: S3 911/924 15/16bpp documentation needed.\n");
                             } else {
-                                if (!cpu_input && (s3->accel.cur_x & 0x400))
+                                if (!cpu_input && (s3->accel.cur_x & 0x400)) {
+                                    s3_log("No Input.\n");
                                     break;
-                                else if (cpu_input && (s3->accel.cmd == 0x53b3) && (s3->accel.cur_x & 0x400))
+                                } else if (cpu_input && (s3->accel.cmd == 0x53b3) && (s3->accel.cur_x & 0x400))
                                     break;
                             }
                         }
@@ -8760,7 +8760,7 @@ s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat, voi
                 s3->accel.cy = s3->accel.cur_y & 0xfff;
 
                 if ((s3->bpp == 0) && s3->color_16bit) {
-                    s3->accel.rd_mask_16bit_check = ((rd_mask & 0xff00) != 0xff00);
+                    s3->accel.rd_mask_16bit_check = ((rd_mask & 0xff00) != 0xff00) && rd_mask;
                     if (s3->accel.rd_mask_16bit_check) {
                         if (!(clip_r & 0x400))
                             s3->accel.start = 1;
@@ -8810,7 +8810,6 @@ s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat, voi
 
             if (!cpu_input && (frgd_mix == 3) && !vram_mask && !(s3->accel.multifunc[0xe] & 0x100) && ((s3->accel.cmd & 0xa0) == 0xa0) && ((s3->accel.frgd_mix & 0xf) == 7) && ((s3->accel.bkgd_mix & 0xf) == 7)) {
                 s3_log("Special BitBLT.\n");
-
                 while (1) {
                     if ((s3->accel.dx >= clip_l) && (s3->accel.dx <= clip_r) && (s3->accel.dy >= clip_t) && (s3->accel.dy <= clip_b)) {
                         READ(s3->accel.src + s3->accel.cx - s3->accel.minus, src_dat);
@@ -8854,7 +8853,7 @@ s3_accel_start(int count, int cpu_input, uint32_t mix_dat, uint32_t cpu_dat, voi
                     }
                 }
             } else {
-                s3_log("Normal blit.\n");
+                s3_log("Normal blit, srcbase=%08x, dstbase=%08x, full=%04x, wrt_mask=%08x, extmultifunc0e=%03x, frgdmixval=%02x.\n", srcbase, dstbase, s3->accel.cmd, wrt_mask, s3->accel.multifunc[0x0e] & 0x180, s3->accel.frgd_mix);
                 while (count-- && (s3->accel.sy >= 0)) {
                     if ((s3->accel.dx >= clip_l) && (s3->accel.dx <= clip_r) && (s3->accel.dy >= clip_t) && (s3->accel.dy <= clip_b)) {
                         if (vram_mask && (s3->accel.cmd & 0x10)) {
@@ -9845,8 +9844,8 @@ s3_init(const device_t *info)
             break;
         case S3_WINNER1000_805:
             bios_fn = ROM_WINNER1000_805;
-            chip    = S3_86C805;
-            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_86c805);
+            chip    = S3_86C801;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_86c801);
             break;
         case S3_86C805_ONBOARD:
             bios_fn = NULL;
@@ -10057,7 +10056,7 @@ s3_init(const device_t *info)
             chip    = S3_TRIO64V;
             if (info->flags & DEVICE_PCI)
                 video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64_pci);
-            break;			
+            break;					
         case S3_DIAMOND_STEALTH64_764:
             bios_fn = ROM_DIAMOND_STEALTH64_764;
             chip    = S3_TRIO64;

@@ -62,7 +62,6 @@ static int dither[4][4] = {
 #define ROM_VIRGE_325                 "roms/video/s3virge/86c325.bin"
 #define ROM_DIAMOND_STEALTH3D_2000    "roms/video/s3virge/s3virge.bin"
 #define ROM_MIROCRYSTAL_3D            "roms/video/s3virge/miro Crystal 3D 1.02.bin"
-#define ROM_MIROCRYSTAL_VR2000        "roms/video/s3virge/2-00-662d5bf1b48c6262888551.bin"
 #define ROM_DIAMOND_STEALTH3D_3000    "roms/video/s3virge/diamondstealth3000.vbi"
 #define ROM_STB_VELOCITY_3D           "roms/video/s3virge/stb_velocity3d_110.BIN"
 #define ROM_VIRGE_DX                  "roms/video/s3virge/86c375_1.bin"
@@ -94,7 +93,6 @@ enum {
     S3_VIRGE_325,
     S3_DIAMOND_STEALTH3D_2000,
     S3_MIROCRYSTAL_3D,
-	S3_MIROCRYSTAL_VR2000,
     S3_DIAMOND_STEALTH3D_3000,
     S3_STB_VELOCITY_3D,
     S3_VIRGE_DX,
@@ -5162,9 +5160,6 @@ s3_virge_init(const device_t *info)
             case S3_MIROCRYSTAL_3D:
                 bios_fn = ROM_MIROCRYSTAL_3D;
                 break;
-			case S3_MIROCRYSTAL_VR2000:
-            bios_fn = ROM_MIROCRYSTAL_VR2000;
-            break;	
             case S3_DIAMOND_STEALTH3D_3000:
                 bios_fn = ROM_DIAMOND_STEALTH3D_3000;
                 break;
@@ -5268,15 +5263,6 @@ s3_virge_init(const device_t *info)
             virge->chip             = S3_VIRGE;
             video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_diamond_stealth3d_2000_pci);
             break;
-		case S3_MIROCRYSTAL_VR2000:
-            virge->fifo_slots_num = 8;
-            virge->svga.decode_mask = (4 << 20) - 1;
-            virge->virge_id_high    = 0x56;
-            virge->virge_id_low     = 0x31;
-            virge->svga.crtc[0x59]  = 0x70;
-            virge->chip             = S3_VIRGEVX;
-            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_diamond_stealth3d_3000_pci);
-            break;	
         case S3_DIAMOND_STEALTH3D_3000:
         case S3_STB_VELOCITY_3D:
             virge->fifo_slots_num   = 8;
@@ -5453,12 +5439,6 @@ s3_mirocrystal_3d_available(void)
 {
     return rom_present(ROM_MIROCRYSTAL_3D);
 }
-
-static int
-s3_mirocrystal_vr2000_available(void)
-{
-    return rom_present(ROM_MIROCRYSTAL_VR2000);
-}	
 
 static int
 s3_virge_988_diamond_available(void)
@@ -5725,20 +5705,6 @@ const device_t s3_mirocrystal_3d_pci_device = {
     .close         = s3_virge_close,
     .reset         = s3_virge_reset,
     .available     = s3_mirocrystal_3d_available,
-    .speed_changed = s3_virge_speed_changed,
-    .force_redraw  = s3_virge_force_redraw,
-    .config        = s3_virge_config
-};
-
-const device_t s3_mirocrystal_vr2000_pci_device = {
-    .name          = "S3 ViRGE (miroCRYSTAL VR 2000) PCI",
-    .internal_name = "mirocrystal_vr2000_pci",
-    .flags         = DEVICE_PCI,
-    .local         = S3_MIROCRYSTAL_VR2000,
-    .init          = s3_virge_init,
-    .close         = s3_virge_close,
-    .reset         = s3_virge_reset,
-    .available     = s3_mirocrystal_vr2000_available,
     .speed_changed = s3_virge_speed_changed,
     .force_redraw  = s3_virge_force_redraw,
     .config        = s3_virge_config
