@@ -822,13 +822,12 @@ machine_at_p2bls_init(const machine_t *model)
     device_add(&sst_flash_39sf020_device);
     spd_register(SPD_TYPE_SDRAM, 0xF, 256);
     device_add(&w83781d_device);     /* fans: Chassis, CPU, Power; temperatures: MB, unused, CPU */
-	device_add(&as99127f_device);
     hwm_values.temperatures[1] = 0;  /* unused */
     hwm_values.temperatures[2] -= 3; /* CPU offset */
-	hwm_values.voltages[4] = hwm_values.voltages[5]; /* +12V reading not in line with other boards; appears to be close to the -12V reading */
+	
+	return ret;
 
-    return ret;
-}
+}	
 
 int
 machine_at_lgibmx7g_init(const machine_t *model)
