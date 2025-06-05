@@ -755,6 +755,7 @@ extern int machine_at_gw2kte_init(const machine_t *);
 extern int machine_at_ma23c_init(const machine_t *);
 extern int machine_at_nupro592_init(const machine_t *);
 extern int machine_at_tx97_init(const machine_t *);
+extern int machine_at_tx97xv_init(const machine_t *);
 extern int machine_at_optiplexgn_init(const machine_t *);
 extern int machine_at_ym430tx_init(const machine_t *);
 extern int machine_at_thunderbolt_init(const machine_t *);
