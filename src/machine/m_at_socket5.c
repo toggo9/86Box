@@ -320,7 +320,7 @@ machine_at_m54pi_init(const machine_t *model)
     int ret;
 
     ret = bios_load_linear("roms/machines/m54pi/BIOS.N19",
-                           0x000c0000, 262144, 0);
+                           0x000e0000, 131072, 0);
 
     if (bios_only || !ret)
         return ret;
@@ -336,7 +336,7 @@ machine_at_m54pi_init(const machine_t *model)
     device_add(&keyboard_ps2_ami_pci_device);
     device_add(&i430nx_device);
     device_add(&sio_zb_device);
-    device_add(&pc87332_398_device);
+    device_add(&fdc37c665_device);
     device_add(&ide_cmd640_pci_device);
     device_add(&intel_flash_bxt_device);
 
