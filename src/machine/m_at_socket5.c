@@ -327,7 +327,7 @@ machine_at_m54pi_init(const machine_t *model)
     
     machine_at_common_init(model);
 
-    pci_init(PCI_CONFIG_TYPE_1 | PCI_NO_IRQ_STEERING);
+    pci_init(PCI_CONFIG_TYPE_2 | PCI_NO_IRQ_STEERING);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
     pci_register_slot(0x02, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
 	pci_register_slot(0x0D, PCI_CARD_NORMAL,      1, 3, 2, 4); /* Slot 01 */
