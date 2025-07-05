@@ -73,6 +73,7 @@ extern const device_t dells333sl_device;
 extern const device_t hot433a_device;
 extern const device_t pbl300sx_device;
 extern const device_t v12p_device;
+extern const device_t pc330_65x6_device;
 
 const machine_filter_t machine_types[] = {
     { "None",                             MACHINE_TYPE_NONE       },
