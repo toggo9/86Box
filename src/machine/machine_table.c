@@ -11197,7 +11197,7 @@ const machine_t machines[] = {
     },
 	
 	{
-        .name = "[i430FX] Intel Advanced/MN S64 (Morrison64)",
+        .name = "[i430FX] Intel Advanced/MN S64 (Morrison64, HP OEM)",
         .internal_name = "morrison64",
         .type = MACHINE_TYPE_SOCKET5,
         .chipset = MACHINE_CHIPSET_INTEL_430FX,
