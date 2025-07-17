@@ -369,18 +369,257 @@ machine_at_ibmxt286_init(const machine_t *model)
 }
 
 int
+machine_at_dart125_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/dart125/alr286dart-012788-u111-27c128-even.bin",
+								"roms/machines/dart125/alr286dart-012788-u130-27c128-odd.bin",
+								0x000f8000, 32768, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+	machine_at_common_init(model);
+	mem_remap_top(384);
+
+    device_add(&keyboard_at_ami_device);
+
+	if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+  
+    return ret;
+}
+
+int
+machine_at_wl286_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/wl286/bios64-637cc0ca8cddb318970569.rom",
+							0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+	machine_at_common_init(model);
+	mem_remap_top(384);
+
+    device_add(&keyboard_at_ami_device);
+
+	if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+  
+    return ret;
+}
+
+
+int
+machine_at_pc40_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/pc40/out-2-67cda3f4dcd63538202935.bin",
+						   0x000f8000, 32768, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+	machine_at_common_init(model);
+	
+	mem_remap_top(384);
+
+    device_add(&keyboard_at_siemens_device);
+
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+  
+    return ret;
+}
+
+int
+machine_at_b1200d_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/b1200d/u53.bin",
+								"roms/machines/b1200d/u54.bin",
+								0x000f8000, 32768, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+	machine_at_common_init(model);
+
+    device_add(&keyboard_at_device);
+
+	if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+  
+    return ret;
+}
+
+int
 machine_at_pb286_init(const machine_t *model)
 {
     int ret;
 
-    ret = bios_load_interleaved("roms/machines/pb286/LB_V332P.BIN",
-                                "roms/machines/pb286/HB_V332P.BIN",
-                                0x000f0000, 65536, 0);
+    ret = bios_load_interleaved("roms/machines/pb286/LB_V332P.bin",
+								"roms/machines/pb286/HB_V332P.bin",
+								0x000f0000, 65536, 0);
 
     if (bios_only || !ret)
         return ret;
 
     machine_at_ibm_common_init(model);
+
+  
+    return ret;
+}
+
+int
+machine_at_atturbo286_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/atturbo286/U87-ROM2.bin",
+								"roms/machines/atturbo286/U89-ROM4.bin",
+								0x000f8000, 32768, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+	
+	mem_remap_top(384);
+
+    device_add(&keyboard_at_ami_device);
+
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+  
+    return ret;
+}
+
+int
+machine_at_mbc17plus_init(const machine_t *model)
+{
+    int ret = 0;
+    const char* fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
+    ret = bios_load_linear(fn, 0x000f8000, 32768, 0);
+    device_context_restore();
+
+	machine_at_common_init_ex(model, 2);
+	device_add(&amstrad_megapc_nvr_device);
+	
+	mem_remap_top(384);
+	
+	device_add(&port_6x_device);
+
+    device_add(&keyboard_at_device);
+	
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+  
+    return ret;
+}
+
+static const device_config_t mbc17plus_config[] = {
+    // clang-format off
+    {
+        .name = "bios_versions",
+        .description = "BIOS Versions",
+        .type = CONFIG_BIOS,
+        .default_string = "bios_203se",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 }, /*W1*/
+        .bios = {
+            { .name = "ROM BIOS Version 1.04 (No Setup)", .internal_name = "bios_104", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 32768, .files = { "roms/machines/mbc17plus/bios_104.bin", "" } },
+			{ .name = "ROM BIOS Version 2.03SE (w/ Setup)", .internal_name = "bios_203se", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 32768, .files = { "roms/machines/mbc17plus/bios_203se.bin", "" } },  
+            { .files_no = 0 }
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+};
+
+
+
+const device_t mbc17plus_device = {
+    .name          = "Sanyo MBC17-PLUS",
+    .internal_name = "mbc17plus",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = &mbc17plus_config[0]
+};
+
+int
+machine_at_pcd2_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/pcd2/TMS27PC256@DIP28_tandon_1985_ver18lo.bin",
+								"roms/machines/pcd2/TMS27PC256@DIP28_tandon_1985_ver18hi.bin",
+								0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+     machine_at_common_init(model);
+
+    device_add(&keyboard_at_siemens_device);
+
+    mem_remap_top(384);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
+machine_at_pcd2m_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/pcd2m/tandon188782-032a_rev_5.23_low.bin",
+								"roms/machines/pcd2m/tandon188782-031a_rev_5.23_high.bin",
+								0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    device_add(&keyboard_at_siemens_device);
+
+    mem_remap_top(384);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
 
     return ret;
 }
@@ -409,6 +648,101 @@ machine_at_siemens_init(const machine_t *model)
 }
 
 int
+machine_at_tm7002_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/tm7002/tm7002.bin",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    device_add(&keyboard_at_device);
+
+    mem_remap_top(384);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
+machine_at_mic800_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/mic800/Andy_Low.bin",
+								"roms/machines/mic800/Andy_High.bin",
+								0x000f8000, 32768, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    device_add(&keyboard_at_phoenix_device);
+
+    mem_remap_top(384);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
+machine_at_ms00102_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/ms00102/286-MS0010-2-LO.bin",
+								"roms/machines/ms00102/286-MS0010-2-HI.bin",
+								0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    device_add(&keyboard_at_phoenix_device);
+
+    mem_remap_top(384);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
+machine_at_laserl286_2_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/laserl286_2/Vtech_L286_2_CIJB-U31L-low.bin",
+								"roms/machines/laserl286_2/Vtech_L286_2_CIJB-U30H-high.bin",
+								0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    device_add(&keyboard_at_ami_device);
+
+    mem_remap_top(384);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
 machine_at_wellamerastar_init(const machine_t *model)
 {
     int ret;
@@ -421,6 +755,54 @@ machine_at_wellamerastar_init(const machine_t *model)
         return ret;
 
     machine_at_ibm_common_init(model);
+
+    return ret;
+}
+
+int
+machine_at_al6410_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/al6410/AL-6410_AMI_BIOS_LOW.bin",
+								"roms/machines/al6410/AL-6410_AMI_BIOS_HIGH.bin",
+								0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+	
+	mem_remap_top(384);
+
+    device_add(&keyboard_at_ami_device);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
+machine_at_p3202_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/p3202/philips70895.bin",
+								"roms/machines/p3202/philips70885.bin",
+								0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+	
+	mem_remap_top(384);
+
+    device_add(&keyboard_at_ami_device);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
 
     return ret;
 }

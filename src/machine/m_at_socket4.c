@@ -41,77 +41,6 @@
 #include <86box/video.h>
 #include <86box/machine.h>
 
-int
-machine_at_v12p_init(const machine_t *model)
-
-{
-    int ret = 0;
-    const char* fn;
-
-    /* No ROMs available */
-    if (!device_available(model->device))
-        return ret;
-
-    device_context(model->device);
-    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 0);
-    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
-    device_context_restore();
-	
-    machine_at_common_init(model);
-
-    device_add(&ide_isa_device);
-    pci_init(PCI_CONFIG_TYPE_2 | PCI_NO_IRQ_STEERING);
-    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
-    pci_register_slot(0x01, PCI_CARD_SCSI,        1, 4, 3, 2);
-    pci_register_slot(0x02, PCI_CARD_SOUTHBRIDGE, 2, 1, 4, 3);
-    pci_register_slot(0x03, PCI_CARD_NORMAL,      3, 2, 1, 4);
-    pci_register_slot(0x04, PCI_CARD_NORMAL,      4, 0, 0, 0);
-    pci_register_slot(0x05, PCI_CARD_NORMAL,      0, 0, 0, 0);
-    device_add(&i430lx_device);
-    device_add(&keyboard_ps2_acer_pci_device);
-    device_add(&sio_zb_device);
-    device_add_params(&pc87310_device, (void *) (PC87310_ALI));
-    device_add(&amd_am28f010_flash_device);
-
-    return ret;
-}
-
-static const device_config_t v12p_config[] = {
-    // clang-format off
-    {
-        .name = "bios",
-        .description = "BIOS Version",
-        .type = CONFIG_BIOS,
-        .default_string = "v12p",
-        .default_int = 0,
-        .file_filter = "",
-        .spinner = { 0 }, /*W1*/
-        .bios = {
-            { .name = "Acer BIOS V1.2 - Revision R1.4", .internal_name = "v12p_r14", .bios_type = BIOS_NORMAL,
-              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/v12p/v12p_14.bin", "" } },
-            { .name = "Acer BIOS V1.2 - Revision R1.6", .internal_name = "v12p", .bios_type = BIOS_NORMAL,
-              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/v12p/v12p_16.bin", "" } },	  
-            { .files_no = 0 }            
-        },
-    },
-    { .name = "", .description = "", .type = CONFIG_END }
-    // clang-format on
-};
-
-const device_t v12p_device = {
-    .name          = "Acer V12P",
-    .internal_name = "v12p_device",
-    .flags         = 0,
-    .local         = 0,
-    .init          = NULL,
-    .close         = NULL,
-    .reset         = NULL,
-    .available	   = NULL,
-    .speed_changed = NULL,
-    .force_redraw  = NULL,
-    .config        = v12p_config
-};
-
 void
 machine_at_premiere_common_init(const machine_t *model, int pci_switch)
 {
@@ -278,6 +207,209 @@ machine_at_opti560l_init(const machine_t *model)
     device_add(&sio_zb_device);
     device_add(&i82091aa_device);
     device_add(&intel_flash_bxt_ami_device);
+
+    return ret;
+}
+
+int
+machine_at_d841_init(const machine_t *model)
+
+{
+    int ret = 0;
+    const char* fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
+    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
+    device_context_restore();
+	
+	machine_at_common_init(model);
+
+    device_add(&ide_pci_2ch_device);
+    pci_init(PCI_CONFIG_TYPE_2 | PCI_NO_IRQ_STEERING);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+	pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0); /* Onboard */
+	pci_register_slot(0x03, PCI_CARD_VIDEO,       4, 0, 0, 0); /* Onboard */
+	pci_register_slot(0x0C, PCI_CARD_NORMAL,      1, 3, 2, 4); /* Slot 01 */
+	pci_register_slot(0x0E, PCI_CARD_NORMAL,      2, 1, 3, 4); /* Slot 02 */
+    device_add(&i430lx_device);
+    device_add(&keyboard_ps2_pci_device);
+    device_add(&sio_zb_device);
+    device_add(&fdc37c665_device);
+	device_add(&amd_am28f010_flash_device);
+
+    return ret;
+}
+
+static const device_config_t d841_config[] = {
+    // clang-format off
+    {
+        .name = "bios_versions",
+        .description = "BIOS Versions",
+        .type = CONFIG_BIOS,
+        .default_string = "d841",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 }, /*W1*/
+        .bios = {
+            { .name = "Version 1.03 Revision 1.06.841 (11/24/1994)", .internal_name = "d841", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/d841/d841.bin", "" } },
+            { .name = "Version 1.03 Revision 1.10.841 (03/05/1996)", .internal_name = "d841_mar96", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/d841/d841_mar96.bin", "" } },
+            { .name = "Version 1.03 Revision 1.11.841 (01/27/1997)", .internal_name = "d841_jan97", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/d841/d841_jan97.bin", "" } },
+			{ .name = "Version 1.03 Revision 1.12.841 (06/02/1998)", .internal_name = "d841_jun98", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/d841/d841_jun98.bin", "" } },		  
+            
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+
+
+const device_t d841_device = {
+    .name          = "Siemens-Nixdorf PCD-5H/PCI (D841)",
+    .internal_name = "pcd5h_pci60",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = &d841_config[0]
+};
+
+int
+machine_at_v12p_init(const machine_t *model)
+
+{
+    int ret = 0;
+    const char* fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
+    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
+    device_context_restore();
+	
+	machine_at_common_init(model);
+
+    device_add(&ide_isa_device);
+    pci_init(PCI_CONFIG_TYPE_2 | PCI_NO_IRQ_STEERING);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x01, PCI_CARD_SCSI,        1, 4, 3, 2);
+    pci_register_slot(0x02, PCI_CARD_SOUTHBRIDGE, 2, 1, 4, 3);
+    pci_register_slot(0x03, PCI_CARD_NORMAL,      3, 2, 1, 4);
+    pci_register_slot(0x04, PCI_CARD_NORMAL,      4, 0, 0, 0);
+    pci_register_slot(0x05, PCI_CARD_NORMAL,      0, 0, 0, 0);
+    device_add(&i430lx_device);
+    device_add(&keyboard_ps2_acer_pci_device);
+    device_add(&sio_zb_device);
+    device_add_params(&pc87310_device, (void *) (PC87310_ALI));
+	device_add(&amd_am28f010_flash_device);
+	device_add(&ncr53c825a_onboard_pci_device);
+
+    return ret;
+}
+
+static const device_config_t v12p_config[] = {
+    // clang-format off
+    {
+        .name = "bios_versions",
+        .description = "BIOS Versions",
+        .type = CONFIG_BIOS,
+        .default_string = "v12p_14",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 }, /*W1*/
+        .bios = {
+            { .name = "Core Version 1.2 Version R1.4", .internal_name = "v12p_14", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/v12p/v12p_14.bin", "" } },
+            { .name = "Core Version 1.2 Version R1.6", .internal_name = "v12p_16", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/v12p/v12p_16.bin", "" } },	  
+            
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+
+
+const device_t v12p_device = {
+    .name          = "Acer V12P",
+    .internal_name = "v12p",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available	   = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = &v12p_config[0]
+};
+
+int
+machine_at_evolutionvstpci_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/evolutionvstpci/9200.BIN",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_2 | PCI_NO_IRQ_STEERING);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x01, PCI_CARD_IDE,         0, 0, 0, 0);
+    pci_register_slot(0x0f, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x0c, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x0b, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x02, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    device_add(&i430lx_device);	
+    device_add(&sio_zb_device);	
+    device_add(&keyboard_ps2_phoenix_device);
+    device_add(&ide_pci_device);	
+    device_add(&fdc37c665_ide_device);
+    device_add(&intel_flash_bxt_device);
+
+    return ret;
+}
+
+int
+machine_at_d818_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear_combined("roms/machines/d818/1008AU0_.BIO",
+                                    "roms/machines/d818/1008AU0_.BI1",
+                                    0x1c000, 128);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_premiere_common_init(model, 0);
+    device_add(&ide_pci_2ch_device);
+	
+    device_add(&i430lx_device);
+	
+	 if (gfxcard[0] == VID_INTERNAL)
+             device_add(&mach32_pci_device);
 
     return ret;
 }

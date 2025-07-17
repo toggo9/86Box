@@ -371,6 +371,75 @@ machine_at_ap440fx_init(const machine_t *model)
 }
 
 int
+machine_at_w6li_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/w6li/W6LNSNH3.ROM",
+                           0x000c0000, 262144, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4);
+	pci_register_slot(0x0F, PCI_CARD_NORMAL,      4, 1, 2, 3);
+	pci_register_slot(0x10, PCI_CARD_NORMAL,      3, 4, 1, 2);
+	pci_register_slot(0x11, PCI_CARD_NORMAL,      2, 3, 4, 1);
+	pci_register_slot(0x12, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    device_add(&i440fx_device);
+    device_add(&piix3_ioapic_device);
+	device_add(&ioapic_device);
+    device_add_params(&fdc37c93x_device, (void *) (FDC37C935 | FDC37C93X_NORMAL));
+    device_add(&intel_flash_bxt_device);
+
+    return ret;
+}
+
+int
+machine_at_d1000_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear_combined2("roms/machines/d1000/1005DI0F.BIO",
+                                     "roms/machines/d1000/1005DI0F.BI1",
+                                     "roms/machines/d1000/1005DI0F.BI2",
+                                     "roms/machines/d1000/1005DI0F.BI3",
+                                     "roms/machines/d1000/1005DI0F.RCV",
+                                     0x3a000, 128);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
+	pci_register_slot(0x06, PCI_CARD_NORMAL,      3, 0, 0, 0); /* Slot 88 */
+	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0); /* Slot 85 */
+	pci_register_slot(0x09, PCI_CARD_NORMAL,      2, 0, 0, 0); /* Slot 87 */
+	pci_register_slot(0x0B, PCI_CARD_NORMAL,      1, 2, 3, 4); /* Slot 01 */
+	pci_register_slot(0x0F, PCI_CARD_NORMAL,      2, 3, 4, 1); /* Slot 02 */
+	pci_register_slot(0x11, PCI_CARD_NORMAL,      3, 4, 1, 2); /* Slot 03 */
+	pci_register_slot(0x13, PCI_CARD_NORMAL,      4, 1, 2, 3); /* Slot 04 */
+
+    device_add(&i440fx_device);
+    device_add(&piix3_ioapic_device);
+    device_add_params(&pc87307_device, (void *) (PCX730X_AMI | PCX7307_PC87307));
+	device_add(&ioapic_device);
+	
+	if (sound_card_current[0] == SOUND_INTERNAL)
+        device_add(&cs4236b_device);
+
+    device_add(&intel_flash_bxt_ami_device);
+
+    return ret;
+}
+
+int
 machine_at_8600ttc_init(const machine_t *model)
 {
     int ret;

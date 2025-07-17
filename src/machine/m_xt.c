@@ -39,10 +39,11 @@
 #include <86box/keyboard.h>
 #include <86box/rom.h>
 #include <86box/machine.h>
-#include <86box/nvr.h>
 #include <86box/chipset.h>
 #include <86box/port_6x.h>
 #include <86box/video.h>
+#include <86box/nvr.h>
+#include <86box/sio.h>
 
 extern const device_t vendex_xt_rtc_onboard_device;
 
@@ -51,6 +52,20 @@ machine_xt_common_init(const machine_t *model, int fixed_floppy)
 {
     if ((fdc_current[0] == FDC_INTERNAL) || fixed_floppy)
         device_add(&fdc_xt_device);
+
+    machine_common_init(model);
+
+    pit_devs[0].set_out_func(pit_devs[0].data, 1, pit_refresh_timer_xt);
+
+    nmi_init();
+    standalone_gameport_type = &gameport_device;
+}
+
+static void
+machine_xt_compact2_init(const machine_t *model, int fixed_floppy)
+{
+    if ((fdc_current[0] == FDC_INTERNAL) || fixed_floppy)
+        device_add(&fdc_at_device);
 
     machine_common_init(model);
 
@@ -669,34 +684,6 @@ machine_xt_amixt_init(const machine_t *model)
     return ret;
 }
 
-int
-machine_xt_tuliptc8_init(const machine_t *model)
-{
-    int ret;
-
-    ret = bios_load_linear("roms/machines/tuliptc8/tulip-bios_xt_compact_2.bin",
-                           0x000fc000, 16384, 0);
-
-    if (bios_only || !ret)
-        return ret;
-
-    device_add(&keyboard_xt_fe2010_device);
-
-    if (fdc_current[0] == FDC_INTERNAL)
-        device_add(&fdc_at_device);
-
-    machine_common_init(model);
-
-    pit_devs[0].set_out_func(pit_devs[0].data, 1, pit_refresh_timer_xt);
-
-    nmi_init();
-    standalone_gameport_type = &gameport_device;
-
-    device_add(&amstrad_megapc_nvr_device);
-
-    return ret;
-}
-
 // TODO
 // Onboard EGA Graphics (NSI Logic EVC315-S on early boards STMicroelectronics EGA on later revisions)
 // RTC
@@ -728,6 +715,22 @@ machine_xt_znic_init(const machine_t *model)
     int ret;
 
     ret = bios_load_linear("roms/machines/znic/ibmzen.rom",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_xt_clone_init(model, 0);
+
+    return ret;
+}
+
+int
+machine_xt_gem10_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/gem10/2764ADIP28_ZETA_P10_8Kb.bin",
                            0x000fe000, 8192, 0);
 
     if (bios_only || !ret)
@@ -807,6 +810,22 @@ machine_xt_jukopc_init(const machine_t *model)
     fn           = device_get_bios_file(model->device, device_get_config_bios("bios"), 0);
     ret          = bios_load_linear(fn, 0x000fe000, 8192, 0);
     device_context_restore();
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_xt_clone_init(model, 0);
+
+    return ret;
+}
+
+int
+machine_xt_xturbo_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/xturbo/x-turbo-xt.bin",
+                           0x000fe000, 8192, 0);
 
     if (bios_only || !ret)
         return ret;
@@ -1079,6 +1098,700 @@ machine_xt_pc500_init(const machine_t *model)
     return ret;
 }
 
+int
+machine_xt_acer710iin_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/acer710iin/acer710iin.bin",
+                           0x000f8000, 32768, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_pc_device);
+
+    machine_xt_common_init(model, 0);
+
+    return ret;
+}
+
+int
+machine_xt_desk3021_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/desk3021/asem-desk-3021.bin",
+                           0x000f8000, 32768, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_xtclone_device);
+
+    machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
+int
+machine_xt_jumboturbo_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/jumboturbo/CHENDAI_ROM2-0.BIN",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_xtclone_device);
+
+    machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
+int
+machine_xt_hed918_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/hed918/TD-20_Turbo-Motherboard-XT-AMI-BIOS-2764.BIN",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_xtclone_device);
+
+    machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
+int
+machine_xt_icl2500_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/icl2500/ICL_2500_BIOS_1.54.BIN",
+                           0x000fc000, 16384, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_xtclone_device);
+
+    machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
+int
+machine_xt_spc3100_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/spc3100/2.51C",
+                           0x000f8000, 32768, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_pc_device);
+
+    machine_xt_common_init(model, 0);
+
+    return ret;
+}
+
+int
+machine_xt_pcterm2094_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/pcterm2094/santa_clara_systems_pcterminal_1986.bin",
+                           0x000f8000, 32768, 0);
+
+    if (bios_only || !ret)
+        return ret;
+	
+	machine_xt_clone_init(model, 0);
+
+    return ret;
+}
+
+int
+machine_xt_tandonxt_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/tandonxt/Tandon_188840 ver.3.2.BIN",
+                           0x000fc000, 16384, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_xt_clone_init(model, 0);
+
+    return ret;
+}
+
+int
+machine_xt_pc10iii_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/pc10iii/cbm-pc10c-bios-v4.36-318085-02.bin",
+                           0x000f8000, 32768, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_xtclone_device);
+
+    machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
+int
+machine_xt_exprxt_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/exprxt/M1101.bin",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_pc_device);
+
+    machine_xt_common_init(model, 0);
+
+    return ret;
+}
+
+
+int
+machine_xt_asi009_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/asi009/ami-8088-asi-050687-67438e9484da9848058029.bin",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_pc_device);
+
+    machine_xt_common_init(model, 0);
+
+    return ret;
+}
+
+int
+machine_xt_2000xt_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/2000xt/XT-640kmem.bin",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_pc_device);
+
+    machine_xt_common_init(model, 0);
+
+    return ret;
+}
+
+int
+machine_xt_arcxturbo_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/arcxturbo/ARC_Turbo_x.bin",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_pc_device);
+
+    machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
+int
+machine_xt_superturbo_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/superturbo/orbitonXT.bin",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_pc_device);
+
+    machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
+int
+machine_xt_auvaxt_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/auvaxt/VIPTXM10_8_II.bin",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_xtclone_device);
+
+    machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
+int
+machine_xt_auvatxm8_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/auvatxm8/bios-rom-ethom-associates-version-1-1f-637cb29cc9649009539095.bin",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_xtclone_device);
+
+    machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
+int
+machine_xt_auvajukoxt_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/auvajukoxt/XT-Juko-ST.bin",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_xtclone_device);
+
+    machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
+int
+machine_xt_faradaypac_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/faradaypac/XT-Faraday PAC.bin",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_xtclone_device);
+
+    machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
+int
+machine_xt_b190_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/b190/copam_mar87.bin",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_xtclone_device);
+
+    machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
+static const device_config_t bc88_config[] = {
+    // clang-format off
+    {
+        .name = "bios",
+        .description = "BIOS Version",
+        .type = CONFIG_BIOS,
+        .default_string = "computerland_v103",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 },
+        .bios = {
+            { .name = "ComputerLand BIOS V1.03", .internal_name = "computerland_v103", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 8192, .files = { "roms/machines/bc88/bc88v103-62137642bbc7b801048452.rom", "" } },
+            { .name = "ComputerLand BIOS V1.04", .internal_name = "computerland_v104", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 8192, .files = { "roms/machines/bc88/bc88v104-62137642bfbe6447845166.rom", "" } },
+			{ .name = "TriGem V1.9", .internal_name = "trigem_v19", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 8192, .files = { "roms/machines/bc88/tg882v19-62137642c03d5256571924.rom", "" } },  
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+const device_t bc88_device = {
+    .name          = "ComputerLand BC-88/TriGem-88",
+    .internal_name = "bc88",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = bc88_config
+};
+
+int
+machine_xt_bc88_init(const machine_t *model)
+{
+    int         ret = 0;
+    const char *fn;
+
+    /* No ROMs available. */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn           = device_get_bios_file(model->device, device_get_config_bios("bios"), 0);
+    ret          = bios_load_linear(fn, 0x000fe000, 8192, 0);
+    device_context_restore();
+
+    if (bios_only || !ret)
+        return ret;
+	device_add(&keyboard_xtclone_device);
+	machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
+int
+machine_xt_megaboard1_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/megaboard1/bios-rom-computer-turbo-version-2-0-637cb9e98ff26098995874.bin",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+	
+	machine_xt_clone_init(model, 0);
+
+    return ret;
+}
+
+static const device_config_t pc401sd_config[] = {
+    // clang-format off
+    {
+        .name = "bios",
+        .description = "BIOS Version",
+        .type = CONFIG_BIOS,
+        .default_string = "copam_386",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 },
+        .bios = {
+            { .name = "Copam Version 3.86", .internal_name = "copam_386", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 8192, .files = { "roms/machines/pc401sd/copam-bios-6575df67c7a81170310301.rom", "" } },
+            { .name = "Copam Version 3.93", .internal_name = "copam_393", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 8192, .files = { "roms/machines/pc401sd/clone-xt-bios-td3-93-6575df67c97b6479673126.bin", "" } },
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+const device_t pc401sd_device = {
+    .name          = "Handwell PC-401-SD",
+    .internal_name = "pc401sd",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = pc401sd_config
+};
+
+int
+machine_xt_pc401sd_init(const machine_t *model)
+{
+    int         ret = 0;
+    const char *fn;
+
+    /* No ROMs available. */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn           = device_get_bios_file(model->device, device_get_config_bios("bios"), 0);
+    ret          = bios_load_linear(fn, 0x000fe000, 8192, 0);
+    device_context_restore();
+
+    if (bios_only || !ret)
+        return ret;
+	device_add(&keyboard_xtclone_device);
+	machine_xt_clone_init(model, 0);
+
+    return ret;
+}
+
+int
+machine_xt_speed22_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/speed22/bios xt speed 22.bin",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_pc_device);
+
+    machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
+int
+machine_xt_t1200ct_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/t1200ct/BIOS_Award_XT_3.0_ver_1.05.bin",
+                           0x000f8000, 32768, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_pc_device);
+
+    machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
+int
+machine_xt_micropc_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/micropc/CPC-010.bin",
+                           0x000f8000, 32768, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_xt_fe2010_device);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_xt_device);
+
+    machine_xt_common_init(model, 0);
+
+
+    return ret;
+}
+
+int
+machine_xt_turboplus_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/turboplus/turbo-plus-u33-67ca047a8f5e4617806065.bin",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_xtclone_device);
+
+    machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
+int
+machine_xt_dt88_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/dt88/Intertan.bin",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_pc_device);
+
+    machine_xt_compact2_init(model, 0);
+	device_add(&at_nvr_device);
+	device_add(&pc87310_device);
+	device_add(&xta_hd20_device);
+	
+	if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
+machine_xt_tulip_pccompact2_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/tulip_pccompact2/tulip-bios_xt_compact_2.bin",
+                           0x000fc000, 16384, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_xt_fe2010_device);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    machine_common_init(model);
+
+    pit_devs[0].set_out_func(pit_devs[0].data, 1, pit_refresh_timer_xt);
+
+    nmi_init();
+    standalone_gameport_type = &gameport_device;
+
+    device_add(&amstrad_megapc_nvr_device);
+
+    return ret;
+}
+
+int
+machine_xt_ls1720_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/ls1720/XT_LS-1720_U8.BIN.bin",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_xt_clone_init(model, 0);
+
+    return ret;
+}
+
+
+static const device_config_t magiab158_config[] = {
+    // clang-format off
+    {
+        .name = "bios",
+        .description = "BIOS Version",
+        .type = CONFIG_BIOS,
+        .default_string = "magiab158_phoenix",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 },
+        .bios = {
+            { .name = "Phoenix BIOS Version 2.27 (05/29/1986)", .internal_name = "magiab158_phoenix", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 8192, .files = { "roms/machines/magiab158/magiab158_phoenix.bin", "" } },
+            { .name = "NEL Electronics Version 2.20 (12/13/1988)", .internal_name = "magiab158_nel", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 8192, .files = { "roms/machines/magiab158/magiab158_nel.bin", "" } },
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+const device_t magiab158_device = {
+    .name          = "Magitronic A-B158",
+    .internal_name = "magiab158",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = magiab158_config
+};
+
+int
+machine_xt_magiab158_init(const machine_t *model)
+{
+    int         ret = 0;
+    const char *fn;
+
+    /* No ROMs available. */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn           = device_get_bios_file(model->device, device_get_config_bios("bios"), 0);
+    ret          = bios_load_linear(fn, 0x000fe000, 8192, 0);
+    device_context_restore();
+
+    if (bios_only || !ret)
+        return ret;
+	device_add(&keyboard_xtclone_device);
+	machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
+int
+machine_xt_mpc1000n_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/mpc1000n/MiTAC_MPC1000N_BIOS_R2.05A_U34_F500_011087.27128.u34.bin",
+                           0x000fc000, 16384, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_xtclone_device);
+	device_add(&vendex_xt_rtc_onboard_device);
+    machine_xt_clone_init(model, 1);
+
+    return ret;
+}
+
 static const device_config_t vendex_config[] = {
     // clang-format off
     {
@@ -1139,6 +1852,45 @@ machine_xt_vendex_init(const machine_t *model)
     machine_xt_clone_init(model, 1);
 
     device_add(&vendex_xt_rtc_onboard_device);
+
+    return ret;
+}
+
+int
+machine_xt_xt12_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/xt12/xt-12-8088-bios-ev1603-hk-rev-x2-03-66a3be6df416e361480839.BIN",
+                           0x000fc000, 16384, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+	device_add(&keyboard_xtclone_device);
+    machine_xt_compact2_init(model, 0);
+	device_add(&at_nvr_device);
+	
+	if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
+
+int
+machine_xt_xtclone_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/xtclone/TURBO_XT_v3-1.BIN",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+	device_add(&keyboard_pc_device);
+    machine_xt_clone_init(model, 0);
 
     return ret;
 }
@@ -1214,6 +1966,22 @@ machine_xt_kaypropc_init(const machine_t *model)
         return ret;
 
     machine_xt_clone_init(model, 0);
+
+    return ret;
+}
+
+int
+machine_xt_rimosxt_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/rimosxt/RIMOS XT BIOS.bin",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_xt_clone_init(model, 1);
 
     return ret;
 }
