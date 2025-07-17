@@ -10907,10 +10907,10 @@ const machine_t machines[] = {
     },
 	
 	{
-        .name = "[CS4031] Micronics Baby Gemini 386",
+        .name = "[OPTi 495] Micronics Baby Gemini 386",
         .internal_name = "gemini386",
         .type = MACHINE_TYPE_386DX,
-        .chipset = MACHINE_CHIPSET_CT_CS4031,
+        .chipset = MACHINE_CHIPSET_OPTI_495,
         .init = machine_at_gemini386_init,
         .p1_handler = NULL,
         .gpio_handler = NULL,
@@ -12357,10 +12357,10 @@ const machine_t machines[] = {
     },
 	
 	{
-        .name = "[CS4031] Micronics Gemini VL-BUS",
+        .name = "[OPTi 495] Micronics Gemini VL-BUS",
         .internal_name = "geminivlbus",
         .type = MACHINE_TYPE_486,
-        .chipset = MACHINE_CHIPSET_CT_CS4031,
+        .chipset = MACHINE_CHIPSET_OPTI_495,
         .init = machine_at_geminivlbus_init,
         .p1_handler = NULL,
         .gpio_handler = NULL,
@@ -12397,10 +12397,10 @@ const machine_t machines[] = {
     },
 	
 	{
-        .name = "[CS4031] Micronics Baby Gemini 33",
+        .name = "[OPTi 495] Micronics Baby Gemini 33",
         .internal_name = "gemini33",
         .type = MACHINE_TYPE_486,
-        .chipset = MACHINE_CHIPSET_CT_CS4031,
+        .chipset = MACHINE_CHIPSET_OPTI_495,
         .init = machine_at_gemini33_init,
         .p1_handler = NULL,
         .gpio_handler = NULL,
@@ -12437,10 +12437,10 @@ const machine_t machines[] = {
     },
 	
 	{
-        .name = "[CS4031] Micronics JX30G VL-BUS (Gateway 2000 OEM)",
+        .name = "[SiS 461] Micronics JX30G VL-BUS (Gateway 2000 OEM)",
         .internal_name = "jx30g",
         .type = MACHINE_TYPE_486,
-        .chipset = MACHINE_CHIPSET_CT_CS4031,
+        .chipset = MACHINE_CHIPSET_SIS_461,
         .init = machine_at_jx30g_init,
         .p1_handler = NULL,
         .gpio_handler = NULL,
