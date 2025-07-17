@@ -43,6 +43,9 @@
 #define BIOS_ROM_PATH_W32I_ISA                 "roms/video/et4000w32/ET4KW32I.VBI"
 #define BIOS_ROM_PATH_W32I_VLB                 "roms/video/et4000w32/tseng.u41.bin"
 #define BIOS_ROM_PATH_W32P_VIDEOMAGIC_REVB_VLB "roms/video/et4000w32/VideoMagic-BioS-HXIRTW32PWSRL.bin"
+#define BIOS_ROM_PATH_W32P_IMASCAN_VLB 		   "roms/video/et4000w32/tseng_et4000w32p-8.03.bin"
+#define BIOS_ROM_PATH_W32P_MIROVIDEO20TD_VLB   "roms/video/et4000w32/m27c256b-at-dip28-miro20td-675dada18e7fa701369657.bin"
+#define BIOS_ROM_PATH_W32P_VIDEOMAGIC_REVB_VLB "roms/video/et4000w32/VideoMagic-BioS-HXIRTW32PWSRL.bin"
 #define BIOS_ROM_PATH_W32P                     "roms/video/et4000w32/ET4K_W32.BIN"
 #define BIOS_ROM_PATH_W32P_REVC                "roms/video/et4000w32/et4000w32pcardex.BIN"
 
@@ -56,6 +59,8 @@ enum {
     ET4000W32I,
     ET4000W32P_REVC,
     ET4000W32P_VIDEOMAGIC_REVB,
+	ET4000W32P_IMASCAN_VLB,
+	ET4000W32P_MIROVIDEO20TD_VLB,
     ET4000W32P,
     ET4000W32P_CARDEX,
     ET4000W32P_DIAMOND
@@ -2786,6 +2791,30 @@ et4000w32p_init(const device_t *info)
             et4000->svga.clock_gen = et4000->svga.ramdac;
             et4000->svga.getclock  = stg_getclock;
             break;
+			
+		case ET4000W32P_IMASCAN_VLB:
+            /* ET4000/W32p Imascan RGB */
+            et4000->rev = 5;
+
+            rom_init(&et4000->bios_rom, BIOS_ROM_PATH_W32P_IMASCAN_VLB, 0xc0000, 0x8000, 0x7fff, 0,
+                     MEM_MAPPING_EXTERNAL);
+
+            et4000->svga.ramdac    = device_add(&stg_ramdac_device);
+            et4000->svga.clock_gen = et4000->svga.ramdac;
+            et4000->svga.getclock  = stg_getclock;
+            break;
+			
+		case ET4000W32P_MIROVIDEO20TD_VLB:
+            /* ET4000/W32p miroVIDEO 20TD LIVE! */
+            et4000->rev = 5;
+
+            rom_init(&et4000->bios_rom, BIOS_ROM_PATH_W32P_MIROVIDEO20TD_VLB, 0xc0000, 0x8000, 0x7fff, 0,
+                     MEM_MAPPING_EXTERNAL);
+
+            et4000->svga.ramdac    = device_add(&stg_ramdac_device);
+            et4000->svga.clock_gen = et4000->svga.ramdac;
+            et4000->svga.getclock  = stg_getclock;
+            break;		
 
         case ET4000W32P_REVC:
             /* ET4000/W32p rev C */
@@ -2892,6 +2921,19 @@ et4000w32p_videomagic_revb_vlb_available(void)
 {
     return rom_present(BIOS_ROM_PATH_W32P_VIDEOMAGIC_REVB_VLB);
 }
+
+int
+et4000w32p_imascan_vlb_available(void)
+{
+    return rom_present(BIOS_ROM_PATH_W32P_IMASCAN_VLB);
+}
+
+int
+et4000w32p_mirovideo20td_vlb_available(void)
+{
+    return rom_present(BIOS_ROM_PATH_W32P_MIROVIDEO20TD_VLB);
+}
+
 
 int
 et4000w32p_revc_available(void)
@@ -3015,6 +3057,34 @@ const device_t et4000w32i_vlb_device = {
     .close         = et4000w32p_close,
     .reset         = NULL,
     .available     = et4000w32i_vlb_available,
+    .speed_changed = et4000w32p_speed_changed,
+    .force_redraw  = et4000w32p_force_redraw,
+    .config        = et4000w32p_config
+};
+
+const device_t et4000w32p_imascan_vlb_device = {
+    .name          = "Tseng Labs ET4000/w32p VLB (Imascan)",
+    .internal_name = "et4000w32p_imascan_vlb",
+    .flags         = DEVICE_VLB,
+    .local         = ET4000W32P_IMASCAN_VLB,
+    .init          = et4000w32p_init,
+    .close         = et4000w32p_close,
+    .reset         = NULL,
+    .available     = et4000w32p_imascan_vlb_available,
+    .speed_changed = et4000w32p_speed_changed,
+    .force_redraw  = et4000w32p_force_redraw,
+    .config        = et4000w32p_config
+};
+
+const device_t et4000w32p_mirovideo20td_vlb_device = {
+    .name          = "Tseng Labs ET4000/w32p VLB (miroVIDEO 20TD LIVE!)",
+    .internal_name = "et4000w32p_mirovideo20td_vlb",
+    .flags         = DEVICE_VLB,
+    .local         = ET4000W32P_MIROVIDEO20TD_VLB,
+    .init          = et4000w32p_init,
+    .close         = et4000w32p_close,
+    .reset         = NULL,
+    .available     = et4000w32p_mirovideo20td_vlb_available,
     .speed_changed = et4000w32p_speed_changed,
     .force_redraw  = et4000w32p_force_redraw,
     .config        = et4000w32p_config

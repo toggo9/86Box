@@ -7512,3 +7512,17 @@ const device_t mach32_onboard_pci_device = {
     .force_redraw  = mach_force_redraw,
     .config        = mach32_pci_config
 };
+
+const device_t mach32_onboard_vlb_device = {
+    .name          = "ATI Mach32 (VLB) On-Board",
+    .internal_name = "mach32_vlb_onboard",
+    .flags         = DEVICE_VLB,
+    .local         = ATI_68800_TYPE | 0x100,
+    .init          = mach8_init,
+    .close         = mach_close,
+    .reset         = mach_reset,
+    .available     = NULL,
+    .speed_changed = mach_speed_changed,
+    .force_redraw  = mach_force_redraw,
+    .config        = mach32_config
+};
