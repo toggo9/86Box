@@ -170,7 +170,7 @@ machine_at_gemini386_init(const machine_t *model)
         return ret;
 
     machine_at_common_init(model);
-    device_add(&cs4031_device);
+    device_add(&opti495sx_device);
     device_add(&keyboard_at_phoenix_device);
 
     if (fdc_current[0] == FDC_INTERNAL)
@@ -1524,7 +1524,7 @@ machine_at_geminivlbus_init(const machine_t *model)
 	
 	machine_at_common_init(model);
 
-    device_add(&cs4031_device);
+    device_add(&opti495sx_device);
     device_add(&pc87311_ide_device);
     device_add(&keyboard_at_phoenix_device); 
 
@@ -1583,7 +1583,7 @@ machine_at_gemini33_init(const machine_t *model)
 
     machine_at_common_init(model);
 
-    device_add(&cs4031_device);
+    device_add(&opti495sx_device);
     device_add(&keyboard_at_phoenix_device);
 	device_add(&intel_flash_bxt_device);
 	
@@ -1607,7 +1607,7 @@ machine_at_jx30g_init(const machine_t *model)
 
     machine_at_common_init(model);
 
-    device_add(&cs4031_device);
+    device_add(&opti495sx_device);
     device_add(&keyboard_ps2_phoenix_device);
 	device_add(&intel_flash_bxt_device);
 	
@@ -3178,7 +3178,7 @@ machine_at_jx30g04p_init(const machine_t *model)
     machine_at_common_init(model);
     device_add(&keyboard_ps2_phoenix_device);
 	
-	device_add(&sis_85c461_device);
+	device_add(&sis_85c471_device);
 	device_add(&fdc37c665_device);
 	device_add(&ide_cmd640_vlb_device);
 	device_add(&intel_flash_bxt_device);
