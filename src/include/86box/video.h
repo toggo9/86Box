@@ -322,6 +322,8 @@ extern const device_t mach32_isa_device;
 extern const device_t mach32_vlb_device;
 extern const device_t mach32_mca_device;
 extern const device_t mach32_pci_device;
+extern const device_t mach32_onboard_isa_device;
+extern const device_t mach32_onboard_vlb_device;
 extern const device_t mach32_onboard_pci_device;
 
 /* IBM Display Adapter (PS/55) */
@@ -384,6 +386,7 @@ extern const device_t gd5429_vlb_device;
 extern const device_t gd5430_diamond_speedstar_pro_se_a8_vlb_device;
 extern const device_t gd5430_vlb_device;
 extern const device_t gd5430_onboard_vlb_device;
+extern const device_t gd5430_horizon_plus_pci_device;
 extern const device_t gd5430_pci_device;
 extern const device_t gd5430_onboard_pci_device;
 extern const device_t gd5434_isa_device;
@@ -398,7 +401,6 @@ extern const device_t gd5440_onboard_pci_device;
 extern const device_t gd5446_pci_device;
 extern const device_t gd5446_stb_pci_device;
 extern const device_t gd5480_pci_device;
-
 
 /* IBM CGA*/
 extern const device_t cga_device;
@@ -437,11 +439,14 @@ extern const device_t et4000w32_device;
 extern const device_t et4000w32_onboard_device;
 extern const device_t et4000w32i_isa_device;
 extern const device_t et4000w32i_vlb_device;
+extern const device_t et4000w32p_imascan_vlb_device;
+extern const device_t et4000w32p_mirovideo20td_vlb_device;
 extern const device_t et4000w32p_videomagic_revb_vlb_device;
 extern const device_t et4000w32p_videomagic_revb_pci_device;
 extern const device_t et4000w32p_revc_vlb_device;
 extern const device_t et4000w32p_revc_pci_device;
 extern const device_t et4000w32p_vlb_device;
+extern const device_t et4000w32p_revcd_onboard_pci_device;
 extern const device_t et4000w32p_pci_device;
 extern const device_t et4000w32p_noncardex_vlb_device;
 extern const device_t et4000w32p_noncardex_pci_device;
@@ -537,6 +542,7 @@ extern const device_t s3_phoenix_trio64_pci_device;
 extern const device_t s3_stb_powergraph_64_video_vlb_device;
 extern const device_t s3_phoenix_trio64vplus_pci_device;
 extern const device_t s3_phoenix_trio64vplus_onboard_pci_device;
+extern const device_t s3_mirocrystal_v22sd_t64plus_device;
 extern const device_t s3_cardex_trio64vplus_pci_device;
 extern const device_t s3_mirocrystal_20sv_964_vlb_device;
 extern const device_t s3_mirocrystal_20sv_964_pci_device;
@@ -608,6 +614,7 @@ extern const device_t ps1vga_mca_device;
 /* 3DFX Voodoo Graphics */
 extern const device_t voodoo_device;
 extern const device_t voodoo_banshee_device;
+extern const device_t voodoo_banshee_agp_device;
 extern const device_t creative_voodoo_banshee_device;
 extern const device_t quantum3d_raven_device;
 extern const device_t voodoo_3_1000_device;

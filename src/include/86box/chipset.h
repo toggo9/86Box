@@ -60,6 +60,9 @@ extern const device_t cs8220_device;
 extern const device_t cs8230_device;
 extern const device_t cs4031_device;
 
+/* ETEQ */
+extern const device_t et6000_device;
+
 /* G2 */
 extern const device_t gc100_device;
 extern const device_t gc100a_device;
@@ -207,6 +210,9 @@ extern const device_t wd76c10_device;
 extern const device_t tulip_jumper_device;
 
 extern const device_t dell_jumper_device;
+extern const device_t dell_jumper_gl_device;
+extern const device_t dell_jumper_gmt_device;
+extern const device_t dell_jumper_gxmt_device;
 
 extern const device_t nec_mate_unk_device;
 
