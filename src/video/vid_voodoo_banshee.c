@@ -18,7 +18,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
-#include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -52,6 +51,7 @@
 #include <86box/vid_voodoo_texture.h>
 
 #define ROM_BANSHEE                 "roms/video/voodoo/Pci_sg.rom"
+#define ROM_BANSHEE_AGP             "roms/video/voodoo/Agp_sg.rom"
 #define ROM_CREATIVE_BANSHEE        "roms/video/voodoo/BlasterPCI.rom"
 #define ROM_QUANTUM3D_RAVEN         "roms/video/voodoo/RVPD0224.rom"
 #define ROM_VOODOO3_1000            "roms/video/voodoo/1k11sg.rom"
@@ -80,6 +80,7 @@ static uint8_t vb_filter_bx_g[256][256];
 
 enum {
     TYPE_BANSHEE = 0,
+	TYPE_BANSHEE_AGP = 0,
     TYPE_QUANTUM3D_RAVEN,
     TYPE_V3_1000,
     TYPE_V3_2000,
@@ -122,8 +123,6 @@ typedef struct banshee_t {
     uint32_t vidProcCfg;
     uint32_t vidScreenSize;
     uint32_t vidSerialParallelPort;
-    uint32_t vidChromaKeyMin;
-    uint32_t vidChromaKeyMax;
 
     uint32_t agpReqSize;
     uint32_t agpHostAddressHigh;
@@ -155,8 +154,6 @@ typedef struct banshee_t {
 
     uint8_t pci_slot;
     uint8_t irq_state;
-
-    bool chroma_key_enabled;
 
     void *i2c, *i2c_ddc, *ddc;
 } banshee_t;
@@ -191,8 +188,6 @@ enum {
     Video_hwCurC0                      = 0x68,
     Video_hwCurC1                      = 0x6c,
     Video_vidSerialParallelPort        = 0x78,
-    Video_vidChromaKeyMin              = 0x8c,
-    Video_vidChromaKeyMax              = 0x90,
     Video_vidScreenSize                = 0x98,
     Video_vidOverlayStartCoords        = 0x9c,
     Video_vidOverlayEndScreenCoords    = 0xa0,
@@ -953,14 +948,6 @@ banshee_ext_outl(uint16_t addr, uint32_t val, void *priv)
             i2c_gpio_set(banshee->i2c, !!(val & VIDSERIAL_I2C_SCK_W), !!(val & VIDSERIAL_I2C_SDA_W));
             break;
 
-        case Video_vidChromaKeyMin:
-            banshee->vidChromaKeyMin = val;
-            break;
-        
-        case Video_vidChromaKeyMax:
-            banshee->vidChromaKeyMax = val;
-            break;
-
         case Video_vidScreenSize:
             banshee->vidScreenSize = val;
             voodoo->h_disp         = (val & 0xfff) + 1;
@@ -1268,12 +1255,6 @@ banshee_ext_inl(uint16_t addr, void *priv)
 #endif
             break;
 
-        case Video_vidChromaKeyMin:
-            ret = banshee->vidChromaKeyMin;
-            break;
-        case Video_vidChromaKeyMax:
-            ret = banshee->vidChromaKeyMax;
-            break;
         case Video_vidScreenSize:
             ret = banshee->vidScreenSize;
             break;
@@ -2655,97 +2636,12 @@ voodoo_generate_vb_filters(voodoo_t *voodoo, int fcr, int fcg)
     }
 }
 
-/* 1 = render overlay, 0 = render desktop */
-static bool
-banshee_chroma_key(banshee_t* banshee, uint32_t x, uint32_t y)
-{
-    uint32_t src_addr_desktop = banshee->desktop_addr + y * (banshee->vidDesktopOverlayStride & 0x3fff);
-    bool res = true;
-    uint8_t chromaKeyMaxIndex = banshee->vidChromaKeyMax & 0xff;
-    uint8_t chromaKeyMinIndex = banshee->vidChromaKeyMin & 0xff;
-    uint32_t desktop_pixel = 0;
-    uint8_t desktop_r = 0;
-    uint8_t desktop_g = 0;
-    uint8_t desktop_b = 0;
-    uint32_t prev_desktop_y = banshee->desktop_y - 1;
-
-    if (!banshee->chroma_key_enabled)
-        return true;
-
-    if (y > 2048)
-        return true;
-
-    if (!(banshee->vidProcCfg & (1 << 5))) {
-        return true;
-    }
-
-    switch (VIDPROCCFG_DESKTOP_PIX_FORMAT) {
-        case PIX_FORMAT_8:
-        {
-            desktop_pixel = banshee->svga.vram[src_addr_desktop + x];
-            res = (desktop_pixel & 0xFF) >= chromaKeyMinIndex && (desktop_pixel & 0xFF) <= chromaKeyMaxIndex;
-            break;
-        }
-        case PIX_FORMAT_RGB565:
-        {
-            if (banshee->vidProcCfg & VIDPROCCFG_DESKTOP_TILE) {
-                uint32_t addr = 0;
-                if (prev_desktop_y & 0x80000000)
-                    return false;
-                if (banshee->vidProcCfg & VIDPROCCFG_HALF_MODE)
-                    addr = banshee->desktop_addr + ((prev_desktop_y >> 1) & 31) * 128 + ((prev_desktop_y >> 6) * banshee->desktop_stride_tiled);
-                else
-                    addr = banshee->desktop_addr + (prev_desktop_y & 31) * 128 + ((prev_desktop_y >> 5) * banshee->desktop_stride_tiled);
-
-                addr += 128 * 32 * (x >> 6);
-                addr += (x & 63) * 2;
-                desktop_pixel = *(uint16_t*)&banshee->svga.vram[addr & banshee->svga.vram_mask];
-            } else {
-                desktop_pixel = *(uint16_t*)&banshee->svga.vram[(src_addr_desktop + x * 2) & banshee->svga.vram_mask];
-            }
-
-            desktop_r = (desktop_pixel & 0x1f);
-            desktop_g = (desktop_pixel & 0x7e0) >> 5;
-            desktop_b = (desktop_pixel & 0xf800) >> 11;
-
-            res = (desktop_r >= ((banshee->vidChromaKeyMin >> 11) & 0x1F) && desktop_r <= ((banshee->vidChromaKeyMax >> 11) & 0x1F)) &&
-                (desktop_g >= ((banshee->vidChromaKeyMin >> 5) & 0x3F) && desktop_g <= ((banshee->vidChromaKeyMax >> 5) & 0x3F)) &&
-                (desktop_b >= ((banshee->vidChromaKeyMin) & 0x1F) && desktop_b <= ((banshee->vidChromaKeyMax) & 0x1F));
-            break;
-        }
-        case PIX_FORMAT_RGB24:
-        {
-            desktop_r = banshee->svga.vram[(src_addr_desktop + x * 3) & banshee->svga.vram_mask];
-            desktop_g = banshee->svga.vram[(src_addr_desktop + x * 3 + 1) & banshee->svga.vram_mask];
-            desktop_b = banshee->svga.vram[(src_addr_desktop + x * 3 + 2) & banshee->svga.vram_mask];
-            res = (desktop_r >= ((banshee->vidChromaKeyMin >> 16) & 0xFF) && desktop_r <= ((banshee->vidChromaKeyMax >> 16) & 0xFF)) &&
-                (desktop_g >= ((banshee->vidChromaKeyMin >> 8) & 0xFF) && desktop_g <= ((banshee->vidChromaKeyMax >> 8) & 0xFF)) &&
-                (desktop_b >= ((banshee->vidChromaKeyMin) & 0xFF) && desktop_b <= ((banshee->vidChromaKeyMax) & 0xFF));
-            break;
-        }
-        case PIX_FORMAT_RGB32:
-        {
-            desktop_r = banshee->svga.vram[(src_addr_desktop + x * 4) & banshee->svga.vram_mask];
-            desktop_g = banshee->svga.vram[(src_addr_desktop + x * 4 + 1) & banshee->svga.vram_mask];
-            desktop_b = banshee->svga.vram[(src_addr_desktop + x * 4 + 2) & banshee->svga.vram_mask];
-            res = (desktop_r >= ((banshee->vidChromaKeyMin >> 16) & 0xFF) && desktop_r <= ((banshee->vidChromaKeyMax >> 16) & 0xFF)) &&
-                (desktop_g >= ((banshee->vidChromaKeyMin >> 8) & 0xFF) && desktop_g <= ((banshee->vidChromaKeyMax >> 8) & 0xFF)) &&
-                (desktop_b >= ((banshee->vidChromaKeyMin) & 0xFF) && desktop_b <= ((banshee->vidChromaKeyMax) & 0xFF));
-            break;
-        }
-    }
-
-    res ^= !!(banshee->vidProcCfg & (1 << 6));
-    return res;
-}
-
 static void
 banshee_overlay_draw(svga_t *svga, int displine)
 {
     banshee_t      *banshee = (banshee_t *) svga->priv;
     voodoo_t       *voodoo  = banshee->voodoo;
     uint32_t       *p;
-    bool            chroma_test_passed = true;
     int             x;
     int             y         = voodoo->overlay.src_y >> 20;
     uint32_t        src_addr  = svga->overlay_latch.addr + ((banshee->vidProcCfg & VIDPROCCFG_OVERLAY_TILE) ? ((y & 31) * 128 + (y >> 5) * svga->overlay_latch.pitch) : y * svga->overlay_latch.pitch);
@@ -2760,8 +2656,6 @@ banshee_overlay_draw(svga_t *svga, int displine)
         voodoo->overlay.src_y += (1 << 20);
         return;
     }
-    
-    chroma_test_passed = banshee_chroma_key(banshee, svga->overlay_latch.x, displine - svga->y_add);
 
     if ((voodoo->overlay.src_y >> 20) < 2048)
         voodoo->dirty_line[voodoo->overlay.src_y >> 20] = 0;
@@ -2779,8 +2673,7 @@ banshee_overlay_draw(svga_t *svga, int displine)
 
     if (skip_filtering) {
         /*No scaling or filtering required, just write straight to output buffer*/
-        if (chroma_test_passed)
-            OVERLAY_SAMPLE(p);
+        OVERLAY_SAMPLE(p);
     } else {
         OVERLAY_SAMPLE(banshee->overlay_buffer[0]);
 
@@ -2797,31 +2690,25 @@ banshee_overlay_draw(svga_t *svga, int displine)
                             ((0x10000 - x_coeff) * y_coeff) >> 16,
                             (x_coeff * y_coeff) >> 16
                         };
-                        uint32_t samp0     = banshee->overlay_buffer[0][src_x >> 20];
-                        uint32_t samp1     = banshee->overlay_buffer[0][(src_x >> 20) + 1];
-                        uint32_t samp2     = banshee->overlay_buffer[1][src_x >> 20];
-                        uint32_t samp3     = banshee->overlay_buffer[1][(src_x >> 20) + 1];
-                        int      r         = (((samp0 >> 16) & 0xff) * coeffs[0] + ((samp1 >> 16) & 0xff) * coeffs[1] + ((samp2 >> 16) & 0xff) * coeffs[2] + ((samp3 >> 16) & 0xff) * coeffs[3]) >> 16;
-                        int      g         = (((samp0 >> 8) & 0xff) * coeffs[0] + ((samp1 >> 8) & 0xff) * coeffs[1] + ((samp2 >> 8) & 0xff) * coeffs[2] + ((samp3 >> 8) & 0xff) * coeffs[3]) >> 16;
-                        int      b         = ((samp0 & 0xff) * coeffs[0] + (samp1 & 0xff) * coeffs[1] + (samp2 & 0xff) * coeffs[2] + (samp3 & 0xff) * coeffs[3]) >> 16;
-                        chroma_test_passed = banshee_chroma_key(banshee, svga->overlay_latch.x + x, displine - svga->y_add);
-
-                        if (chroma_test_passed)
-                            p[x] = (r << 16) | (g << 8) | b;
+                        uint32_t samp0 = banshee->overlay_buffer[0][src_x >> 20];
+                        uint32_t samp1 = banshee->overlay_buffer[0][(src_x >> 20) + 1];
+                        uint32_t samp2 = banshee->overlay_buffer[1][src_x >> 20];
+                        uint32_t samp3 = banshee->overlay_buffer[1][(src_x >> 20) + 1];
+                        int      r     = (((samp0 >> 16) & 0xff) * coeffs[0] + ((samp1 >> 16) & 0xff) * coeffs[1] + ((samp2 >> 16) & 0xff) * coeffs[2] + ((samp3 >> 16) & 0xff) * coeffs[3]) >> 16;
+                        int      g     = (((samp0 >> 8) & 0xff) * coeffs[0] + ((samp1 >> 8) & 0xff) * coeffs[1] + ((samp2 >> 8) & 0xff) * coeffs[2] + ((samp3 >> 8) & 0xff) * coeffs[3]) >> 16;
+                        int      b     = ((samp0 & 0xff) * coeffs[0] + (samp1 & 0xff) * coeffs[1] + (samp2 & 0xff) * coeffs[2] + (samp3 & 0xff) * coeffs[3]) >> 16;
+                        p[x]           = (r << 16) | (g << 8) | b;
 
                         src_x += voodoo->overlay.vidOverlayDudx;
                     }
                 } else {
                     for (x = 0; x < svga->overlay_latch.cur_xsize; x++) {
-                        uint32_t samp0     = banshee->overlay_buffer[0][src_x >> 20];
-                        uint32_t samp1     = banshee->overlay_buffer[1][src_x >> 20];
-                        int      r         = (((samp0 >> 16) & 0xff) * (0x10000 - y_coeff) + ((samp1 >> 16) & 0xff) * y_coeff) >> 16;
-                        int      g         = (((samp0 >> 8) & 0xff) * (0x10000 - y_coeff) + ((samp1 >> 8) & 0xff) * y_coeff) >> 16;
-                        int      b         = ((samp0 & 0xff) * (0x10000 - y_coeff) + (samp1 & 0xff) * y_coeff) >> 16;
-                        chroma_test_passed = banshee_chroma_key(banshee, svga->overlay_latch.x + x, displine - svga->y_add);
-
-                        if (chroma_test_passed)
-                            p[x] = (r << 16) | (g << 8) | b;
+                        uint32_t samp0 = banshee->overlay_buffer[0][src_x >> 20];
+                        uint32_t samp1 = banshee->overlay_buffer[1][src_x >> 20];
+                        int      r     = (((samp0 >> 16) & 0xff) * (0x10000 - y_coeff) + ((samp1 >> 16) & 0xff) * y_coeff) >> 16;
+                        int      g     = (((samp0 >> 8) & 0xff) * (0x10000 - y_coeff) + ((samp1 >> 8) & 0xff) * y_coeff) >> 16;
+                        int      b     = ((samp0 & 0xff) * (0x10000 - y_coeff) + (samp1 & 0xff) * y_coeff) >> 16;
+                        p[x]           = (r << 16) | (g << 8) | b;
                     }
                 }
                 break;
@@ -2876,30 +2763,21 @@ banshee_overlay_draw(svga_t *svga, int displine)
                         fil3[x * 3 + 2] = vb_filter_v1_rb[fil[x * 3 + 2]][fil[(x - 1) * 3 + 2]];
                     }
                     for (x = 0; x < svga->overlay_latch.cur_xsize; x++) {
-                        fil[x * 3]         = vb_filter_v1_rb[fil[x * 3]][fil3[(x + 1) * 3]];
-                        fil[x * 3 + 1]     = vb_filter_v1_g[fil[x * 3 + 1]][fil3[(x + 1) * 3 + 1]];
-                        fil[x * 3 + 2]     = vb_filter_v1_rb[fil[x * 3 + 2]][fil3[(x + 1) * 3 + 2]];
-                        chroma_test_passed = banshee_chroma_key(banshee, svga->overlay_latch.x + x, displine - svga->y_add);
-                        
-                        if (chroma_test_passed)
-                            p[x] = (fil[x * 3 + 2] << 16) | (fil[x * 3 + 1] << 8) | fil[x * 3];
+                        fil[x * 3]     = vb_filter_v1_rb[fil[x * 3]][fil3[(x + 1) * 3]];
+                        fil[x * 3 + 1] = vb_filter_v1_g[fil[x * 3 + 1]][fil3[(x + 1) * 3 + 1]];
+                        fil[x * 3 + 2] = vb_filter_v1_rb[fil[x * 3 + 2]][fil3[(x + 1) * 3 + 2]];
+                        p[x]            = (fil[x * 3 + 2] << 16) | (fil[x * 3 + 1] << 8) | fil[x * 3];
                     }
                 } else /* filter disabled by emulator option */
                 {
                     if (banshee->vidProcCfg & VIDPROCCFG_H_SCALE_ENABLE) {
                         for (x = 0; x < svga->overlay_latch.cur_xsize; x++) {
-                            chroma_test_passed = banshee_chroma_key(banshee, svga->overlay_latch.x + x, displine - svga->y_add);
-                            if (chroma_test_passed)
-                                p[x] = banshee->overlay_buffer[0][src_x >> 20];
-
+                            p[x] = banshee->overlay_buffer[0][src_x >> 20];
                             src_x += voodoo->overlay.vidOverlayDudx;
                         }
                     } else {
-                        for (x = 0; x < svga->overlay_latch.cur_xsize; x++) {
-                            chroma_test_passed = banshee_chroma_key(banshee, svga->overlay_latch.x + x, displine - svga->y_add);
-                            if (chroma_test_passed)
-                                p[x] = banshee->overlay_buffer[0][x];
-                        }
+                        for (x = 0; x < svga->overlay_latch.cur_xsize; x++)
+                            p[x] = banshee->overlay_buffer[0][x];
                     }
                 }
                 break;
@@ -2954,35 +2832,25 @@ banshee_overlay_draw(svga_t *svga, int displine)
                     if (banshee->vidProcCfg & VIDPROCCFG_H_SCALE_ENABLE) /* 2x2 on a scaled low res */
                     {
                         for (x = 0; x < svga->overlay_latch.cur_xsize; x++) {
-                            chroma_test_passed = banshee_chroma_key(banshee, svga->overlay_latch.x + x, displine - svga->y_add);
-                            if (chroma_test_passed)
-                                p[x] = (fil[(src_x >> 20) * 3 + 2] << 16) | (fil[(src_x >> 20) * 3 + 1] << 8) | fil[(src_x >> 20) * 3];
-
+                            p[x] = (fil[(src_x >> 20) * 3 + 2] << 16) | (fil[(src_x >> 20) * 3 + 1] << 8) | fil[(src_x >> 20) * 3];
                             src_x += voodoo->overlay.vidOverlayDudx;
                         }
                     } else {
                         for (x = 0; x < svga->overlay_latch.cur_xsize; x++) {
-                            chroma_test_passed = banshee_chroma_key(banshee, svga->overlay_latch.x + x, displine - svga->y_add);
-                            if (chroma_test_passed)
-                                p[x] = (fil[x * 3 + 2] << 16) | (fil[x * 3 + 1] << 8) | fil[x * 3];
+                            p[x] = (fil[x * 3 + 2] << 16) | (fil[x * 3 + 1] << 8) | fil[x * 3];
                         }
                     }
                 } else /* filter disabled by emulator option */
                 {
                     if (banshee->vidProcCfg & VIDPROCCFG_H_SCALE_ENABLE) {
                         for (x = 0; x < svga->overlay_latch.cur_xsize; x++) {
-                            chroma_test_passed = banshee_chroma_key(banshee, svga->overlay_latch.x + x, displine - svga->y_add);
-                            if (chroma_test_passed)
-                                p[x] = banshee->overlay_buffer[0][src_x >> 20];
+                            p[x] = banshee->overlay_buffer[0][src_x >> 20];
 
                             src_x += voodoo->overlay.vidOverlayDudx;
                         }
                     } else {
-                        for (x = 0; x < svga->overlay_latch.cur_xsize; x++) {
-                            chroma_test_passed = banshee_chroma_key(banshee, svga->overlay_latch.x + x, displine - svga->y_add);
-                            if (chroma_test_passed)
-                                p[x] = banshee->overlay_buffer[0][x];
-                        }
+                        for (x = 0; x < svga->overlay_latch.cur_xsize; x++)
+                            p[x] = banshee->overlay_buffer[0][x];
                     }
                 }
                 break;
@@ -2991,18 +2859,13 @@ banshee_overlay_draw(svga_t *svga, int displine)
             default:
                 if (banshee->vidProcCfg & VIDPROCCFG_H_SCALE_ENABLE) {
                     for (x = 0; x < svga->overlay_latch.cur_xsize; x++) {
-                        chroma_test_passed = banshee_chroma_key(banshee, svga->overlay_latch.x + x, displine - svga->y_add);
-                        if (chroma_test_passed)
-                            p[x] = banshee->overlay_buffer[0][src_x >> 20];
+                        p[x] = banshee->overlay_buffer[0][src_x >> 20];
 
                         src_x += voodoo->overlay.vidOverlayDudx;
                     }
                 } else {
-                    for (x = 0; x < svga->overlay_latch.cur_xsize; x++) {
-                        chroma_test_passed = banshee_chroma_key(banshee, svga->overlay_latch.x + x, displine - svga->y_add);
-                        if (chroma_test_passed)
-                            p[x] = banshee->overlay_buffer[0][x];
-                    }
+                    for (x = 0; x < svga->overlay_latch.cur_xsize; x++)
+                        p[x] = banshee->overlay_buffer[0][x];
                 }
                 break;
         }
@@ -3401,8 +3264,6 @@ banshee_init_common(const device_t *info, char *fn, int has_sgram, int type, int
     banshee->agp      = agp;
     banshee->has_bios = !!fn;
 
-    banshee->chroma_key_enabled = device_get_config_int("chromakey");
-
     if (banshee->has_bios) {
         rom_init(&banshee->bios_rom, fn, 0xc0000, 0x10000, 0xffff, 0, MEM_MAPPING_EXTERNAL);
         mem_mapping_disable(&banshee->bios_rom.mapping);
@@ -3599,6 +3460,12 @@ banshee_init(const device_t *info)
 }
 
 static void *
+banshee_agp_init(const device_t *info)
+{
+    return banshee_init_common(info, ROM_BANSHEE_AGP, 1, TYPE_BANSHEE_AGP, VOODOO_BANSHEE, 0);
+}
+
+static void *
 creative_banshee_init(const device_t *info)
 {
     return banshee_init_common(info, ROM_CREATIVE_BANSHEE, 0, TYPE_BANSHEE, VOODOO_BANSHEE, 0);
@@ -3699,6 +3566,13 @@ banshee_available(void)
 {
     return rom_present(ROM_BANSHEE);
 }
+
+static int
+banshee_agp_available(void)
+{
+    return rom_present(ROM_BANSHEE_AGP);
+}
+
 
 static int
 creative_banshee_available(void)
@@ -3834,17 +3708,6 @@ static const device_config_t banshee_sgram_config[] = {
         .bios           = { { 0 } }
     },
     {
-        .name           = "chromakey",
-        .description    = "Video chroma-keying",
-        .type           = CONFIG_BINARY,
-        .default_string = NULL,
-        .default_int    = 1,
-        .file_filter    = NULL,
-        .spinner        = { 0 },
-        .selection      = { { 0 } },
-        .bios           = { { 0 } }
-    },
-    {
         .name           = "dithersub",
         .description    = "Dither subtraction",
         .type           = CONFIG_BINARY,
@@ -3911,17 +3774,6 @@ static const device_config_t banshee_sgram_16mbonly_config[] = {
         .bios           = { { 0 } }
     },
     {
-        .name           = "chromakey",
-        .description    = "Video chroma-keying",
-        .type           = CONFIG_BINARY,
-        .default_string = NULL,
-        .default_int    = 1,
-        .file_filter    = NULL,
-        .spinner        = { 0 },
-        .selection      = { { 0 } },
-        .bios           = { { 0 } }
-    },
-    {
         .name           = "dithersub",
         .description    = "Dither subtraction",
         .type           = CONFIG_BINARY,
@@ -3979,17 +3831,6 @@ static const device_config_t banshee_sdram_config[] = {
     {
         .name           = "bilinear",
         .description    = "Bilinear filtering",
-        .type           = CONFIG_BINARY,
-        .default_string = NULL,
-        .default_int    = 1,
-        .file_filter    = NULL,
-        .spinner        = { 0 },
-        .selection      = { { 0 } },
-        .bios           = { { 0 } }
-    },
-    {
-        .name           = "chromakey",
-        .description    = "Video chroma-keying",
         .type           = CONFIG_BINARY,
         .default_string = NULL,
         .default_int    = 1,
@@ -4104,6 +3945,20 @@ const device_t voodoo_3_1000_device = {
     .close         = banshee_close,
     .reset         = NULL,
     .available     = v3_1000_available,
+    .speed_changed = banshee_speed_changed,
+    .force_redraw  = banshee_force_redraw,
+    .config        = banshee_sgram_config
+};
+
+const device_t voodoo_banshee_agp_device = {
+    .name          = "3Dfx Voodoo Banshee (AGP)",
+    .internal_name = "voodoo_banshee_agp",
+    .flags         = DEVICE_AGP,
+    .local         = 0,
+    .init          = banshee_init,
+    .close         = banshee_close,
+    .reset         = NULL,
+    .available     = banshee_available,
     .speed_changed = banshee_speed_changed,
     .force_redraw  = banshee_force_redraw,
     .config        = banshee_sgram_config
