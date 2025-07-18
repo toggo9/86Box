@@ -121,3 +121,29 @@ machine_at_cmdpc_init(const machine_t *model)
 
     return ret;
 }
+
+int
+machine_at_pc40iii_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/pc40iii/cbm-pc45c-bios-lo-v2.04-390339-05.bin",
+								"roms/machines/pc40iii/cbm-pc45c-bios-hi-v2.04-390340-05.bin",
+								0x000f8000, 32768, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+	machine_at_init(model);
+	
+	mem_remap_top(384);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+	
+	cmd_uart = device_add(&ns8250_device);
+
+    cbm_io_init();
+
+    return ret;
+}
