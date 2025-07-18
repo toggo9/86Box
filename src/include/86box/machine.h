@@ -955,7 +955,6 @@ extern int machine_at_p55t2p4_init(const machine_t *);
 extern int machine_at_delloptigxi_init(const machine_t *);
 extern int machine_at_ga586dx_init(const machine_t *);
 extern int machine_at_genovagt_init(const machine_t *);
-extern int machine_at_d969_init(const machine_t *);
 extern int machine_at_m7shi_init(const machine_t *);
 extern int machine_at_tc430hx_init(const machine_t *);
 extern int machine_at_millennialxamta_init(const machine_t *);
