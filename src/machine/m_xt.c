@@ -1204,23 +1204,6 @@ machine_xt_spc3100_init(const machine_t *model)
     machine_xt_common_init(model, 0);
 
     return ret;
-}
-
-int
-machine_xt_pcterm2094_init(const machine_t *model)
-{
-    int ret;
-
-    ret = bios_load_linear("roms/machines/pcterm2094/santa_clara_systems_pcterminal_1986.bin",
-                           0x000f8000, 32768, 0);
-
-    if (bios_only || !ret)
-        return ret;
-	
-	machine_xt_clone_init(model, 0);
-
-    return ret;
-}
 
 int
 machine_xt_tandonxt_init(const machine_t *model)
@@ -1588,47 +1571,6 @@ machine_xt_speed22_init(const machine_t *model)
 
     return ret;
 }
-
-int
-machine_xt_t1200ct_init(const machine_t *model)
-{
-    int ret;
-
-    ret = bios_load_linear("roms/machines/t1200ct/BIOS_Award_XT_3.0_ver_1.05.bin",
-                           0x000f8000, 32768, 0);
-
-    if (bios_only || !ret)
-        return ret;
-
-    device_add(&keyboard_pc_device);
-
-    machine_xt_clone_init(model, 1);
-
-    return ret;
-}
-
-int
-machine_xt_micropc_init(const machine_t *model)
-{
-    int ret;
-
-    ret = bios_load_linear("roms/machines/micropc/CPC-010.bin",
-                           0x000f8000, 32768, 0);
-
-    if (bios_only || !ret)
-        return ret;
-
-    device_add(&keyboard_xt_fe2010_device);
-
-    if (fdc_current[0] == FDC_INTERNAL)
-        device_add(&fdc_xt_device);
-
-    machine_xt_common_init(model, 0);
-
-
-    return ret;
-}
-
 int
 machine_xt_turboplus_init(const machine_t *model)
 {
@@ -1646,31 +1588,6 @@ machine_xt_turboplus_init(const machine_t *model)
 
     return ret;
 }
-
-int
-machine_xt_dt88_init(const machine_t *model)
-{
-    int ret;
-
-    ret = bios_load_linear("roms/machines/dt88/Intertan.bin",
-                           0x000f0000, 65536, 0);
-
-    if (bios_only || !ret)
-        return ret;
-
-    device_add(&keyboard_pc_device);
-
-    machine_xt_compact2_init(model, 0);
-	device_add(&at_nvr_device);
-	device_add(&pc87310_device);
-	device_add(&xta_hd20_device);
-	
-	if (fdc_current[0] == FDC_INTERNAL)
-        device_add(&fdc_at_device);
-
-    return ret;
-}
-
 int
 machine_xt_tulip_pccompact2_init(const machine_t *model)
 {
