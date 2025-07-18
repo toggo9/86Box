@@ -1393,47 +1393,6 @@ const machine_t machines[] = {
         .snd_device = NULL,
         .net_device = NULL
     },
-	
-	{
-        .name = "[8088] Santa Clara Systems, Inc. PC-Terminal 2094",
-        .internal_name = "pcterm2094",
-        .type = MACHINE_TYPE_8088,
-        .chipset = MACHINE_CHIPSET_DISCRETE,
-        .init = machine_xt_pcterm2094_init,
-        .p1_handler = NULL,
-        .gpio_handler = NULL,
-        .available_flag = MACHINE_AVAILABLE,
-        .gpio_acpi_handler = NULL,
-        .cpu = {
-            .package = CPU_PKG_8088,
-            .block = CPU_BLOCK_NONE,
-            .min_bus = 0,
-            .max_bus = 0,
-            .min_voltage = 0,
-            .max_voltage = 0,
-            .min_multi = 0,
-            .max_multi = 0
-        },
-        .bus_flags = MACHINE_PC,
-        .flags = MACHINE_FLAGS_NONE,
-        .ram = {
-            .min = 128,
-            .max = 640,
-            .step = 64
-        },
-        .nvrmask = 0,
-        .kbc_device = &keyboard_xtclone_device,
-        .kbc_p1 = 0xff,
-        .gpio = 0xffffffff,
-        .gpio_acpi = 0xffffffff,
-        .device = NULL,
-        .fdc_device = NULL,
-        .sio_device = NULL,
-        .vid_device = NULL,
-        .snd_device = NULL,
-        .net_device = NULL
-    },
-	
 	{
         .name = "[8088] TANDON CORPORATION MODEL 188840",
         .internal_name = "tandonxt",
@@ -2033,87 +1992,6 @@ const machine_t machines[] = {
         .snd_device = NULL,
         .net_device = NULL
     },
-	
-	{
-        .name = "[8088] Siemens T1200CT",
-        .internal_name = "t1200ct",
-        .type = MACHINE_TYPE_8088,
-        .chipset = MACHINE_CHIPSET_DISCRETE,
-        .init = machine_xt_t1200ct_init,
-        .p1_handler = NULL,
-        .gpio_handler = NULL,
-        .available_flag = MACHINE_AVAILABLE,
-        .gpio_acpi_handler = NULL,
-        .cpu = {
-            .package = CPU_PKG_8088,
-            .block = CPU_BLOCK_NONE,
-            .min_bus = 0,
-            .max_bus = 0,
-            .min_voltage = 0,
-            .max_voltage = 0,
-            .min_multi = 0,
-            .max_multi = 0
-        },
-        .bus_flags = MACHINE_PC,
-        .flags = MACHINE_FLAGS_NONE,
-        .ram = {
-            .min = 128,
-            .max = 640,
-            .step = 64
-        },
-        .nvrmask = 0,
-        .kbc_device = &keyboard_pc_device,
-        .kbc_p1 = 0xff,
-        .gpio = 0xffffffff,
-        .gpio_acpi = 0xffffffff,
-        .device = NULL,
-        .fdc_device = NULL,
-        .sio_device = NULL,
-        .vid_device = NULL,
-        .snd_device = NULL,
-        .net_device = NULL
-    },
-	
-	{
-        .name = "[8088] Faraday Micro PC",
-        .internal_name = "micropc",
-        .type = MACHINE_TYPE_8088,
-        .chipset = MACHINE_CHIPSET_DISCRETE,
-        .init = machine_xt_micropc_init,
-        .p1_handler = NULL,
-        .gpio_handler = NULL,
-        .available_flag = MACHINE_AVAILABLE,
-        .gpio_acpi_handler = NULL,
-        .cpu = {
-            .package = CPU_PKG_8088,
-            .block = CPU_BLOCK_NONE,
-            .min_bus = 0,
-            .max_bus = 0,
-            .min_voltage = 0,
-            .max_voltage = 0,
-            .min_multi = 0,
-            .max_multi = 0
-        },
-        .bus_flags = MACHINE_PC,
-        .flags = MACHINE_FLAGS_NONE,
-        .ram = {
-            .min = 128,
-            .max = 640,
-            .step = 64
-        },
-        .nvrmask = 0,
-        .kbc_device = &keyboard_xtclone_device,
-        .kbc_p1 = 0xff,
-        .gpio = 0xffffffff,
-        .gpio_acpi = 0xffffffff,
-        .device = NULL,
-        .fdc_device = NULL,
-        .sio_device = NULL,
-        .vid_device = NULL,
-        .snd_device = NULL,
-        .net_device = NULL
-    },
-	
 	{
         .name = "[8088] Golden Star Technology Inc TURBO PLUS",
         .internal_name = "turboplus",
@@ -2153,47 +2031,6 @@ const machine_t machines[] = {
         .snd_device = NULL,
         .net_device = NULL
     },
-	
-	{
-        .name = "[8088] Intertan DT-88",
-        .internal_name = "dt88",
-        .type = MACHINE_TYPE_8088,
-        .chipset = MACHINE_CHIPSET_DISCRETE,
-        .init = machine_xt_dt88_init,
-        .p1_handler = NULL,
-        .gpio_handler = NULL,
-        .available_flag = MACHINE_AVAILABLE,
-        .gpio_acpi_handler = NULL,
-        .cpu = {
-            .package = CPU_PKG_8088,
-            .block = CPU_BLOCK_NONE,
-            .min_bus = 0,
-            .max_bus = 0,
-            .min_voltage = 0,
-            .max_voltage = 0,
-            .min_multi = 0,
-            .max_multi = 0
-        },
-        .bus_flags = MACHINE_PC,
-        .flags = MACHINE_XTA,
-        .ram = {
-            .min = 128,
-            .max = 640,
-            .step = 64
-        },
-        .nvrmask = 63,
-        .kbc_device = &keyboard_pc_device,
-        .kbc_p1 = 0xff,
-        .gpio = 0xffffffff,
-        .gpio_acpi = 0xffffffff,
-        .device = NULL,
-        .fdc_device = NULL,
-        .sio_device = NULL,
-        .vid_device = NULL,
-        .snd_device = NULL,
-        .net_device = NULL
-    },
-	
 	{
         .name = "[8088] Long State LS-1720",
         .internal_name = "ls1720",
