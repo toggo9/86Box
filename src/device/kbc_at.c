@@ -2957,6 +2957,20 @@ const device_t keyboard_ps2_mca_2_device = {
     .config        = NULL
 };
 
+const device_t keyboard_ps2_olivetti_device = {
+    .name          = "PS/2 Keyboard (Olivetti)",
+    .internal_name = "keyboard_ps2_olivetti",
+    .flags         = DEVICE_KBC,
+    .local         = KBC_TYPE_PS2_1 | KBC_VEN_OLIVETTI,
+    .init          = kbc_at_init,
+    .close         = kbc_at_close,
+    .reset         = kbc_at_reset,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = NULL
+};
+
 const device_t keyboard_ps2_quadtel_device = {
     .name          = "PS/2 Keyboard (Quadtel/MegaPC)",
     .internal_name = "keyboard_ps2_quadtel",
