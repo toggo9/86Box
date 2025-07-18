@@ -300,43 +300,6 @@ machine_at_genovagt_init(const machine_t *model)
 }
 
 int
-machine_at_d969_init(const machine_t *model)
-{
-    int ret;
-
-    ret = bios_load_linear("roms/machines/d969/d969.bin",
-                           0x000c0000, 262144, 0);
-
-    if (bios_only || !ret)
-        return ret;
-
-    machine_at_common_init_ex(model, 2);
-	device_add(&amstrad_megapc_nvr_device);
-	
-    pci_init(PCI_CONFIG_TYPE_1);
-    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
-	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4); /* Onboard */
-	pci_register_slot(0x08, PCI_CARD_VIDEO, 	  4, 0, 0, 0); /* Onboard */
-	pci_register_slot(0x11, PCI_CARD_NORMAL,      1, 2, 3, 4); /* Slot 01 */
-	pci_register_slot(0x12, PCI_CARD_NORMAL,	  2, 3, 4, 1); /* Slot 02 */
-	pci_register_slot(0x13, PCI_CARD_NORMAL,	  3, 4, 1, 2); /* Slot 03 */
-	pci_register_slot(0x14, PCI_CARD_NORMAL,	  4, 1, 2, 3); /* Slot 04 */
-    device_add(&i430hx_device);
-	device_add(&piix3_device);
-    device_add_params(&pc87307_device, (void *) (PCX730X_PHOENIX_42 | PCX7307_PC97307));
-    device_add(&intel_flash_bxt_device);
-	spd_register(SPD_TYPE_EDO, 0x7, 256);
-	
-	if (gfxcard[0] == VID_INTERNAL)
-        device_add(machine_get_vid_device(machine));
-	
-	 if (sound_card_current[0] == SOUND_INTERNAL)
-        device_add(&sb_vibra16c_onboard_device);
-
-    return ret;
-}
-
-int
 machine_at_m7shi_init(const machine_t *model)
 {
     int ret;
