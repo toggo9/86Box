@@ -141,6 +141,39 @@ dell_jumper_reset(void *priv)
 }
 
 static void
+dell_jumper_gl_reset(void *priv)
+{
+    dell_jumper_t *dev = (dell_jumper_t *) priv;
+
+    dev->index = 0x00;
+    memset(dev->regs, 0x00, 256);
+	
+    dev->regs[0x07] = 0x06;
+}
+
+static void
+dell_jumper_gmt_reset(void *priv)
+{
+    dell_jumper_t *dev = (dell_jumper_t *) priv;
+
+    dev->index = 0x00;
+    memset(dev->regs, 0x00, 256);
+	
+        dev->regs[0x07] = 0x0E;
+}
+
+static void
+dell_jumper_gxmt_reset(void *priv)
+{
+    dell_jumper_t *dev = (dell_jumper_t *) priv;
+
+    dev->index = 0x00;
+    memset(dev->regs, 0x00, 256);
+	
+        dev->regs[0x07] = 0x0A;
+}
+
+static void
 dell_jumper_close(void *priv)
 {
     dell_jumper_t *dev = (dell_jumper_t *) priv;
@@ -160,6 +193,42 @@ dell_jumper_init(const device_t *info)
     return dev;
 }
 
+static void *
+dell_jumper_gl_init(const device_t *info)
+{
+    dell_jumper_t *dev = (dell_jumper_t *) calloc(1, sizeof(dell_jumper_t));
+
+    dell_jumper_gl_reset(dev);
+
+    io_sethandler(0x00e8, 0x0002, dell_jumper_read, NULL, NULL, dell_jumper_write, NULL, NULL, dev);
+
+    return dev;
+}
+
+static void *
+dell_jumper_gmt_init(const device_t *info)
+{
+    dell_jumper_t *dev = (dell_jumper_t *) calloc(1, sizeof(dell_jumper_t));
+
+    dell_jumper_gmt_reset(dev);
+
+    io_sethandler(0x00e8, 0x0002, dell_jumper_read, NULL, NULL, dell_jumper_write, NULL, NULL, dev);
+
+    return dev;
+}
+
+static void *
+dell_jumper_gxmt_init(const device_t *info)
+{
+    dell_jumper_t *dev = (dell_jumper_t *) calloc(1, sizeof(dell_jumper_t));
+
+    dell_jumper_gxmt_reset(dev);
+
+    io_sethandler(0x00e8, 0x0002, dell_jumper_read, NULL, NULL, dell_jumper_write, NULL, NULL, dev);
+
+    return dev;
+}
+
 const device_t dell_jumper_device = {
     .name          = "Dell Jumper Readout",
     .internal_name = "dell_jumper",
@@ -168,6 +237,48 @@ const device_t dell_jumper_device = {
     .init          = dell_jumper_init,
     .close         = dell_jumper_close,
     .reset         = dell_jumper_reset,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = NULL
+};
+
+const device_t dell_jumper_gl_device = {
+    .name          = "Dell Jumper Readout (GL)",
+    .internal_name = "dell_jumper_gl",
+    .flags         = 0,
+    .local         = 0,
+    .init          = dell_jumper_gl_init,
+    .close         = dell_jumper_close,
+    .reset         = dell_jumper_gl_reset,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = NULL
+};
+
+const device_t dell_jumper_gmt_device = {
+    .name          = "Dell Jumper Readout (GMT)",
+    .internal_name = "dell_jumper_gmt",
+    .flags         = 0,
+    .local         = 0,
+    .init          = dell_jumper_gmt_init,
+    .close         = dell_jumper_close,
+    .reset         = dell_jumper_gmt_reset,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = NULL
+};
+
+const device_t dell_jumper_gxmt_device = {
+    .name          = "Dell Jumper Readout (GXMT)",
+    .internal_name = "dell_jumper_gxmt",
+    .flags         = 0,
+    .local         = 0,
+    .init          = dell_jumper_gxmt_init,
+    .close         = dell_jumper_close,
+    .reset         = dell_jumper_gxmt_reset,
     .available     = NULL,
     .speed_changed = NULL,
     .force_redraw  = NULL,
