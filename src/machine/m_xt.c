@@ -1204,6 +1204,7 @@ machine_xt_spc3100_init(const machine_t *model)
     machine_xt_common_init(model, 0);
 
     return ret;
+}
 
 int
 machine_xt_tandonxt_init(const machine_t *model)
