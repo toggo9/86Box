@@ -177,14 +177,28 @@ do_stop(void)
 #endif
 }
 
+extern bool acp_utf8;
 void
 plat_get_exe_name(char *s, int size)
 {
+#ifdef Q_OS_WINDOWS
+    wchar_t *temp;
+
+    if (acp_utf8)
+        GetModuleFileNameA(NULL, s, size);
+    else {
+        temp = (wchar_t*)calloc(size, sizeof(wchar_t));
+        GetModuleFileNameW(NULL, temp, size);
+        c16stombs(s, (uint16_t*)temp, size);
+        free(temp);
+    }
+#else
     QByteArray exepath_temp = QCoreApplication::applicationDirPath().toLocal8Bit();
 
     memcpy(s, exepath_temp.data(), std::min((qsizetype) exepath_temp.size(), (qsizetype) size));
 
     path_slash(s);
+#endif
 }
 
 uint32_t
@@ -341,9 +355,25 @@ path_get_slash(char *path)
 void
 path_append_filename(char *dest, const char *s1, const char *s2)
 {
-    strcpy(dest, s1);
-    path_slash(dest);
-    strcat(dest, s2);
+    size_t dest_size = 260;
+    size_t len;
+
+    if (!dest || !s1 || !s2)
+        return;
+
+    snprintf(dest, dest_size, "%s", s1);
+    len = strlen(dest);
+
+    if (len > 0 && dest[len - 1] != '/' && dest[len - 1] != '\\') {
+        if (len + 1 < dest_size) {
+            dest[len++] = '/';
+            dest[len] = '\0';
+        }
+    }
+
+    if (len < dest_size - 1) {
+        strncat(dest, s2, dest_size - len - 1);
+    }
 }
 
 void
@@ -776,8 +806,8 @@ plat_set_thread_name(void *thread, const char *name)
 
     if (pSetThreadDescription) {
         size_t len = strlen(name) + 1;
-        wchar_t wname[len + 1];
-        mbstowcs(wname, name, len);
+        wchar_t wname[2048];
+        mbstowcs(wname, name, (len >= 1024) ? 1024 : len);
         pSetThreadDescription(thread ? (HANDLE) thread : GetCurrentThread(), wname);
     }
 #else

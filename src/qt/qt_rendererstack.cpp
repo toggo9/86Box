@@ -21,7 +21,6 @@
 #include "qt_rendererstack.hpp"
 #include "ui_qt_rendererstack.h"
 
-#include "qt_hardwarerenderer.hpp"
 #include "qt_openglrenderer.hpp"
 #include "qt_softwarerenderer.hpp"
 #include "qt_vulkanwindowrenderer.hpp"
@@ -40,6 +39,22 @@
 #include <QMessageBox>
 #include <QTouchEvent>
 #include <QStringBuilder>
+
+#include <QPainter>
+#include <QEvent>
+#include <QKeyEvent>
+#include <QWidget>
+
+#include <atomic>
+#include <mutex>
+#include <array>
+#include <vector>
+#include <memory>
+#include <QApplication>
+
+#ifdef WAYLAND
+#    include "wl_mouse.hpp"
+#endif
 
 #ifdef __APPLE__
 #    include <CoreGraphics/CoreGraphics.h>
@@ -151,6 +166,10 @@ int ignoreNextMouseEvent = 1;
 void
 RendererStack::mouseReleaseEvent(QMouseEvent *event)
 {
+#ifdef Q_OS_WINDOWS
+    rw_hwnd        = (HWND) this->winId();                
+#endif
+
     if (!dopause && this->geometry().contains(m_monitor_index >= 1 ? event->globalPos() : event->pos()) &&
         (event->button() == Qt::LeftButton) && !mouse_capture &&
         (isMouseDown & 1) && (kbd_req_capture || (mouse_get_buttons() != 0)) &&
@@ -336,24 +355,6 @@ RendererStack::createRenderer(Renderer renderer)
 #endif
             }
             break;
-        case Renderer::OpenGL:
-            {
-                this->createWinId();
-                auto hw        = new HardwareRenderer(this);
-                rendererWindow = hw;
-                connect(this, &RendererStack::blitToRenderer, hw, &HardwareRenderer::onBlit, Qt::QueuedConnection);
-                current.reset(this->createWindowContainer(hw, this));
-                break;
-            }
-        case Renderer::OpenGLES:
-            {
-                this->createWinId();
-                auto hw        = new HardwareRenderer(this, HardwareRenderer::RenderType::OpenGLES);
-                rendererWindow = hw;
-                connect(this, &RendererStack::blitToRenderer, hw, &HardwareRenderer::onBlit, Qt::QueuedConnection);
-                current.reset(this->createWindowContainer(hw, this));
-                break;
-            }
         case Renderer::OpenGL3:
             {
                 this->createWinId();
@@ -413,14 +414,8 @@ RendererStack::createRenderer(Renderer renderer)
 #endif
     }
     if (current.get() == nullptr) {
-#ifdef Q_OS_WINDOWS
-        rw_hwnd = NULL;
-#endif
         return;
     }
-#ifdef Q_OS_WINDOWS
-    rw_hwnd        = (HWND) this->winId();                
-#endif
     current->setFocusPolicy(Qt::NoFocus);
     current->setFocusProxy(this);
     current->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);

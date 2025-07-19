@@ -212,18 +212,9 @@ int
 fdd_get_from_internal_name(char *s)
 {
     int   c = 0;
-    char *n;
-
-    /* TODO: Remove this once the migration period is over. */
-    if (!strcmp(s, "525_2hd_ps2"))
-        n = "525_2hd";
-    else if (!strcmp(s, "35_2hd_ps2"))
-        n = "35_2hd";
-    else
-        n = s;
 
     while (strlen(drive_types[c].internal_name)) {
-        if (!strcmp((char *) drive_types[c].internal_name, n))
+        if (!strcmp((char *) drive_types[c].internal_name, s))
             return c;
         c++;
     }
@@ -467,7 +458,7 @@ fdd_load(int drive, char *fn)
     int         c = 0;
     int         size;
     const char *p;
-    FILE *      fp;
+    FILE       *fp;
 
     fdd_log("FDD: loading drive %d with '%s'\n", drive, fn);
 

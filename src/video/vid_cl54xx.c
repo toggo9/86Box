@@ -45,6 +45,7 @@
 #include <86box/plat_unused.h>
 
 #define BIOS_GD5401_PATH                "roms/video/cirruslogic/avga1.rom"
+#define BIOS_GD5401_ONBOARD_PATH        "roms/machines/drsm35286/qpaw01-6658237d5e3c2611427518.bin"
 #define BIOS_GD5402_PATH                "roms/video/cirruslogic/avga2.rom"
 #define BIOS_GD5402_ONBOARD_PATH        "roms/machines/cmdsl386sx25/c000.rom"
 #define BIOS_GD5420_PATH                "roms/video/cirruslogic/5420.vbi"
@@ -575,7 +576,7 @@ gd54xx_overlay_draw(svga_t *svga, int displine)
     uint8_t        *src         = &svga->vram[(svga->overlay_latch.addr << shift) & svga->vram_mask];
     int             bpp         = svga->bpp;
     int             bytesperpix = (bpp + 7) / 8;
-    uint8_t        *src2        = &svga->vram[(svga->ma - (svga->hdisp * bytesperpix)) & svga->vram_display_mask];
+    uint8_t        *src2        = &svga->vram[(svga->memaddr - (svga->hdisp * bytesperpix)) & svga->vram_display_mask];
     int             occl;
     int             ckval;
 
@@ -1255,7 +1256,7 @@ gd54xx_out(uint16_t addr, uint8_t val, void *priv)
                 if (svga->crtcreg < 0xe || svga->crtcreg > 0x10) {
                     if ((svga->crtcreg == 0xc) || (svga->crtcreg == 0xd)) {
                         svga->fullchange = 3;
-                        svga->ma_latch   = ((svga->crtc[0xc] << 8) | svga->crtc[0xd]) +
+                        svga->memaddr_latch   = ((svga->crtc[0xc] << 8) | svga->crtc[0xd]) +
                                            ((svga->crtc[8] & 0x60) >> 5);
                     } else {
                         svga->fullchange = changeframecount;
@@ -1875,7 +1876,7 @@ gd54xx_recalctimings(svga_t *svga)
     } else if (svga->gdcreg[5] & 0x40)
         svga->render = svga_render_8bpp_lowres;
 
-    svga->ma_latch |= ((svga->crtc[0x1b] & 0x01) << 16) | ((svga->crtc[0x1b] & 0xc) << 15);
+    svga->memaddr_latch |= ((svga->crtc[0x1b] & 0x01) << 16) | ((svga->crtc[0x1b] & 0xc) << 15);
 
     svga->bpp = 8;
 
@@ -4236,8 +4237,11 @@ gd54xx_init(const device_t *info)
 
     switch (id) {
         case CIRRUS_ID_CLGD5401:
-            romfn = BIOS_GD5401_PATH;
-            break;
+        if (info->local & 0x100)
+                romfn = BIOS_GD5401_ONBOARD_PATH;
+            else
+				romfn = BIOS_GD5401_PATH;
+			break;
 
         case CIRRUS_ID_CLGD5402:
             if (info->local & 0x200)
@@ -4254,8 +4258,14 @@ gd54xx_init(const device_t *info)
             break;
 
         case CIRRUS_ID_CLGD5422:
-        case CIRRUS_ID_CLGD5424:
             romfn = BIOS_GD5422_PATH;
+            break;
+
+        case CIRRUS_ID_CLGD5424:
+            if (info->local & 0x200)
+                romfn = /*NULL*/ "roms/machines/advantage40xxd/AST101.09A";
+            else
+                romfn = BIOS_GD5422_PATH;
             break;
 
         case CIRRUS_ID_CLGD5426:
@@ -4939,6 +4949,20 @@ const device_t gd5401_isa_device = {
     .config        = NULL,
 };
 
+const device_t gd5401_onboard_device = {
+    .name          = "Cirrus Logic GD5401 (ISA) (ACUMOS AVGA1) (On-Board)",
+    .internal_name = "cl_gd5402_onboard",
+    .flags         = DEVICE_ISA16,
+    .local         = CIRRUS_ID_CLGD5401 | 0x100,
+    .init          = gd54xx_init,
+    .close         = gd54xx_close,
+    .reset         = gd54xx_reset,
+    .available     = NULL,
+    .speed_changed = gd54xx_speed_changed,
+    .force_redraw  = gd54xx_force_redraw,
+    .config        = NULL,
+};
+
 const device_t gd5402_isa_device = {
     .name          = "Cirrus Logic GD5402 (ISA) (ACUMOS AVGA2)",
     .internal_name = "cl_gd5402_isa",
@@ -5018,6 +5042,20 @@ const device_t gd5424_vlb_device = {
     .close         = gd54xx_close,
     .reset         = gd54xx_reset,
     .available     = gd5422_available, /* Common BIOS between 5422 and 5424 */
+    .speed_changed = gd54xx_speed_changed,
+    .force_redraw  = gd54xx_force_redraw,
+    .config        = gd542x_config,
+};
+
+const device_t gd5424_onboard_device = {
+    .name          = "Cirrus Logic GD5424 (VLB) (On-Board)",
+    .internal_name = "cl_gd5424_onboard",
+    .flags         = DEVICE_VLB,
+    .local         = CIRRUS_ID_CLGD5424 | 0x200,
+    .init          = gd54xx_init,
+    .close         = gd54xx_close,
+    .reset         = gd54xx_reset,
+    .available     = NULL,
     .speed_changed = gd54xx_speed_changed,
     .force_redraw  = gd54xx_force_redraw,
     .config        = gd542x_config,
