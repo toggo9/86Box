@@ -149,13 +149,14 @@ extern int      fpu_type;                   /* (C) fpu type */
 extern int      fpu_softfloat;              /* (C) fpu uses softfloat */
 extern int      time_sync;                  /* (C) enable time sync */
 extern int      hdd_format_type;            /* (C) hard disk file format */
-extern int      lba_enhancer_enabled;       /* (C) enable Vision Systems LBA Enhancer */
 extern int      confirm_reset;              /* (C) enable reset confirmation */
 extern int      confirm_exit;               /* (C) enable exit confirmation */
 extern int      confirm_save;               /* (C) enable save confirmation */
 extern int      enable_discord;             /* (C) enable Discord integration */
+extern int      force_10ms;                 /* (C) force 10ms CPU frame interval */
 extern int      other_ide_present;          /* IDE controllers from non-IDE cards are present */
 extern int      other_scsi_present;         /* SCSI controllers from non-SCSI cards are present */
+extern int      is_pcjr;                    /* The current machine is PCjr. */
 
 extern int    hard_reset_pending;
 extern int    fixed_size_x;
@@ -177,6 +178,8 @@ extern char usr_path[1024];     /* path (dir) of user data */
 extern char cfg_path[1024];     /* full path of config file */
 extern int  open_dir_usr_path;  /* default file open dialog directory of usr_path */
 extern char uuid[MAX_UUID_LEN]; /* UUID or machine identifier */
+extern char vmm_path[1024];       /* VM Manager path to scan (temporary) */
+extern int  vmm_enabled;
 #ifndef USE_NEW_DYNAREC
 extern FILE *stdlog; /* file to log output to */
 #endif

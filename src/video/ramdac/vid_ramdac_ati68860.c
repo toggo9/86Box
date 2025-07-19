@@ -67,22 +67,22 @@ typedef struct ati68860_ramdac_t {
 } ati68860_ramdac_t;
 
 void
-ati68860_ramdac_out(uint16_t addr, uint8_t val, void *priv, svga_t *svga)
+ati68860_ramdac_out(uint16_t addr, uint8_t val, int is_8514, void *priv, svga_t *svga)
 {
     ati68860_ramdac_t *ramdac = (ati68860_ramdac_t *) priv;
 
     switch (addr) {
         case 0:
-            svga_out(0x3c8, val, svga);
+            svga_out(is_8514 ? 0x2ec : 0x3c8, val, svga);
             break;
         case 1:
-            svga_out(0x3c9, val, svga);
+            svga_out(is_8514 ? 0x2ed : 0x3c9, val, svga);
             break;
         case 2:
-            svga_out(0x3c6, val, svga);
+            svga_out(is_8514 ? 0x2ea : 0x3c6, val, svga);
             break;
         case 3:
-            svga_out(0x3c7, val, svga);
+            svga_out(is_8514 ? 0x2eb : 0x3c7, val, svga);
             break;
         default:
             ramdac->regs[addr & 0xf] = val;
@@ -172,23 +172,23 @@ ati68860_ramdac_out(uint16_t addr, uint8_t val, void *priv, svga_t *svga)
 }
 
 uint8_t
-ati68860_ramdac_in(uint16_t addr, void *priv, svga_t *svga)
+ati68860_ramdac_in(uint16_t addr, int is_8514, void *priv, svga_t *svga)
 {
     const ati68860_ramdac_t *ramdac = (ati68860_ramdac_t *) priv;
     uint8_t                  temp   = 0;
 
     switch (addr) {
         case 0:
-            temp = svga_in(0x3c8, svga);
+            temp = svga_in(is_8514 ? 0x2ec : 0x3c8, svga);
             break;
         case 1:
-            temp = svga_in(0x3c9, svga);
+            temp = svga_in(is_8514 ? 0x2ed : 0x3c9, svga);
             break;
         case 2:
-            temp = svga_in(0x3c6, svga);
+            temp = svga_in(is_8514 ? 0x2ea : 0x3c6, svga);
             break;
         case 3:
-            temp = svga_in(0x3c7, svga);
+            temp = svga_in(is_8514 ? 0x2eb : 0x3c7, svga);
             break;
         case 4:
         case 8:
@@ -261,38 +261,57 @@ void
 ati68860_hwcursor_draw(svga_t *svga, int displine)
 {
     const ati68860_ramdac_t *ramdac = (ati68860_ramdac_t *) svga->ramdac;
+    int                      comb;
     int                      offset;
-    uint8_t                  dat;
+    int                      x_pos;
+    int                      y_pos;
+    int                      shift = 0;
+    uint16_t                 dat;
     uint32_t                 col0 = ramdac->pallook[0];
     uint32_t                 col1 = ramdac->pallook[1];
+    uint32_t                *p;
 
-    offset = svga->dac_hwcursor_latch.xoff;
-    for (uint32_t x = 0; x < 64 - svga->dac_hwcursor_latch.xoff; x += 4) {
-        dat = svga->vram[svga->dac_hwcursor_latch.addr + (offset >> 2)];
-        if (!(dat & 2))
-            buffer32->line[displine][svga->dac_hwcursor_latch.x + x + svga->x_add] = (dat & 1) ? col1 : col0;
-        else if ((dat & 3) == 3)
-            buffer32->line[displine][svga->dac_hwcursor_latch.x + x + svga->x_add] ^= 0xFFFFFF;
-        dat >>= 2;
-        if (!(dat & 2))
-            buffer32->line[displine][svga->dac_hwcursor_latch.x + x + svga->x_add + 1] = (dat & 1) ? col1 : col0;
-        else if ((dat & 3) == 3)
-            buffer32->line[displine][svga->dac_hwcursor_latch.x + x + svga->x_add + 1] ^= 0xFFFFFF;
-        dat >>= 2;
-        if (!(dat & 2))
-            buffer32->line[displine][svga->dac_hwcursor_latch.x + x + svga->x_add + 2] = (dat & 1) ? col1 : col0;
-        else if ((dat & 3) == 3)
-            buffer32->line[displine][svga->dac_hwcursor_latch.x + x + svga->x_add + 2] ^= 0xFFFFFF;
-        dat >>= 2;
-        if (!(dat & 2))
-            buffer32->line[displine][svga->dac_hwcursor_latch.x + x + svga->x_add + 3] = (dat & 1) ? col1 : col0;
-        else if ((dat & 3) == 3)
-            buffer32->line[displine][svga->dac_hwcursor_latch.x + x + svga->x_add + 3] ^= 0xFFFFFF;
-        dat >>= 2;
-        offset += 4;
+    offset = svga->dac_hwcursor_latch.x - svga->dac_hwcursor_latch.xoff;
+    if (svga->packed_4bpp)
+        shift = 1;
+
+    for (int x = 0; x < svga->dac_hwcursor_latch.cur_xsize; x += (8 >> shift)) {
+        if (shift) {
+            dat = svga->vram[(svga->dac_hwcursor_latch.addr) & svga->vram_mask] & 0x0f;
+            dat |= (svga->vram[(svga->dac_hwcursor_latch.addr + 1) & svga->vram_mask] << 4);
+            dat |= (svga->vram[(svga->dac_hwcursor_latch.addr + 2) & svga->vram_mask] << 8);
+            dat |= (svga->vram[(svga->dac_hwcursor_latch.addr + 3) & svga->vram_mask] << 12);
+        } else {
+            dat = svga->vram[svga->dac_hwcursor_latch.addr & svga->vram_mask];
+            dat |= (svga->vram[(svga->dac_hwcursor_latch.addr + 1) & svga->vram_mask] << 8);
+        }
+        for (int xx = 0; xx < (8 >> shift); xx++) {
+            comb = (dat >> (xx << 1)) & 0x03;
+
+            y_pos = displine;
+            x_pos = offset + svga->x_add;
+            p     = buffer32->line[y_pos];
+
+            if (offset >= svga->dac_hwcursor_latch.x) {
+                switch (comb) {
+                    case 0:
+                        p[x_pos] = col0;
+                        break;
+                    case 1:
+                        p[x_pos] = col1;
+                        break;
+                    case 3:
+                        p[x_pos] ^= 0xffffff;
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+            offset++;
+        }
+        svga->dac_hwcursor_latch.addr += 2;
     }
-
-    svga->dac_hwcursor_latch.addr += 16;
 }
 
 static void
