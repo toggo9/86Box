@@ -77,3 +77,7 @@ We do not charge you for the emulator but donations are still welcome:
 
 You can also support the project on Patreon:
 <https://www.patreon.com/86box>.
+
+Many thanks to
+--------------
+Veit Kannegieser for the tool "SNIPAC" to extract .OCF/.OMF files from SNI/FSC BIOS-Updates and to RichardG (@richardg867 on DC) for the development of the 86Bot (to analyze BIOS ROMs, extract them from executables etc.). Without their incredible work, this fork wouldn't have been possible.
