@@ -377,3 +377,28 @@ machine_at_martin_init(const machine_t *model)
     
     return ret;
 }
+
+/* VLSI 82C481 */
+int
+machine_at_prolineamt_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/prolineamt/bios93.10.27.bin",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    device_add(&vl82c486_device);
+    device_add(&vl82c113_device);
+	device_add(&ide_isa_device);
+    device_add_params(&fdc37c6xx_device, (void *) (FDC37C661 | FDC37C6XX_IDE_PRI));
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+    
+    return ret;
+}
