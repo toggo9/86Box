@@ -466,19 +466,7 @@ machine_at_morrison32_hp_gpio_init(void)
 {
     uint32_t gpio = 0xffffe6ff;
 
-    /* Register 0x0079: */
-    /* Bit 7: 0 = Clear password, 1 = Keep password. */
-    /* Bit 6: 0 = NVRAM cleared by jumper, 1 = NVRAM normal. */
-    /* Bit 5: 0 = CMOS Setup disabled, 1 = CMOS Setup enabled. */
-    /* Bit 4: External CPU clock (Switch 8). */
-    /* Bit 3: External CPU clock (Switch 7). */
-    /*        50 MHz: Switch 7 = Off, Switch 8 = Off. */
-    /*        60 MHz: Switch 7 = On, Switch 8 = Off. */
-    /*        66 MHz: Switch 7 = Off, Switch 8 = On. */
-    /* Bit 2: No Connect. */
-    /* Bit 1: No Connect. */
-    /* Bit 0: 2x multiplier, 1 = 1.5x multiplier (Switch 6). */
-    /* NOTE: A bit is read as 1 if switch is off, and as 0 if switch is on. */
+/* COPIED FROM ZAPPA */
     if (cpu_busspeed <= 50000000)
         gpio |= 0xffff00ff;
     else if ((cpu_busspeed > 50000000) && (cpu_busspeed <= 60000000))
@@ -532,19 +520,7 @@ machine_at_advt8100p_gpio_init(void)
 {
     uint32_t gpio = 0xffffe6ff;
 
-    /* Register 0x0079: */
-    /* Bit 7: 0 = Clear password, 1 = Keep password. */
-    /* Bit 6: 0 = NVRAM cleared by jumper, 1 = NVRAM normal. */
-    /* Bit 5: 0 = CMOS Setup disabled, 1 = CMOS Setup enabled. */
-    /* Bit 4: External CPU clock (Switch 8). */
-    /* Bit 3: External CPU clock (Switch 7). */
-    /*        50 MHz: Switch 7 = Off, Switch 8 = Off. */
-    /*        60 MHz: Switch 7 = On, Switch 8 = Off. */
-    /*        66 MHz: Switch 7 = Off, Switch 8 = On. */
-    /* Bit 2: No Connect. */
-    /* Bit 1: No Connect. */
-    /* Bit 0: 2x multiplier, 1 = 1.5x multiplier (Switch 6). */
-    /* NOTE: A bit is read as 1 if switch is off, and as 0 if switch is on. */
+   /* COPIED FROM ZAPPA */
     if (cpu_busspeed <= 50000000)
         gpio |= 0xffff00ff;
     else if ((cpu_busspeed > 50000000) && (cpu_busspeed <= 60000000))
@@ -598,19 +574,7 @@ machine_at_morrison64_gpio_init(void)
 {
     uint32_t gpio = 0xffffe6ff;
 
-    /* Register 0x0079: */
-    /* Bit 7: 0 = Clear password, 1 = Keep password. */
-    /* Bit 6: 0 = NVRAM cleared by jumper, 1 = NVRAM normal. */
-    /* Bit 5: 0 = CMOS Setup disabled, 1 = CMOS Setup enabled. */
-    /* Bit 4: External CPU clock (Switch 8). */
-    /* Bit 3: External CPU clock (Switch 7). */
-    /*        50 MHz: Switch 7 = Off, Switch 8 = Off. */
-    /*        60 MHz: Switch 7 = On, Switch 8 = Off. */
-    /*        66 MHz: Switch 7 = Off, Switch 8 = On. */
-    /* Bit 2: No Connect. */
-    /* Bit 1: No Connect. */
-    /* Bit 0: 2x multiplier, 1 = 1.5x multiplier (Switch 6). */
-    /* NOTE: A bit is read as 1 if switch is off, and as 0 if switch is on. */
+    /* COPIED FROM ZAPPA */
     if (cpu_busspeed <= 50000000)
         gpio |= 0xffff00ff;
     else if ((cpu_busspeed > 50000000) && (cpu_busspeed <= 60000000))
@@ -664,19 +628,7 @@ machine_at_morrisonmc_gpio_init(void)
 {
     uint32_t gpio = 0xffffe6ff;
 
-    /* Register 0x0079: */
-    /* Bit 7: 0 = Clear password, 1 = Keep password. */
-    /* Bit 6: 0 = NVRAM cleared by jumper, 1 = NVRAM normal. */
-    /* Bit 5: 0 = CMOS Setup disabled, 1 = CMOS Setup enabled. */
-    /* Bit 4: External CPU clock (Switch 8). */
-    /* Bit 3: External CPU clock (Switch 7). */
-    /*        50 MHz: Switch 7 = Off, Switch 8 = Off. */
-    /*        60 MHz: Switch 7 = On, Switch 8 = Off. */
-    /*        66 MHz: Switch 7 = Off, Switch 8 = On. */
-    /* Bit 2: No Connect. */
-    /* Bit 1: No Connect. */
-    /* Bit 0: 2x multiplier, 1 = 1.5x multiplier (Switch 6). */
-    /* NOTE: A bit is read as 1 if switch is off, and as 0 if switch is on. */
+   /* COPIED FROM ZAPPA */
     if (cpu_busspeed <= 50000000)
         gpio |= 0xffff00ff;
     else if ((cpu_busspeed > 50000000) && (cpu_busspeed <= 60000000))
