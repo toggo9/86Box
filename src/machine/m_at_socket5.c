@@ -461,6 +461,358 @@ machine_at_zappa_gpio_init(void)
     machine_set_gpio_default(gpio);
 }
 
+static void
+machine_at_morrison32_hp_gpio_init(void)
+{
+    uint32_t gpio = 0xffffe6ff;
+
+    /* Register 0x0079: */
+    /* Bit 7: 0 = Clear password, 1 = Keep password. */
+    /* Bit 6: 0 = NVRAM cleared by jumper, 1 = NVRAM normal. */
+    /* Bit 5: 0 = CMOS Setup disabled, 1 = CMOS Setup enabled. */
+    /* Bit 4: External CPU clock (Switch 8). */
+    /* Bit 3: External CPU clock (Switch 7). */
+    /*        50 MHz: Switch 7 = Off, Switch 8 = Off. */
+    /*        60 MHz: Switch 7 = On, Switch 8 = Off. */
+    /*        66 MHz: Switch 7 = Off, Switch 8 = On. */
+    /* Bit 2: No Connect. */
+    /* Bit 1: No Connect. */
+    /* Bit 0: 2x multiplier, 1 = 1.5x multiplier (Switch 6). */
+    /* NOTE: A bit is read as 1 if switch is off, and as 0 if switch is on. */
+    if (cpu_busspeed <= 50000000)
+        gpio |= 0xffff00ff;
+    else if ((cpu_busspeed > 50000000) && (cpu_busspeed <= 60000000))
+        gpio |= 0xffff08ff;
+    else if (cpu_busspeed > 60000000)
+        gpio |= 0xffff10ff;
+
+    if (cpu_dmulti <= 1.5)
+        gpio |= 0xffff01ff;
+    else
+        gpio |= 0xffff00ff;
+
+    machine_set_gpio_default(gpio);
+}
+
+int
+machine_at_morrison32_hp_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear_combined("roms/machines/morrison32_hp/1011BT0L.BIO",
+									"roms/machines/morrison32_hp/1011BT0L.BI1",
+									0x20000, 128);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+    machine_at_morrison32_hp_gpio_init();
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x08, PCI_CARD_VIDEO,       4, 0, 0, 0);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      1, 3, 2, 4);
+    pci_register_slot(0x13, PCI_CARD_NORMAL, 	  2, 1, 3, 4);
+    device_add(&i430fx_device);
+    device_add(&piix_device);
+    device_add_params(&pc87306_device, (void *) PCX730X_AMI);
+    device_add(&intel_flash_bxt_ami_device);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+
+    return ret;
+}
+
+static void
+machine_at_advt8100p_gpio_init(void)
+{
+    uint32_t gpio = 0xffffe6ff;
+
+    /* Register 0x0079: */
+    /* Bit 7: 0 = Clear password, 1 = Keep password. */
+    /* Bit 6: 0 = NVRAM cleared by jumper, 1 = NVRAM normal. */
+    /* Bit 5: 0 = CMOS Setup disabled, 1 = CMOS Setup enabled. */
+    /* Bit 4: External CPU clock (Switch 8). */
+    /* Bit 3: External CPU clock (Switch 7). */
+    /*        50 MHz: Switch 7 = Off, Switch 8 = Off. */
+    /*        60 MHz: Switch 7 = On, Switch 8 = Off. */
+    /*        66 MHz: Switch 7 = Off, Switch 8 = On. */
+    /* Bit 2: No Connect. */
+    /* Bit 1: No Connect. */
+    /* Bit 0: 2x multiplier, 1 = 1.5x multiplier (Switch 6). */
+    /* NOTE: A bit is read as 1 if switch is off, and as 0 if switch is on. */
+    if (cpu_busspeed <= 50000000)
+        gpio |= 0xffff00ff;
+    else if ((cpu_busspeed > 50000000) && (cpu_busspeed <= 60000000))
+        gpio |= 0xffff08ff;
+    else if (cpu_busspeed > 60000000)
+        gpio |= 0xffff10ff;
+
+    if (cpu_dmulti <= 1.5)
+        gpio |= 0xffff01ff;
+    else
+        gpio |= 0xffff00ff;
+
+    machine_set_gpio_default(gpio);
+}
+
+int
+machine_at_advt8100p_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear_combined("roms/machines/advt8100p/1004BT0Q.BIO",
+									"roms/machines/advt8100p/1004BT0Q.BI1",
+									0x20000, 128);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+    machine_at_advt8100p_gpio_init();
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x08, PCI_CARD_VIDEO,       4, 0, 0, 0);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      1, 3, 2, 4);
+    pci_register_slot(0x13, PCI_CARD_NORMAL, 	  2, 1, 3, 4);
+    device_add(&i430fx_device);
+    device_add(&piix_device);
+    device_add_params(&pc87306_device, (void *) PCX730X_AMI);
+    device_add(&intel_flash_bxt_ami_device);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+
+    return ret;
+}
+
+static void
+machine_at_morrison64_gpio_init(void)
+{
+    uint32_t gpio = 0xffffe6ff;
+
+    /* Register 0x0079: */
+    /* Bit 7: 0 = Clear password, 1 = Keep password. */
+    /* Bit 6: 0 = NVRAM cleared by jumper, 1 = NVRAM normal. */
+    /* Bit 5: 0 = CMOS Setup disabled, 1 = CMOS Setup enabled. */
+    /* Bit 4: External CPU clock (Switch 8). */
+    /* Bit 3: External CPU clock (Switch 7). */
+    /*        50 MHz: Switch 7 = Off, Switch 8 = Off. */
+    /*        60 MHz: Switch 7 = On, Switch 8 = Off. */
+    /*        66 MHz: Switch 7 = Off, Switch 8 = On. */
+    /* Bit 2: No Connect. */
+    /* Bit 1: No Connect. */
+    /* Bit 0: 2x multiplier, 1 = 1.5x multiplier (Switch 6). */
+    /* NOTE: A bit is read as 1 if switch is off, and as 0 if switch is on. */
+    if (cpu_busspeed <= 50000000)
+        gpio |= 0xffff00ff;
+    else if ((cpu_busspeed > 50000000) && (cpu_busspeed <= 60000000))
+        gpio |= 0xffff08ff;
+    else if (cpu_busspeed > 60000000)
+        gpio |= 0xffff10ff;
+
+    if (cpu_dmulti <= 1.5)
+        gpio |= 0xffff01ff;
+    else
+        gpio |= 0xffff00ff;
+
+    machine_set_gpio_default(gpio);
+}
+
+int
+machine_at_morrison64_init(const machine_t *model)
+{
+    int ret;
+
+   ret = bios_load_linear_combined("roms/machines/morrison64/1006CA2L.BIO",
+								   "roms/machines/morrison64/1006CA2L.BI1",
+									0x20000, 128);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+    machine_at_morrison64_gpio_init();
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x08, PCI_CARD_VIDEO,       4, 0, 0, 0);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      1, 3, 2, 4);
+    pci_register_slot(0x13, PCI_CARD_NORMAL, 	  2, 1, 3, 4);
+    device_add(&i430fx_device);
+    device_add(&piix_device);
+    device_add_params(&pc87306_device, (void *) PCX730X_AMI);
+    device_add(&intel_flash_bxt_ami_device);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+
+    return ret;
+}
+
+static void
+machine_at_morrisonmc_gpio_init(void)
+{
+    uint32_t gpio = 0xffffe6ff;
+
+    /* Register 0x0079: */
+    /* Bit 7: 0 = Clear password, 1 = Keep password. */
+    /* Bit 6: 0 = NVRAM cleared by jumper, 1 = NVRAM normal. */
+    /* Bit 5: 0 = CMOS Setup disabled, 1 = CMOS Setup enabled. */
+    /* Bit 4: External CPU clock (Switch 8). */
+    /* Bit 3: External CPU clock (Switch 7). */
+    /*        50 MHz: Switch 7 = Off, Switch 8 = Off. */
+    /*        60 MHz: Switch 7 = On, Switch 8 = Off. */
+    /*        66 MHz: Switch 7 = Off, Switch 8 = On. */
+    /* Bit 2: No Connect. */
+    /* Bit 1: No Connect. */
+    /* Bit 0: 2x multiplier, 1 = 1.5x multiplier (Switch 6). */
+    /* NOTE: A bit is read as 1 if switch is off, and as 0 if switch is on. */
+    if (cpu_busspeed <= 50000000)
+        gpio |= 0xffff00ff;
+    else if ((cpu_busspeed > 50000000) && (cpu_busspeed <= 60000000))
+        gpio |= 0xffff08ff;
+    else if (cpu_busspeed > 60000000)
+        gpio |= 0xffff10ff;
+
+    if (cpu_dmulti <= 1.5)
+        gpio |= 0xffff01ff;
+    else
+        gpio |= 0xffff00ff;
+
+    machine_set_gpio_default(gpio);
+}
+
+int
+machine_at_morrisonmc_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear_combined("roms/machines/morrisonmc/1002CH0L.BIO",
+									"roms/machines/morrisonmc/1002CH0L.BI1",
+									0x20000, 128);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+    machine_at_morrisonmc_gpio_init();
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x08, PCI_CARD_VIDEO,       4, 0, 0, 0);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      1, 3, 2, 4);
+    pci_register_slot(0x13, PCI_CARD_NORMAL, 	  2, 1, 3, 4);
+    device_add(&i430fx_device);
+    device_add(&piix_device);
+    device_add_params(&pc87306_device, (void *) PCX730X_AMI);
+    device_add(&intel_flash_bxt_ami_device);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+
+    return ret;
+}
+
+int
+machine_at_pc330_65x6_init(const machine_t *model)
+{
+    int ret = 0;
+    const char* fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
+    ret = bios_load_linear(fn, 0x000c0000, 262144, 0);
+    device_context_restore();
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+    machine_at_morrison64_gpio_init();
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x08, PCI_CARD_VIDEO,       4, 0, 0, 0);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      1, 3, 2, 4);
+    pci_register_slot(0x13, PCI_CARD_NORMAL, 	  2, 1, 3, 4);
+    device_add(&i430fx_device);
+    device_add(&piix_device);
+    device_add_params(&pc87306_device, (void *) PCX730X_AMI);
+    device_add(&intel_flash_bxt_ami_device);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+
+    return ret;
+}
+
+static const device_config_t pc330_65x6_config[] = {
+    // clang-format off
+    {
+        .name = "bios_versions",
+        .description = "BIOS Versions",
+        .type = CONFIG_BIOS,
+        .default_string = "pc330_65x6_sep95",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 }, /*W1*/
+        .bios = {
+            { .name = "LPKT49A (09/14/1995)", .internal_name = "pc330_65x6_sep95", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 262144, .files = { "roms/machines/pc330_65x6/pc330_65x6_sep95.bin", "" } },
+            { .name = "LPKT51A (10/05/1995)", .internal_name = "pc330_65x6_oct95", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 262144, .files = { "roms/machines/pc330_65x6/pc330_65x6_oct95.bin", "" } },
+            { .name = "LPKT52A (10/13/1995)", .internal_name = "pc330_65x6_oct952", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 262144, .files = { "roms/machines/pc330_65x6/pc330_65x6_oct952.bin", "" } },
+			{ .name = "LPKT53A (10/26/1995)", .internal_name = "pc330_65x6_oct953", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 262144, .files = { "roms/machines/pc330_65x6/pc330_65x6_oct953.bin", "" } },
+			{ .name = "LPKT56A (12/20/1995)", .internal_name = "pc330_65x6_dec95", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 262144, .files = { "roms/machines/pc330_65x6/pc330_65x6_dec95.bin", "" } },
+			{ .name = "LPKT59A (04/24/1996)", .internal_name = "pc330_65x6_apr96", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 262144, .files = { "roms/machines/pc330_65x6/pc330_65x6_apr96.bin", "" } },
+			{ .name = "LPKT60A (11/15/1996)", .internal_name = "pc330_65x6_nov96", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 262144, .files = { "roms/machines/pc330_65x6/pc330_65x6_nov96.bin", "" } },
+			{ .name = "LPKT63A (02/04/1998)", .internal_name = "pc330_65x6_feb98", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 262144, .files = { "roms/machines/pc330_65x6/pc330_65x6_feb98.bin", "" } },
+            
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+
+const device_t pc330_65x6_device = {
+    .name          = "IBM PC330/350 type 65x6 (Intel Morrison64 OEM)",
+    .internal_name = "pc330_65x6",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = &pc330_65x6_config[0]
+};
+
 int
 machine_at_pt2000_init(const machine_t *model)
 {
