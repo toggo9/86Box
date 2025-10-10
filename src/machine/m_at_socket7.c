@@ -421,7 +421,7 @@ static const device_config_t m7shi_config[] = {
         .bios           = {
             {
                 .name          = "PhoenixBIOS 4.0 Release 6.0 - Revision 05/20/97",
-                .internal_name = "m7shi",
+                .internal_name = "m7shi_97",
                 .bios_type     = BIOS_NORMAL,
                 .files_no      = 1,
                 .local         = 0,
@@ -430,7 +430,7 @@ static const device_config_t m7shi_config[] = {
             },
             {
                 .name          = "PhoenixBIOS 4.0 Release 6.0 - Revision 01/21/98",
-                .internal_name = "m7shi_4",
+                .internal_name = "m7shi",
                 .bios_type     = BIOS_NORMAL,
                 .files_no      = 1,
                 .local         = 0,
@@ -1419,20 +1419,61 @@ machine_at_ma23c_init(const machine_t *model)
     return ret;
 }
 
+static const device_config_t an430tx_config[] = {
+    // clang-format off
+    {
+        .name = "bios",
+        .description = "BIOS Version",
+        .type = CONFIG_BIOS,
+        .default_string = "pb79x",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 },
+        .bios = {
+            { .name = "PhoenixBIOS 4.0 Release 6.0 - Revision P02-0011 (Sony Vaio PCV-130/150)", .internal_name = "vaio150", .bios_type = BIOS_NORMAL,
+              .files_no = 5, .local = 0, .size = 262144, .files = { "roms/machines/an430tx/P02-0011.BIO", "roms/machines/an430tx/P02-0011.BI1",
+                                                                    "roms/machines/an430tx/P02-0011.BI2", "roms/machines/an430tx/P02-0011.BI3",
+                                                                    "roms/machines/an430tx/P02-0011.RCV", "" } },
+            { .name = "PhoenixBIOS 4.0 Release 6.0 - Revision P09-0006 (Packard Bell PB79x)", .internal_name = "pb79x", .bios_type = BIOS_NORMAL,
+              .files_no = 5, .local = 0, .size = 262144, .files = { "roms/machines/an430tx/ANP0911A.BIO", "roms/machines/an430tx/ANP0911A.BI1",
+                                                                    "roms/machines/an430tx/ANP0911A.BI2", "roms/machines/an430tx/ANP0911A.BI3",
+                                                                    "roms/machines/an430tx/ANP0911A.RCV", "" } },
+            { .files_no = 0 }
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+const device_t an430tx_device = {
+    .name          = "Intel AN430TX (Anchorage)",
+    .internal_name = "an430tx_device",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = an430tx_config
+};
+
 int
 machine_at_an430tx_init(const machine_t *model)
 {
-    int ret;
+    int ret = 0;
+    const char* fn[5];
 
-    ret = bios_load_linear_combined2("roms/machines/an430tx/ANP0911A.BIO",
-                                     "roms/machines/an430tx/ANP0911A.BI1",
-                                     "roms/machines/an430tx/ANP0911A.BI2",
-                                     "roms/machines/an430tx/ANP0911A.BI3",
-                                     "roms/machines/an430tx/ANP0911A.RCV",
-                                     0x3a000, 160);
-
-    if (bios_only || !ret)
+    /* No ROMs available */
+    if (!device_available(model->device))
         return ret;
+
+    device_context(model->device);
+    for (int i = 0; i < 5; i++)
+        fn[i] = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), i);
+    ret = bios_load_linear_combined2(fn[0], fn[1], fn[2], fn[3], fn[4], 0x3a000, 160);
+    device_context_restore();
 
     machine_at_common_init_ex(model, 2);
 
@@ -1748,7 +1789,7 @@ static const device_config_t r534f_config[] = {
         .name           = "bios",
         .description    = "BIOS Version",
         .type           = CONFIG_BIOS,
-        .default_string = "r534f_1998",
+        .default_string = "r534f",
         .default_int    = 0,
         .file_filter    = NULL,
         .spinner        = { 0 },
@@ -1756,7 +1797,7 @@ static const device_config_t r534f_config[] = {
         .bios           = {
             {
                 .name          = "Award Modular BIOS v4.51PG - Revision 06/12/1998",
-                .internal_name = "r534f_1998",
+                .internal_name = "r534f",
                 .bios_type     = BIOS_NORMAL,
                 .files_no      = 1,
                 .local         = 0,
@@ -1765,7 +1806,7 @@ static const device_config_t r534f_config[] = {
             },
             {
                 .name          = "Award Modular BIOS v4.51PG - Revision 03/13/2000 (by Unicore Software)",
-                .internal_name = "r534f",
+                .internal_name = "r534f_unicore",
                 .bios_type     = BIOS_NORMAL,
                 .files_no      = 1,
                 .local         = 0,

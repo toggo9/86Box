@@ -18,7 +18,6 @@
  *          Copyright 2017-2020 Fred N. van Kempen.
  *          Copyright 2025      Jasmine Iwanek.
  */
-
 #ifndef EMU_MACHINE_H
 #define EMU_MACHINE_H
 
@@ -497,6 +496,9 @@ extern int             machine_at_portableii_init(const machine_t *);
 extern int             machine_at_portableiii_init(const machine_t *);
 extern int             machine_at_grid1520_init(const machine_t *);
 extern int             machine_at_pc900_init(const machine_t *);
+#ifdef EMU_DEVICE_H
+extern const device_t  pc900_device;
+#endif
 extern int             machine_at_mr286_init(const machine_t *);
 extern int             machine_at_pc8_init(const machine_t *);
 extern int             machine_at_m290_init(const machine_t *);
@@ -758,6 +760,7 @@ extern int             machine_at_acerv10_init(const machine_t *);
 
 /* SiS 471 */
 extern int             machine_at_win471_init(const machine_t *);
+extern int             machine_at_win471t_init(const machine_t *);
 extern int             machine_at_vi15g_init(const machine_t *);
 extern int             machine_at_vli486sv2g_init(const machine_t *);
 extern int             machine_at_dvent4xx_init(const machine_t *);
@@ -966,8 +969,12 @@ extern int             machine_at_vectra54_init(const machine_t *);
 extern const device_t  thor_device;
 #endif
 extern int             machine_at_thor_init(const machine_t *);
+extern uint32_t        machine_at_monaco_gpio_handler(uint8_t write, uint32_t val);
+extern int             machine_at_monaco_init(const machine_t *);
 extern uint32_t        machine_at_endeavor_gpio_handler(uint8_t write, uint32_t val);
 extern int             machine_at_endeavor_init(const machine_t *);
+extern int             machine_at_atlantis_init(const machine_t *);
+extern int             machine_at_monaco_init(const machine_t *);
 extern int             machine_at_ms5119_init(const machine_t *);
 extern int             machine_at_pb640_init(const machine_t *);
 extern int             machine_at_mb500n_init(const machine_t *);
@@ -1054,10 +1061,13 @@ extern int             machine_at_tx97_init(const machine_t *);
 extern void            machine_at_optiplex_21152_init(void);
 extern int             machine_at_optiplexgn_init(const machine_t *);
 extern int             machine_at_tomahawk_init(const machine_t *);
+#ifdef EMU_DEVICE_H
+extern const device_t  an430tx_device;
+#endif
+extern int             machine_at_an430tx_init(const machine_t *);
 extern int             machine_at_ym430tx_init(const machine_t *);
 extern int             machine_at_thunderbolt_init(const machine_t *);
 extern int             machine_at_ma23c_init(const machine_t *);
-extern int             machine_at_an430tx_init(const machine_t *);
 extern int             machine_at_mb540n_init(const machine_t *);
 extern int             machine_at_56a5_init(const machine_t *);
 extern int             machine_at_p5mms98_init(const machine_t *);
@@ -1175,6 +1185,10 @@ extern int             machine_at_ga686_init(const machine_t *);
 extern const device_t  ms6119_device;
 #endif
 extern int             machine_at_ms6119_init(const machine_t *);
+#ifdef EMU_DEVICE_H
+extern const device_t  ms6147_device;
+#endif
+extern int             machine_at_ms6147_init(const machine_t *);
 extern int             machine_at_p6sba_init(const machine_t *);
 extern int             machine_at_s1846_init(const machine_t *);
 
@@ -1348,6 +1362,9 @@ extern int             machine_xt_ataripc3_init(const machine_t *);
 extern int             machine_xt_bw230_init(const machine_t *);
 extern int             machine_xt_mpc1600_init(const machine_t *);
 extern int             machine_xt_compaq_portable_init(const machine_t *);
+#ifdef EMU_DEVICE_H
+extern const device_t dtk_device;
+#endif
 extern int             machine_xt_dtk_init(const machine_t *);
 extern int             machine_xt_pcspirit_init(const machine_t *);
 extern int             machine_genxt_init(const machine_t *);
@@ -1365,7 +1382,13 @@ extern int             machine_xt_micoms_xl7turbo_init(const machine_t *);
 extern const device_t  pc500_device;
 #endif
 extern int             machine_xt_pc500_init(const machine_t *);
+#ifdef EMU_DEVICE_H
+extern const device_t  pc500plus_device;
+#endif
 extern int             machine_xt_pc500plus_init(const machine_t *);
+#ifdef EMU_DEVICE_H
+extern const device_t  pc700_device;
+#endif
 extern int             machine_xt_pc700_init(const machine_t *);
 extern int             machine_xt_pc4i_init(const machine_t *);
 extern int             machine_xt_openxt_init(const machine_t *);
