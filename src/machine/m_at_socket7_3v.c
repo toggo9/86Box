@@ -478,9 +478,13 @@ machine_at_monaco_gpio_init(void)
         gpio |= 0xffff0400;
 
     if (cpu_dmulti <= 1.5)
-        gpio |= 0xffff0100;
-    else
-        gpio |= 0xffff0000;
+        gpio |= 0xffff01ff;
+	else if (cpu_dmulti <= 2.0)
+        gpio |= 0xffffe2df;
+	if ((cpu_dmulti > 2.0) && (cpu_dmulti <= 2.5))
+		gpio |= 0xffffe2cf;
+	if ((cpu_dmulti > 2.5) && (cpu_dmulti <= 3.0))
+		gpio |= 0xffffe2ef;
 
     machine_set_gpio_default(gpio);
 }
