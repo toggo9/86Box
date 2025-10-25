@@ -476,3 +476,34 @@ machine_at_tg486g_init(const machine_t *model)
 
     return ret;
 }
+
+/* VLSI 82C486 */
+int
+machine_at_pres425_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/pres425/FFF80000.DMP",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    device_add(&vl82c486_device);
+    device_add(&vl82c113_device);
+	device_add(&ide_isa_device);
+	device_add_params(&fdc37c6xx_device, (void *) (FDC37C661 | FDC37C6XX_IDE_PRI));
+
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+	
+	if (fdc_current[0] == FDC_INTERNAL){
+        fdd_set_turbo(0, 1);
+        fdd_set_turbo(1, 1);
+    }
+    
+    return ret;
+}
