@@ -377,3 +377,108 @@ machine_at_martin_init(const machine_t *model)
 
     return ret;
 }
+
+/* VLSI 82C481 */
+int
+machine_at_prolineamt_init(const machine_t *model)
+{
+    int ret = 0;
+    const char* fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
+    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
+    device_context_restore();
+
+    machine_at_common_init_ex(model, 2);
+
+    device_add(&vl82c486_device);
+    device_add(&vl82c113_device);
+	device_add(&ide_isa_device);
+    device_add_params(&fdc37c6xx_device, (void *) (FDC37C661 | FDC37C6XX_IDE_PRI));
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+	
+	if (fdc_current[0] == FDC_INTERNAL){
+        fdd_set_turbo(0, 1);
+        fdd_set_turbo(1, 1);
+    }
+    
+    return ret;
+}
+
+static const device_config_t prolineamt_config[] = {
+    // clang-format off
+    {
+        .name = "bios_versions",
+        .description = "BIOS Versions",
+        .type = CONFIG_BIOS,
+        .default_string = "prolineamt_oct93",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 }, /*W1*/
+        .bios = {
+            { .name = "09/29/93", .internal_name = "prolineamt_sep93", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/prolineamt/bios93.9.29.bin", "" } },
+            { .name = "10/27/93", .internal_name = "prolineamt_oct93", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/prolineamt/bios93.10.27.bin", "" } },
+			{ .name = "05/02/94", .internal_name = "prolineamt_may94", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/prolineamt/COMPAQ_PROLINEA_MT_05-02-94.bin", "" } },  
+            
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+
+
+const device_t prolineamt_device = {
+    .name          = "Compaq ProLinea MT",
+    .internal_name = "prolineamt",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available 	   = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = prolineamt_config
+};
+
+/* VLSI 82C486 */
+int
+machine_at_prolinea466_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/prolinea466/COMPAQ_PROLINEA_07-29-94.bin",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    device_add(&vl82c486_device);
+    device_add(&vl82c113_device);
+	device_add(&ide_isa_device);
+	device_add_params(&fdc37c6xx_device, (void *) (FDC37C665 | FDC37C6XX_IDE_PRI));
+
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+	
+	if (fdc_current[0] == FDC_INTERNAL){
+        fdd_set_turbo(0, 1);
+        fdd_set_turbo(1, 1);
+    }
+    
+    return ret;
+}
