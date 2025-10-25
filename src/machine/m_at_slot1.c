@@ -660,6 +660,41 @@ machine_at_ax6bc_init(const machine_t *model)
     return ret;
 }
 
+int
+machine_at_kbi6130compaq_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/kbi6130compaq/mz4225.bin",
+                           0x000c0000, 262144, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
+	pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4); /* Onboard */
+	pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4); /* Onboard */
+	pci_register_slot(0x08, PCI_CARD_NORMAL, 	  1, 2, 3, 4); /* Slot 01 */
+	pci_register_slot(0x09, PCI_CARD_NORMAL, 	  2, 3, 4, 1); /* Slot 02 */
+	pci_register_slot(0x0A, PCI_CARD_NORMAL, 	  3, 4, 1, 2); /* Slot 03 */
+	pci_register_slot(0x0B, PCI_CARD_SOUND, 	  4, 1, 2, 3); /* Slot 04 */
+	device_add(&i440bx_device);
+    device_add(&piix4e_device);
+    device_add_params(&w83977_device, (void *) (W83977EF | W83977_AMI | W83977_NO_NVR));
+    device_add(&intel_flash_bxt_device);
+    spd_register(SPD_TYPE_SDRAM, 0xF, 256);
+	
+	if (sound_card_current[0] == SOUND_INTERNAL)
+        device_add(&es1371_onboard_device);
+	
+    device_add(&w83782d_device);     /* fans: CPU, unused, unused; temperatures: unused, CPU, unused */
+
+    return ret;
+}
+
 static const device_config_t ga686_config[] = {
     // clang-format off
     {
@@ -1335,6 +1370,46 @@ machine_at_p3v133_init(const machine_t *model)
     hwm_values.temperatures[1] = 0;  /* unused */
     hwm_values.temperatures[2] -= 3; /* CPU offset */
 
+    return ret;
+}
+
+int
+machine_at_pwaavnv_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/pwaavnv/rompaq.bin",
+                           0x000c0000, 262144, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x14, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4);
+    pci_register_slot(0x03, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x04, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x05, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x06, PCI_CARD_NORMAL,      4, 1, 2, 3);
+    pci_register_slot(0x0A, PCI_CARD_VIDEO,       4, 0, 0, 0);
+	pci_register_slot(0x0C, PCI_CARD_SOUND,       1, 2, 3, 4);
+    pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 0, 0);
+
+    device_add(&via_apro133_device);
+    device_add(&via_vt82c686a_device); /* fans: CPU1, CPU2; temperatures: CPU, System, unused */
+    device_add(ics9xxx_get(ICS9250_18));
+    device_add(&amd_flash_29f020a_device);
+    spd_register(SPD_TYPE_SDRAM, 0x7, 384);
+    hwm_values.temperatures[0] += 2; /* CPU offset */
+    hwm_values.temperatures[1] += 2; /* System offset */
+    hwm_values.temperatures[2] = 0;  /* unused */
+	
+	if (fdc_current[0] == FDC_INTERNAL){
+        fdd_set_turbo(0, 1);
+        fdd_set_turbo(1, 1);
+    }
     return ret;
 }
 
