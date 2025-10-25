@@ -8451,7 +8451,7 @@ const machine_t machines[] = {
         .net_device               = NULL
     },
     {
-        .name = "[VLSI 82C481] Compaq ProLinea MT",
+        .name = "[VLSI 82C481] Compaq ProLinea MT/Presario 800",
         .internal_name = "prolineamt",
         .type = MACHINE_TYPE_486_S2,
         .chipset = MACHINE_CHIPSET_VLSI_VL82C481,
