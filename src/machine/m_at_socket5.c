@@ -1100,6 +1100,82 @@ machine_at_hot539_init(const machine_t *model)
 
     return ret;
 }
+int
+machine_at_presario7100_init(const machine_t *model)
+
+{
+    int ret = 0;
+    const char* fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
+    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
+    device_context_restore();
+	
+	machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
+	pci_register_slot(0x0C, PCI_CARD_NORMAL,      1, 2, 3, 4); /* Slot 01 */
+	pci_register_slot(0x0D, PCI_CARD_NORMAL,      4, 1, 2, 3); /* Slot 02 */
+	pci_register_slot(0x12, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0); /* Onboard */
+	pci_register_slot(0x13, PCI_CARD_VIDEO,       0, 0, 0, 0); /* Onboard */
+    device_add(&umc_8890_device);
+    device_add(&umc_8886af_device);
+    device_add(&sst_flash_29ee010_device);
+    device_add_params(machine_get_kbc_device(machine), (void *) model->kbc_params);
+    device_add_params(&um866x_device, (void *) UM8663AF);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(&s3_phoenix_trio64_onboard_pci_device);
+	
+	if (sound_card_current[0] == SOUND_INTERNAL)
+        device_add(&ess_1688_device);  
+
+    return ret;
+}
+
+static const device_config_t presario7100_config[] = {
+    // clang-format off
+    {
+        .name = "bios_versions",
+        .description = "BIOS Versions",
+        .type = CONFIG_BIOS,
+        .default_string = "presario7100_oct95",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 }, /*W1*/
+        .bios = {
+            { .name = "Version 4.04 Revision 1.01 (10/04/1995)", .internal_name = "presario7100_oct95", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/presario7100/presario7100_oct95.bin", "" } },
+            { .name = "Version 4.04 Revision 1.40 (11/09/1995)", .internal_name = "presario7100_nov95", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/presario7100/presario7100_nov95.bin", "" } },
+            
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+
+
+const device_t presario7100_device = {
+    .name          = "Compaq Presario 71xx",
+    .internal_name = "presario7100",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = &presario7100_config
+};
 
 /* VLSI SuperCore */
 int
