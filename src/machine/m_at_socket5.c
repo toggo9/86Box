@@ -1141,6 +1141,85 @@ machine_at_bravoms586_init(const machine_t *model)
 }
 
 int
+machine_at_prescdspent_init(const machine_t *model)
+{
+    int ret = 0;
+    const char* fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
+    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
+    device_context_restore();
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x02, PCI_CARD_VIDEO, 1, 0, 0, 0);
+    pci_register_slot(0x03, PCI_CARD_IDE, 2, 0, 0, 0);
+    pci_register_slot(0x13, PCI_CARD_NORMAL, 0, 0, 0, 0);
+    pci_register_slot(0x14, PCI_CARD_NORMAL, 3, 4, 3, 4);
+    device_add(&vl82c59x_compaq_device);
+    device_add(&amd_flash_29f010_device);
+	device_add_params(machine_get_kbc_device(machine), (void *) model->kbc_params);
+    device_add_params(&fdc37c6xx_device, (void *) FDC37C665);
+    device_add(&ide_cmd640_pci_device);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+	
+	if (fdc_current[0] == FDC_INTERNAL){
+        fdd_set_turbo(0, 1);
+        fdd_set_turbo(1, 1);
+    }
+	
+    return ret;
+}
+
+static const device_config_t prescdspent_config[] = {
+    // clang-format off
+    {
+        .name = "bios_versions",
+        .description = "BIOS Versions",
+        .type = CONFIG_BIOS,
+        .default_string = "prescdspent_apr95",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 }, /*W1*/
+        .bios = {
+            { .name = "BIOS (04/12/1995)", .internal_name = "prescdspent_apr95", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 262144, .files = { "roms/machines/prescdspent/prescdspent_apr95.bin", "" } },
+            { .name = "BIOS (07/21/1995)", .internal_name = "prescdspent_jul95", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/prescdspent/prescdspent_jul95.bin", "" } },
+            
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+
+
+const device_t prescdspent_device = {
+    .name          = "Compaq Presario CDS 774/972/974/982/992",
+    .internal_name = "prescdspent",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available 	   = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = prescdspent_config
+};
+
+int
 machine_at_g586vpmc_init(const machine_t *model)
 {
     int ret;
@@ -1270,3 +1349,82 @@ machine_at_globalyst620_init(const machine_t *model)
 
     return ret;
 }
+
+int
+machine_at_prolinea5xxxe_init(const machine_t *model)
+{
+    int ret = 0;
+    const char* fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
+    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
+    device_context_restore();
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x02, PCI_CARD_VIDEO, 1, 0, 0, 0);
+    pci_register_slot(0x03, PCI_CARD_IDE, 2, 0, 0, 0);
+    pci_register_slot(0x13, PCI_CARD_NORMAL, 0, 0, 0, 0);
+    pci_register_slot(0x14, PCI_CARD_NORMAL, 3, 4, 3, 4);
+    device_add(&vl82c59x_wildcat_compaq_device);
+    device_add(&amd_flash_29f010_device);
+	device_add_params(machine_get_kbc_device(machine), (void *) model->kbc_params);
+    device_add_params(&fdc37c6xx_device, (void *) FDC37C665);
+    device_add(&ide_cmd640_pci_device);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+	
+	if (fdc_current[0] == FDC_INTERNAL){
+        fdd_set_turbo(0, 1);
+        fdd_set_turbo(1, 1);
+    }
+	
+    return ret;
+}
+
+static const device_config_t prolinea5xxxe_config[] = {
+    // clang-format off
+    {
+        .name = "bios_versions",
+        .description = "BIOS Versions",
+        .type = CONFIG_BIOS,
+        .default_string = "prolinea5xxxe_apr97",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 }, /*W1*/
+        .bios = {
+            { .name = "BIOS (04/24/1996)", .internal_name = "prolinea5xxxe_apr96", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 262144, .files = { "roms/machines/prolinea5xxxe/prolinea5xxxe_apr96.bin", "" } },
+            { .name = "BIOS (04/04/1997)", .internal_name = "prolinea5xxxe_apr97", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/prolinea5xxxe/prolinea5xxxe_apr97.bin", "" } },
+            
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+
+
+const device_t prolinea5xxxe_device = {
+    .name          = "Compaq ProLinea 5xxxE",
+    .internal_name = "prolinea5xxxe",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available 	   = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = prolinea5xxxe_config
+};
