@@ -128,6 +128,44 @@ machine_at_p54tp4xe_init(const machine_t *model)
 }
 
 int
+machine_at_presario8700_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/presario8700/PRED5T10.BIN",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+	machine_at_common_init_ex(model, 2);
+	
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
+	pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4); /* Onboard */
+    pci_register_slot(0x02, PCI_CARD_VIDEO,       2, 0, 0, 0); /* Onboard */
+    pci_register_slot(0x03, PCI_CARD_NORMAL,      1, 2, 3, 4); /* Slot 01 */
+	pci_register_slot(0x04, PCI_CARD_NORMAL,      3, 4, 1, 2); /* Slot 01 */
+    pci_register_slot(0x05, PCI_CARD_NORMAL,      4, 1, 2, 3); /* Slot 02 */
+    
+    device_add(&i430fx_device);
+    device_add(&piix_device);
+    device_add_params(&fdc37c93x_device, (void *) (FDC37XXX1 | FDC37C93X_NORMAL));
+    device_add(&intel_flash_bxb_device);
+	spd_register(SPD_TYPE_EDO, 0x7, 32);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+	
+	 if (fdc_current[0] == FDC_INTERNAL){
+        fdd_set_turbo(0, 1);
+        fdd_set_turbo(1, 1);
+    }
+
+    return ret;
+}
+
+int
 machine_at_exp8551_init(const machine_t *model)
 {
     int ret;
@@ -1281,6 +1319,158 @@ machine_at_d943_init(const machine_t *model)
 }
 
 /* i430VX */
+int
+machine_at_pctheatre9xxx_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/pctheatre9xxx/PRED5T50.BIN",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+	
+    pci_init(PCI_CONFIG_TYPE_1 | FLAG_NO_BRIDGES);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
+	pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4); /* Onboard */
+    pci_register_slot(0x02, PCI_CARD_VIDEO,       2, 0, 0, 0); /* Onboard */
+    pci_register_slot(0x03, PCI_CARD_NORMAL,      1, 2, 3, 4); /* Slot 01 */
+	pci_register_slot(0x04, PCI_CARD_NORMAL,      3, 4, 1, 2); /* Slot 01 */
+    pci_register_slot(0x05, PCI_CARD_NORMAL,      4, 1, 2, 3); /* Slot 02 */
+    
+    device_add(&i430vx_device);
+    device_add(&piix3_device);
+    device_add_params(&fdc37c93x_device, (void *) (FDC37XXX1 | FDC37C93X_NORMAL));
+    device_add(&intel_flash_bxb_device);
+	
+	 if (fdc_current[0] == FDC_INTERNAL){
+        fdd_set_turbo(0, 1);
+        fdd_set_turbo(1, 1);
+    }
+
+    return ret;
+}
+
+int
+machine_at_md45600_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/md45600/PRED5T40.BIN",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+	
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
+	pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4); /* Onboard */
+    pci_register_slot(0x02, PCI_CARD_VIDEO,       2, 0, 0, 0); /* Onboard */
+    pci_register_slot(0x03, PCI_CARD_NORMAL,      1, 2, 3, 4); /* Slot 01 */
+	pci_register_slot(0x04, PCI_CARD_NORMAL,      3, 4, 1, 2); /* Slot 01 */
+    pci_register_slot(0x05, PCI_CARD_NORMAL,      4, 1, 2, 3); /* Slot 02 */
+    
+    device_add(&i430vx_device);
+    device_add(&piix3_device);
+    device_add_params(&fdc37c93x_device, (void *) (FDC37XXX1 | FDC37C93X_NORMAL));
+    device_add(&intel_flash_bxb_device);
+	spd_register(SPD_TYPE_EDO, 0x7, 256);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+	
+	 if (fdc_current[0] == FDC_INTERNAL){
+        fdd_set_turbo(0, 1);
+        fdd_set_turbo(1, 1);
+    }
+
+    return ret;
+}
+
+int
+machine_at_presario4760_init(const machine_t *model)
+{
+    int ret = 0;
+    const char* fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
+    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
+    device_context_restore();
+
+    machine_at_common_init_ex(model, 2);
+	
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
+	pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4); /* Onboard */
+    pci_register_slot(0x02, PCI_CARD_VIDEO,       2, 0, 0, 0); /* Onboard */
+    pci_register_slot(0x03, PCI_CARD_NORMAL,      1, 2, 3, 4); /* Slot 01 */
+	pci_register_slot(0x04, PCI_CARD_NORMAL,      3, 4, 1, 2); /* Slot 01 */
+    pci_register_slot(0x05, PCI_CARD_NORMAL,      4, 1, 2, 3); /* Slot 02 */
+    
+    device_add(&i430vx_device);
+    device_add(&piix3_device);
+    device_add_params(&fdc37c93x_device, (void *) (FDC37XXX1 | FDC37C93X_NORMAL));
+    device_add(&intel_flash_bxb_device);
+	spd_register(SPD_TYPE_SDRAM, 0x3, 128);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+	
+	 if (fdc_current[0] == FDC_INTERNAL){
+        fdd_set_turbo(0, 1);
+        fdd_set_turbo(1, 1);
+    }
+
+    return ret;
+}
+
+static const device_config_t presario4760_config[] = {
+    // clang-format off
+    {
+        .name = "bios_versions",
+        .description = "BIOS Versions",
+        .type = CONFIG_BIOS,
+        .default_string = "presario4760_dec96",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 }, /*W1*/
+        .bios = {
+            { .name = "BIOS (12/19/1996)", .internal_name = "presario4760_dec96", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 262144, .files = { "roms/machines/presario4760/presario4760_dec96.bin", "" } },
+            { .name = "BIOS (06/23/1997)", .internal_name = "presario4760_jun97", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/presario4760/presario4760_jun97.bin", "" } },
+            
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+
+
+const device_t presario4760_device = {
+    .name          = "Compaq Presario 4760",
+    .internal_name = "presario4760",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available 	   = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = presario4760_config
+};
+
 int
 machine_at_gw2kma_init(const machine_t *model)
 {
