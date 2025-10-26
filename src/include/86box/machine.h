@@ -739,6 +739,9 @@ extern int             machine_at_valuepoint433_init(const machine_t *);
 extern int             machine_at_martin_init(const machine_t *);
 
 /* VLSI 82C481 */
+#ifdef EMU_DEVICE_H
+extern const device_t prolineamt_device;
+#endif
 extern int             machine_at_prolineamt_init(const machine_t *);
 
 /* VLSI 82C486 */
@@ -777,6 +780,9 @@ extern int             machine_at_dtk486_init(const machine_t *);
 extern int             machine_at_ami471_init(const machine_t *);
 extern int             machine_at_px471_init(const machine_t *);
 extern int             machine_at_tg486g_init(const machine_t *);
+
+/* VLSI 82C486 */
+extern int machine_at_pres425_init(const machine_t *);
 
 /* m_at_socket3_pci.c */
 /* ALi M1429G */
@@ -1031,6 +1037,9 @@ extern int             machine_at_d943_init(const machine_t *);
 /* i430VX */
 extern int             machine_at_pctheatre9xxx_init(const machine_t *);
 extern int             machine_at_md45600_init(const machine_t *);
+#ifdef EMU_DEVICE_H
+extern const device_t presario4760_device;
+#endif
 extern int             machine_at_presario4760_init(const machine_t *);
 extern int             machine_at_gw2kma_init(const machine_t *);
 
