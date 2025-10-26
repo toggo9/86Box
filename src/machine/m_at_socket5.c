@@ -1174,7 +1174,7 @@ const device_t presario7100_device = {
     .available     = NULL,
     .speed_changed = NULL,
     .force_redraw  = NULL,
-    .config        = &presario7100_config
+    .config        = presario7100_config
 };
 
 /* VLSI SuperCore */
