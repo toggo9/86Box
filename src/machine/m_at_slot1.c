@@ -24,6 +24,10 @@
 #include <86box/device.h>
 #include <86box/pci.h>
 #include <86box/chipset.h>
+#include <86box/timer.h>
+#include <86box/fdd.h>
+#include <86box/fdc.h>
+#include <86box/fdc_ext.h>
 #include <86box/hdc.h>
 #include <86box/hdc_ide.h>
 #include <86box/keyboard.h>
