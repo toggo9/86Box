@@ -127,6 +127,7 @@ static char flash_path[1024];
 #define WINBOND     0xda /* Winbond Manufacturer's ID */
 #define W29C512     0xc800
 #define W29C010     0xc100
+#define W29C011A    0xc100
 #define W29C020     0x4500
 #define W29C040     0x4600
 
@@ -146,17 +147,14 @@ static void
 sst_sector_erase(sst_t *dev, uint32_t addr)
 {
     uint32_t base = addr & (dev->mask & ~0xfff);
-
-    /* ------------------- NUR FÜR Am29F010 ------------------- */
+    
     if (dev->manufacturer == AMD && dev->id == 0x20) {
-        base = addr & (dev->mask & ~0x3fff);   /* 16 KB-Alignment */
+        base = addr & (dev->mask & ~0x3fff);
         memset(&dev->array[base], 0xFF, 0x4000);
         dev->dirty = 1;
-        return;                                /* alle anderen Chips bleiben unberührt */
+        return;
     }
-    /* -------------------------------------------------------- */
-
-    /* --- Ab hier läuft der bisherige Code wie gehabt --- */
+    
     if (dev->manufacturer == AMD) {
         base = addr & biosmask;
 
@@ -626,6 +624,20 @@ const device_t winbond_flash_w29c010_device = {
     .internal_name = "winbond_flash_w29c010",
     .flags         = 0,
     .local         = WINBOND | W29C010 | SIZE_1M,
+    .init          = sst_init,
+    .close         = sst_close,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = NULL
+};
+
+const device_t winbond_flash_w29c011a_device = {
+    .name          = "Winbond W29C011A Flash BIOS",
+    .internal_name = "winbond_flash_w29c011a",
+    .flags         = 0,
+    .local         = WINBOND | W29C011A | SIZE_1M,
     .init          = sst_init,
     .close         = sst_close,
     .reset         = NULL,
