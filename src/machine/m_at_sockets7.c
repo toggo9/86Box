@@ -303,7 +303,7 @@ machine_at_5114vu_init(const machine_t *model)
 {
     int ret;
 
-    ret = bios_load_linear("roms/machines/5114vu/BACKUP.BIN",
+    ret = bios_load_linear("roms/machines/5114vu/CAMARO.BIN",
                            0x000c0000, 262144, 0);
 
     if (bios_only || !ret)
