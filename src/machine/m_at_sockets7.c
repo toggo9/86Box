@@ -298,6 +298,38 @@ machine_at_ax59pro_init(const machine_t *model)
     return ret;
 }
 
+int
+machine_at_5114vu_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/5114vu/BACKUP.BIN",
+                           0x000c0000, 262144, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 1, 0, 0, 4);
+    pci_register_slot(0x08, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x09, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x0A, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,      4, 1, 2, 3);
+	pci_register_slot(0x0C, PCI_CARD_NORMAL,      3, 0, 0, 0);
+    pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 0, 0, 0);
+
+    device_add(&via_mvp3_device);
+    device_add(&via_vt82c686a_device);
+    device_add_params(machine_get_kbc_device(machine), (void *) model->kbc_params);
+    device_add(&amd_flash_29f020a_device);
+    spd_register(SPD_TYPE_SDRAM, 0x3, 256);
+
+    return ret;
+}
+
 static const device_config_t delhi3_config[] = {
     // clang-format off
     {
