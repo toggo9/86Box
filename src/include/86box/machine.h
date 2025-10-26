@@ -738,6 +738,12 @@ extern int             machine_at_valuepoint433_init(const machine_t *);
 /* VLSI 82C480 */
 extern int             machine_at_martin_init(const machine_t *);
 
+/* VLSI 82C481 */
+extern int             machine_at_prolineamt_init(const machine_t *);
+
+/* VLSI 82C486 */
+extern int             machine_at_prolinea466_init(const machine_t *);
+
 /* m_at_socket3.c */
 /* ALi M1429G */
 extern int             machine_at_atc1762_init(const machine_t *);
@@ -953,14 +959,26 @@ extern int             machine_at_torino_init(const machine_t *);
 
 /* UMC 889x */
 extern int             machine_at_hot539_init(const machine_t *);
+#ifdef EMU_DEVICE_H
+extern const device_t presario7100_device;
+#endif
+extern int             machine_at_presario7100_init(const machine_t *);
 
 /* VLSI SuperCore */
 extern int             machine_at_bravoms586_init(const machine_t *);
+#ifdef EMU_DEVICE_H
+extern const device_t  prescdspent_device;
+#endif
+extern int             machine_at_prescdspent_init(const machine_t *);
 extern int             machine_at_g586vpmc_init(const machine_t *);
 extern int             machine_at_m54si_init(const machine_t *);
 extern int             machine_at_pb600_init(const machine_t *);
 
 /* VLSI Wildcat */
+#ifdef EMU_DEVICE_H
+extern const device_t  prolinea5xxxe_device;
+#endif
+extern int             machine_at_prolinea5xxxe_init(const machine_t *);
 extern int             machine_at_globalyst620_init(const machine_t *);
 
 /* m_at_socket7_3v.c */
@@ -969,6 +987,7 @@ extern int             machine_at_globalyst620_init(const machine_t *);
 extern const device_t  p54tp4xe_device;
 #endif
 extern int             machine_at_p54tp4xe_init(const machine_t *);
+extern int             machine_at_presario8700_init(const machine_t *);
 extern int             machine_at_exp8551_init(const machine_t *);
 #ifdef EMU_DEVICE_H
 extern const device_t vectra52_device;
@@ -1010,6 +1029,9 @@ extern const device_t  d943_device;
 extern int             machine_at_d943_init(const machine_t *);
 
 /* i430VX */
+extern int             machine_at_pctheatre9xxx_init(const machine_t *);
+extern int             machine_at_md45600_init(const machine_t *);
+extern int             machine_at_presario4760_init(const machine_t *);
 extern int             machine_at_gw2kma_init(const machine_t *);
 
 /* SiS 5501 */
@@ -1139,6 +1161,7 @@ extern int             machine_at_g5x_init(const machine_t *);
 
 /* VIA MVP3 */
 extern int             machine_at_ax59pro_init(const machine_t *);
+extern int             machine_at_5114vu_init(const machine_t *);
 #ifdef EMU_DEVICE_H
 extern const device_t  delhi3_device;
 #endif
@@ -1157,6 +1180,7 @@ extern int             machine_at_ap61_init(const machine_t *);
 #ifdef EMU_DEVICE_H
 extern const device_t  ficpo6000_device;
 #endif
+extern int             machine_at_prolineappro_init(const machine_t *);
 extern int             machine_at_p6rp4_init(const machine_t *);
 extern int             machine_at_ficpo6000_init(const machine_t *);
 
@@ -1208,6 +1232,7 @@ extern const device_t  ax6bc_device;
 extern int             machine_at_ax6bc_init(const machine_t *);
 extern int             machine_at_p2bls_init(const machine_t *);
 extern int             machine_at_p3bf_init(const machine_t *);
+extern int             machine_at_kbi6130compaq_init(const machine_t *);
 #ifdef EMU_DEVICE_H
 extern const device_t  ga686_device;
 #endif
@@ -1242,6 +1267,7 @@ extern int             machine_at_ficka6130_init(const machine_t *);
 
 /* VIA Apollo Pro 133 */
 extern int             machine_at_p3v133_init(const machine_t *);
+extern int             machine_at_pwaavnv_init(const machine_t *);
 
 /* VIA Apollo Pro 133A */
 extern int             machine_at_p3v4x_init(const machine_t *);
