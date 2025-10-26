@@ -127,11 +127,11 @@ static char flash_path[1024];
 #define WINBOND     0xda /* Winbond Manufacturer's ID */
 #define W29C512     0xc800
 #define W29C010     0xc100
-#define W29C011A    0xc100
 #define W29C020     0x4500
 #define W29C040     0x4600
 
 #define AMD         0x01 /* AMD Manufacturer's ID */
+#define AMD29F010   0x2000
 #define AMD29F020A  0xb000
 
 #define SIZE_512K   0x010000
@@ -147,34 +147,46 @@ sst_sector_erase(sst_t *dev, uint32_t addr)
 {
     uint32_t base = addr & (dev->mask & ~0xfff);
 
+    /* ------------------- NUR FÜR Am29F010 ------------------- */
+    if (dev->manufacturer == AMD && dev->id == 0x20) {
+        base = addr & (dev->mask & ~0x3fff);   /* 16 KB-Alignment */
+        memset(&dev->array[base], 0xFF, 0x4000);
+        dev->dirty = 1;
+        return;                                /* alle anderen Chips bleiben unberührt */
+    }
+    /* -------------------------------------------------------- */
+
+    /* --- Ab hier läuft der bisherige Code wie gehabt --- */
     if (dev->manufacturer == AMD) {
         base = addr & biosmask;
 
         if ((base >= 0x00000) && (base <= 0x0ffff))
-            memset(&dev->array[0x00000], 0xff, 65536);
+            memset(&dev->array[0x00000], 0xFF, 65536);
         else if ((base >= 0x10000) && (base <= 0x1ffff))
-            memset(&dev->array[0x10000], 0xff, 65536);
+            memset(&dev->array[0x10000], 0xFF, 65536);
         else if ((base >= 0x20000) && (base <= 0x2ffff))
-            memset(&dev->array[0x20000], 0xff, 65536);
+            memset(&dev->array[0x20000], 0xFF, 65536);
         else if ((base >= 0x30000) && (base <= 0x37fff))
-            memset(&dev->array[0x30000], 0xff, 32768);
+            memset(&dev->array[0x30000], 0xFF, 32768);
         else if ((base >= 0x38000) && (base <= 0x39fff))
-            memset(&dev->array[0x38000], 0xff, 8192);
+            memset(&dev->array[0x38000], 0xFF, 8192);
         else if ((base >= 0x3a000) && (base <= 0x3bfff))
-            memset(&dev->array[0x3a000], 0xff, 8192);
+            memset(&dev->array[0x3a000], 0xFF, 8192);
         else if ((base >= 0x3c000) && (base <= 0x3ffff))
-            memset(&dev->array[0x3c000], 0xff, 16384);
+            memset(&dev->array[0x3c000], 0xFF, 16384);
     } else {
         if ((base < 0x2000) && (dev->bbp_first_8k & 0x01))
             return;
         else if ((base >= (dev->size - 0x2000)) && (dev->bbp_last_8k & 0x01))
             return;
 
-        memset(&dev->array[base], 0xff, 4096);
+        memset(&dev->array[base], 0xFF, 4096);
     }
 
     dev->dirty = 1;
 }
+
+
 
 static void
 sst_new_command(sst_t *dev, uint32_t addr, uint8_t val)
@@ -623,20 +635,6 @@ const device_t winbond_flash_w29c010_device = {
     .config        = NULL
 };
 
-const device_t winbond_flash_w29c011a_device = {
-    .name          = "Winbond W29C011A Flash BIOS",
-    .internal_name = "winbond_flash_w29c011a",
-    .flags         = 0,
-    .local         = WINBOND | W29C011A | SIZE_1M,
-    .init          = sst_init,
-    .close         = sst_close,
-    .reset         = NULL,
-    .available     = NULL,
-    .speed_changed = NULL,
-    .force_redraw  = NULL,
-    .config        = NULL
-};
-
 const device_t winbond_flash_w29c020_device = {
     .name          = "Winbond W29C020 Flash BIOS",
     .internal_name = "winbond_flash_w29c020",
@@ -987,6 +985,20 @@ const device_t sst_flash_49lf160_device = {
     .internal_name = "sst_flash_49lf160",
     .flags         = 0,
     .local         = SST | SST49LF160 | SIZE_16M,
+    .init          = sst_init,
+    .close         = sst_close,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = NULL
+};
+
+const device_t amd_flash_29f010_device = {
+    .name          = "AMD 29F010 Flash BIOS",
+    .internal_name = "amd_flash_29f010",
+    .flags         = 0,
+    .local         = AMD | AMD29F010 | SIZE_1M,
     .init          = sst_init,
     .close         = sst_close,
     .reset         = NULL,
