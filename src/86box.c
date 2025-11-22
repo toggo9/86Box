@@ -79,6 +79,7 @@
 #include <86box/mouse.h>
 #include <86box/gameport.h>
 #include <86box/fdd.h>
+#include <86box/fdd_audio.h>
 #include <86box/fdc.h>
 #include <86box/fdc_ext.h>
 #include <86box/hdd.h>
@@ -107,6 +108,7 @@
 #include <86box/apm.h>
 #include <86box/acpi.h>
 #include <86box/nv/vid_nv_rivatimer.h>
+#include <86box/vfio.h>
 
 // Disable c99-designator to avoid the warnings about int ng
 #ifdef __clang__
@@ -169,6 +171,7 @@ int      vid_api                                = 0;              /* (C) video r
 int      vid_cga_contrast                       = 0;              /* (C) video */
 int      video_fullscreen                       = 0;              /* (C) video */
 int      video_fullscreen_scale                 = 0;              /* (C) video */
+int      fullscreen_ui_visible                  = 0;              /* (C) video */
 int      enable_overscan                        = 0;              /* (C) video */
 int      force_43                               = 0;              /* (C) video */
 int      video_filter_method                    = 1;              /* (C) video */
@@ -238,6 +241,7 @@ char     monitor_edid_path[1024] = { 0 };                         /* (C) Path to
 double   video_gl_input_scale = 1.0;                              /* (C) OpenGL 3.x input scale */
 int      video_gl_input_scale_mode = FULLSCR_SCALE_FULL;          /* (C) OpenGL 3.x input stretch mode */
 int      color_scheme = 0;                                        /* (C) Color scheme of UI (Windows-only) */
+int      fdd_sounds_enabled = 1;                                  /* (C) Floppy drive sounds enabled */
 
 // Accelerator key array
 struct accelKey acc_keys[NUM_ACCELS];
@@ -258,6 +262,11 @@ struct accelKey def_acc_keys[NUM_ACCELS] = {
         .name="fullscreen",
         .desc="Toggle fullscreen",
         .seq="Ctrl+Alt+PgUp"
+    },
+    {
+        .name="toggle_ui_fullscreen",
+        .desc="Toggle UI in fullscreen",
+        .seq="Ctrl+Alt+PgDown"
     },
     {
         .name="screenshot",
@@ -1080,7 +1089,10 @@ usage:
     /* Build the global configuration file path. */
     if (global == NULL) {
         plat_get_global_config_dir(global_cfg_path, sizeof(global_cfg_path));
-        path_append_filename(global_cfg_path, global_cfg_path, GLOBAL_CONFIG_FILE);
+        // avoid strcpy global_cfg_path over itself (valgrind says it's bad...)
+        // path_append_filename(global_cfg_path, global_cfg_path, GLOBAL_CONFIG_FILE);
+        path_slash(global_cfg_path);
+        strcat(global_cfg_path, GLOBAL_CONFIG_FILE);
     } else {
         strncpy(global_cfg_path, global, sizeof(global_cfg_path) - 1);
     }
@@ -1378,6 +1390,11 @@ pc_init_modules(void)
     video_init();
 
     fdd_init();
+    
+    if (fdd_sounds_enabled) {
+        fdd_audio_load_profiles();
+        fdd_audio_init();
+    }
 
     sound_init();
 
@@ -1646,6 +1663,11 @@ pc_reset_hard_init(void)
        the chances of the SCSI controller ending up on the bridge. */
     video_voodoo_init();
 
+#if defined(USE_VFIO) && defined(__linux__)
+    /* Initialize VFIO */
+    vfio_init();
+#endif
+
     /* installs first game port if no device provides one, must be late */
     if (joystick_type[0])
         gameport_update_joystick_type(0);
@@ -1724,19 +1746,19 @@ update_mouse_msg(void)
         *(wcp - 1) = L'\0';
     mbstowcs(wcpu, cpu_s->name, strlen(cpu_s->name) + 1);
 #ifdef _WIN32
-    swprintf(mouse_msg[0], sizeof_w(mouse_msg[0]), L"%%i.%%i%%%% - %ls",
+    swprintf(mouse_msg[0], sizeof_w(mouse_msg[0]), L"%%i%%%% - %ls",
              plat_get_string(STRING_MOUSE_CAPTURE));
-    swprintf(mouse_msg[1], sizeof_w(mouse_msg[1]), L"%%i.%%i%%%% - %ls",
+    swprintf(mouse_msg[1], sizeof_w(mouse_msg[1]), L"%%i%%%% - %ls",
              (mouse_get_buttons() > 2) ? plat_get_string(STRING_MOUSE_RELEASE) : plat_get_string(STRING_MOUSE_RELEASE_MMB));
-    wcsncpy(mouse_msg[2], L"%i.%i%%", sizeof_w(mouse_msg[2]));
+    wcsncpy(mouse_msg[2], L"%i%%", sizeof_w(mouse_msg[2]));
 #else
-    swprintf(mouse_msg[0], sizeof_w(mouse_msg[0]), L"%ls v%ls - %%i.%%i%%%% - %ls - %ls/%ls - %ls",
+    swprintf(mouse_msg[0], sizeof_w(mouse_msg[0]), L"%ls v%ls - %%i%%%% - %ls - %ls/%ls - %ls",
              EMU_NAME_W, EMU_VERSION_FULL_W, wmachine, wcpufamily, wcpu,
              plat_get_string(STRING_MOUSE_CAPTURE));
-    swprintf(mouse_msg[1], sizeof_w(mouse_msg[1]), L"%ls v%ls - %%i.%%i%%%% - %ls - %ls/%ls - %ls",
+    swprintf(mouse_msg[1], sizeof_w(mouse_msg[1]), L"%ls v%ls - %%i%%%% - %ls - %ls/%ls - %ls",
              EMU_NAME_W, EMU_VERSION_FULL_W, wmachine, wcpufamily, wcpu,
              (mouse_get_buttons() > 2) ? plat_get_string(STRING_MOUSE_RELEASE) : plat_get_string(STRING_MOUSE_RELEASE_MMB));
-    swprintf(mouse_msg[2], sizeof_w(mouse_msg[2]), L"%ls v%ls - %%i.%%i%%%% - %ls - %ls/%ls",
+    swprintf(mouse_msg[2], sizeof_w(mouse_msg[2]), L"%ls v%ls - %%i%%%% - %ls - %ls/%ls",
              EMU_NAME_W, EMU_VERSION_FULL_W, wmachine, wcpufamily, wcpu);
 #endif
 }
@@ -1871,7 +1893,7 @@ pc_run(void)
         else
             fps = ((fps + 20) / 50) * 50;
 #endif
-        swprintf(temp, sizeof_w(temp), mouse_msg[mouse_msg_idx], fps / (force_10ms ? 1 : 10), force_10ms ? 0 : (fps % 10));
+        swprintf(temp, sizeof_w(temp), mouse_msg[mouse_msg_idx], fps / (force_10ms ? 1 : 10));
 #ifdef __APPLE__
         /* Needed due to modifying the UI on the non-main thread is a big no-no. */
         dispatch_async_f(dispatch_get_main_queue(), wcsdup((const wchar_t *) temp), _ui_window_title);

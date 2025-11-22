@@ -54,6 +54,7 @@
 #include <86box/hdc.h>
 #include <86box/hdc_ide.h>
 #include <86box/fdd.h>
+#include <86box/fdd_audio.h>
 #include <86box/fdc_ext.h>
 #include <86box/gameport.h>
 #include <86box/keyboard.h>
@@ -265,6 +266,7 @@ load_general(void)
 
     do_auto_pause = ini_section_get_int(cat, "do_auto_pause", 0);
     force_constant_mouse = ini_section_get_int(cat, "force_constant_mouse", 0);
+    fdd_sounds_enabled = ini_section_get_int(cat, "fdd_sounds_enabled", 1);
 
     p = ini_section_get_string(cat, "uuid", NULL);
     if (p != NULL)
@@ -337,6 +339,7 @@ load_machine(void)
         { .old = "infinia7200", .new = "tc430hx", .new_bios = "infinia7200" },
         { .old = "dellvenus", .new = "vs440fx", .new_bios = "dellvenus" },
         { .old = "gw2kvenus", .new = "vs440fx", .new_bios = "gw2kvenus" },
+        { .old = "lgibmx7g", .new = "ms6119", .new_bios = "lgibmx7g" },
         { 0 }
     };
 
@@ -567,12 +570,13 @@ load_input_devices(void)
 {
     ini_section_t cat = ini_find_section(config, "Input devices");
     char          temp[512];
+    char          tmp2[32];
     char         *p;
 
     p = ini_section_get_string(cat, "keyboard_type", NULL);
     if (p != NULL)
         keyboard_type = keyboard_get_from_internal_name(p);
-    else if (strstr(machine_get_internal_name(), "pc5086"))
+    else if (machines[machine].init == machine_xt_pc5086_init)
         keyboard_type = KEYBOARD_TYPE_PC_XT;
     else if (machine_has_bus(machine, MACHINE_BUS_PS2_PORTS)) {
         if (machine_has_flags(machine, MACHINE_KEYBOARD_JIS))
@@ -637,25 +641,34 @@ load_input_devices(void)
     } else
         joystick_type[joy_insn] = JS_TYPE_NONE;
 
+    uint8_t gp = 0;
+
     for (int js = 0; js < joystick_get_max_joysticks(joystick_type[joy_insn]); js++) {
         sprintf(temp, "joystick_%i_nr", js);
-        joystick_state[0][js].plat_joystick_nr = ini_section_get_int(cat, temp, 0);
+        joystick_state[gp][js].plat_joystick_nr = ini_section_get_int(cat, temp, 0);
 
-        if (joystick_state[0][js].plat_joystick_nr) {
+        if (joystick_state[gp][js].plat_joystick_nr) {
+            // --- Load Axis Mappings ---
             for (int axis_nr = 0; axis_nr < joystick_get_axis_count(joystick_type[joy_insn]); axis_nr++) {
                 sprintf(temp, "joystick_%i_axis_%i", js, axis_nr);
-                joystick_state[0][js].axis_mapping[axis_nr] = ini_section_get_int(cat, temp, axis_nr);
+                joystick_state[gp][js].axis_mapping[axis_nr] = ini_section_get_int(cat, temp, axis_nr);
             }
+
+            // --- Load Button Mappings ---
             for (int button_nr = 0; button_nr < joystick_get_button_count(joystick_type[joy_insn]); button_nr++) {
                 sprintf(temp, "joystick_%i_button_%i", js, button_nr);
-                joystick_state[0][js].button_mapping[button_nr] = ini_section_get_int(cat, temp, button_nr);
+                joystick_state[gp][js].button_mapping[button_nr] = ini_section_get_int(cat, temp, button_nr);
             }
+
+            // --- Load POV (Hat Switch) Mappings ---
             for (int pov_nr = 0; pov_nr < joystick_get_pov_count(joystick_type[joy_insn]); pov_nr++) {
                 sprintf(temp, "joystick_%i_pov_%i", js, pov_nr);
-                p                                   = ini_section_get_string(cat, temp, "0, 0");
-                joystick_state[0][js].pov_mapping[pov_nr][0] = joystick_state[0][js].pov_mapping[pov_nr][1] = 0;
-                sscanf(p, "%i, %i", &joystick_state[0][js].pov_mapping[pov_nr][0],
-                       &joystick_state[0][js].pov_mapping[pov_nr][1]);
+                sprintf(tmp2, "%i, %i", 0, 0);
+                p                                             = ini_section_get_string(cat, temp, tmp2);
+                joystick_state[gp][js].pov_mapping[pov_nr][0] = 0;
+				joystick_state[gp][js].pov_mapping[pov_nr][1] = 0;
+                sscanf(p, "%i, %i", &joystick_state[gp][js].pov_mapping[pov_nr][0],
+                       &joystick_state[gp][js].pov_mapping[pov_nr][1]);
             }
         }
     }
@@ -934,11 +947,35 @@ load_ports(void)
 #endif
 }
 
+static char *
+memrmem(char *src, char *start, char *what)
+{
+    if ((src == NULL) || (what == NULL))
+        return NULL;
+
+    while (1) {
+        if (memcmp(src, what, strlen(what)) == 0)
+            return src;
+        src--;
+        if (src < start)
+            return NULL;
+    }
+}
+
 static int
 load_image_file(char *dest, char *p, uint8_t *ui_wp)
 {
     char *prefix = "";
     int   ret    = 0;
+    char *slash  = NULL;
+    char *above  = NULL;
+    char *use    = NULL;
+
+    if ((slash = memrmem(usr_path + strlen(usr_path) - 2, usr_path, "/")) != NULL) {
+        slash++;
+        above = (char *) calloc(1, slash - usr_path + 1);
+        memcpy(above, usr_path, slash - usr_path);
+    }
 
     if (strstr(p, "wp://") == p) {
        p += 5;
@@ -948,7 +985,33 @@ load_image_file(char *dest, char *p, uint8_t *ui_wp)
     } else if ((ui_wp != NULL) && *ui_wp)
        prefix = "wp://";
 
-    if (path_abs(p)) {
+    if (strstr(p, "ioctl://") == p) {
+       if (strlen(p) > (MAX_IMAGE_PATH_LEN - 11))
+           ret = 1;
+       else
+           snprintf(dest, MAX_IMAGE_PATH_LEN, "%s", p);
+
+        if (above != NULL)
+            free(above);
+
+        return ret;
+    }
+
+    if (memcmp(p, "<exe_path>/", strlen("<exe_path>/")) == 0) {
+        if ((strlen(prefix) + strlen(exe_path) + strlen(path_get_slash(exe_path)) + strlen(p + strlen("<exe_path>/"))) >
+            (MAX_IMAGE_PATH_LEN - 11))
+            ret = 1;
+        else
+            snprintf(dest, MAX_IMAGE_PATH_LEN, "%s%s%s%s", prefix, exe_path, path_get_slash(exe_path),
+                     p + strlen("<exe_path>/"));
+    } else if (memcmp(p, "../", strlen("../")) == 0) {
+        use = (above == NULL) ? usr_path : above;
+        if ((strlen(prefix) + strlen(use) + strlen(path_get_slash(use)) + strlen(p + strlen("../"))) >
+            (MAX_IMAGE_PATH_LEN - 11))
+            ret = 1;
+        else
+            snprintf(dest, MAX_IMAGE_PATH_LEN, "%s%s%s%s", prefix, use, path_get_slash(use), p + strlen("../"));
+    } else if (path_abs(p)) {
         if ((strlen(prefix) + strlen(p)) > (MAX_IMAGE_PATH_LEN - 11))
             ret = 1;
         else
@@ -961,6 +1024,9 @@ load_image_file(char *dest, char *p, uint8_t *ui_wp)
     }
 
     path_normalize(dest);
+
+    if (above != NULL)
+        free(above);
 
     return ret;
 }
@@ -1131,15 +1197,8 @@ load_storage_controllers(void)
             p[0] = 0x00;
 
         if (p[0] != 0x00) {
-            if (path_abs(p)) {
-                if (strlen(p) > 511)
-                    fatal("Configuration: Length of cartridge_%02i_fn is more than 511\n",
-                          c + 1);
-                else
-                    strncpy(cart_fns[c], p, 511);
-            } else
-                path_append_filename(cart_fns[c], usr_path, p);
-            path_normalize(cart_fns[c]);
+            if (load_image_file(cart_fns[c], p, NULL))
+                fatal("Configuration: Length of cartridge_%02i_fn is more than 511\n", c + 1);
         }
 
         for (int i = 0; i < MAX_PREV_IMAGES; i++) {
@@ -1147,16 +1206,9 @@ load_storage_controllers(void)
             sprintf(temp, "cartridge_%02i_image_history_%02i", c + 1, i + 1);
             p = ini_section_get_string(cat, temp, NULL);
             if (p) {
-                if (path_abs(p)) {
-                    if (strlen(p) > (MAX_IMAGE_PATH_LEN - 1))
-                        fatal("Configuration: Length of cartridge_%02i_image_history_%02i "
-                              "is more than %i\n", c + 1, i + 1, MAX_IMAGE_PATH_LEN - 1);
-                    else
-                        snprintf(cart_image_history[c][i], MAX_IMAGE_PATH_LEN, "%s", p);
-                } else
-                    snprintf(cart_image_history[c][i], MAX_IMAGE_PATH_LEN, "%s%s%s", usr_path,
-                             path_get_slash(usr_path), p);
-                path_normalize(cart_image_history[c][i]);
+                if (load_image_file(cart_image_history[c][i], p, NULL))
+                    fatal("Configuration: Length of cartridge_%02i_image_history_%02i "
+                          "is more than %i\n", c + 1, i + 1, MAX_IMAGE_PATH_LEN - 1);
             }
         }
     }
@@ -1320,16 +1372,14 @@ load_hard_disks(void)
             p[0] = 0x00;
 
         if (p[0] != 0x00) {
-            if (path_abs(p)) {
-                if (strlen(p) > 511)
-                    fatal("Configuration: Length of hdd_%02i_fn is more "
-                          "than 511\n", c + 1);
-                else
-                    strncpy(hdd[c].fn, p, 511);
-            } else
-                path_append_filename(hdd[c].fn, usr_path, p);
-            path_normalize(hdd[c].fn);
+            if (load_image_file(hdd[c].fn, p, NULL))
+                fatal("Configuration: Length of hdd_%02i_fn is more than 511\n", c + 1);
         }
+
+#if defined(ENABLE_CONFIG_LOG) && (ENABLE_CONFIG_LOG == 2)
+        if (*p != '\0')
+            config_log("HDD%d: %ls\n", c, hdd[c].fn);
+#endif
 
         sprintf(temp, "hdd_%02i_vhd_blocksize", c + 1);
         hdd[c].vhd_blocksize = ini_section_get_int(cat, temp, 0);
@@ -1378,10 +1428,15 @@ load_floppy_and_cdrom_drives(void)
     int           c;
     int           d;
     int           count = cdrom_get_type_count();
+    
+#ifndef DISABLE_FDD_AUDIO
+    fdd_audio_load_profiles();
+#endif
 
     memset(temp, 0x00, sizeof(temp));
     for (c = 0; c < FDD_NUM; c++) {
         sprintf(temp, "fdd_%02i_type", c + 1);
+
         p = ini_section_get_string(cat, temp, (c < 2) ? "525_2dd" : "none");
         if (!strcmp(p, "525_2hd_ps2"))
             d = fdd_get_from_internal_name("525_2hd");
@@ -1413,6 +1468,7 @@ load_floppy_and_cdrom_drives(void)
         if (*p != '\0')
             config_log("Floppy%d: %ls\n", c, floppyfns[c]);
 #endif
+
         sprintf(temp, "fdd_%02i_turbo", c + 1);
         fdd_set_turbo(c, !!ini_section_get_int(cat, temp, 0));
         sprintf(temp, "fdd_%02i_check_bpb", c + 1);
@@ -1436,6 +1492,15 @@ load_floppy_and_cdrom_drives(void)
             sprintf(temp, "fdd_%02i_check_bpb", c + 1);
             ini_section_delete_var(cat, temp);
         }
+        sprintf(temp, "fdd_%02i_audio", c + 1);        
+#ifndef DISABLE_FDD_AUDIO
+        p    = ini_section_get_string(cat, temp, "none");
+        int prof = fdd_audio_get_profile_by_internal_name(p);
+        fdd_set_audio_profile(c, prof);
+#else
+        fdd_set_audio_profile(c, 0);
+#endif        
+
         for (int i = 0; i < MAX_PREV_IMAGES; i++) {
             fdd_image_history[c][i] = (char *) calloc((MAX_IMAGE_PATH_LEN + 1) << 1, sizeof(char));
             sprintf(temp, "fdd_%02i_image_history_%02i", c + 1, i + 1);
@@ -1475,7 +1540,7 @@ load_floppy_and_cdrom_drives(void)
         sprintf(temp, "cdrom_%02i_type", c + 1);
         p = ini_section_get_string(cat, temp, cdrom[c].bus_type == CDROM_BUS_MKE ? "cr563" : "86cd");
         /* TODO: Configuration migration, remove when no longer needed. */
-        int cdrom_type = cdrom_get_from_internal_name(p);
+        int cdrom_type = cdrom_get_from_internal_name(!strcmp(p, "goldstar") ? "goldstar_r560b" : p);
         if (cdrom_type == -1) {
             cdrom_type = cdrom_get_from_name(p);
             if (cdrom_type == -1)
@@ -1559,31 +1624,23 @@ load_floppy_and_cdrom_drives(void)
             p[0] = 0x00;
 
         if (p[0] != 0x00) {
-            if (path_abs(p)) {
-                if (strlen(p) > 511)
-                    fatal("Configuration: Length of cdrom_%02i_image_path is more than 511\n", c + 1);
-                else
-                    strncpy(cdrom[c].image_path, p, 511);
-            } else
-                path_append_filename(cdrom[c].image_path, usr_path, p);
-            path_normalize(cdrom[c].image_path);
+            if (load_image_file(cdrom[c].image_path, p, NULL))
+                fatal("Configuration: Length of cdrom_%02i_image_path is more than 511\n", c + 1);
         }
+
+#if defined(ENABLE_CONFIG_LOG) && (ENABLE_CONFIG_LOG == 2)
+        if (*p != '\0')
+            config_log("CD-ROM%d: %ls\n", c, cdrom[c].image_path);
+#endif
 
         for (int i = 0; i < MAX_PREV_IMAGES; i++) {
             cdrom[c].image_history[i] = (char *) calloc((MAX_IMAGE_PATH_LEN + 1) << 1, sizeof(char));
             sprintf(temp, "cdrom_%02i_image_history_%02i", c + 1, i + 1);
             p = ini_section_get_string(cat, temp, NULL);
             if (p) {
-                if (path_abs(p)) {
-                    if (strlen(p) > (MAX_IMAGE_PATH_LEN - 1))
-                        fatal("Configuration: Length of cdrom_%02i_image_history_%02i is more "
-                              "than %i\n", c + 1, i + 1, MAX_IMAGE_PATH_LEN - 1);
-                    else
-                        snprintf(cdrom[c].image_history[i], MAX_IMAGE_PATH_LEN, "%s", p);
-                } else
-                    snprintf(cdrom[c].image_history[i], MAX_IMAGE_PATH_LEN, "%s%s%s", usr_path,
-                             path_get_slash(usr_path), p);
-                path_normalize(cdrom[c].image_history[i]);
+                if (load_image_file(cdrom[c].image_history[i], p, NULL))
+                    fatal("Configuration: Length of cdrom_%02i_image_history_%02i is more "
+                          "than %i\n", c + 1, i + 1, MAX_IMAGE_PATH_LEN - 1);
             }
         }
 
@@ -2479,6 +2536,11 @@ save_general(void)
     else
         ini_section_delete_var(cat, "force_constant_mouse");
 
+    if (fdd_sounds_enabled == 1)
+        ini_section_delete_var(cat, "fdd_sounds_enabled");
+    else
+        ini_section_set_int(cat, "fdd_sounds_enabled", fdd_sounds_enabled);
+
     char cpu_buf[128] = { 0 };
     plat_get_cpu_string(cpu_buf, 128);
     ini_section_set_string(cat, "host_cpu", cpu_buf);
@@ -2679,7 +2741,7 @@ save_input_devices(void)
 {
     ini_section_t cat = ini_find_or_create_section(config, "Input devices");
     char          temp[512];
-    char          tmp2[512];
+    char          tmp2[32];
 
     ini_section_set_string(cat, "keyboard_type", keyboard_get_internal_name(keyboard_type));
 
@@ -2690,53 +2752,64 @@ save_input_devices(void)
         ini_section_delete_var(cat, "joystick_type");
 
         for (int js = 0; js < MAX_PLAT_JOYSTICKS; js++) {
-            sprintf(tmp2, "joystick_%i_nr", js);
-            ini_section_delete_var(cat, tmp2);
+            sprintf(temp, "joystick_%i_nr", js);
+            ini_section_delete_var(cat, temp);
 
+            // --- Save Axis Mappings ---
             for (int axis_nr = 0; axis_nr < MAX_JOY_AXES; axis_nr++) {
-                sprintf(tmp2, "joystick_%i_axis_%i", js, axis_nr);
-                ini_section_delete_var(cat, tmp2);
+                sprintf(temp, "joystick_%i_axis_%i", js, axis_nr);
+                ini_section_delete_var(cat, temp);
             }
+
+            // --- Save Button Mappings ---
             for (int button_nr = 0; button_nr < MAX_JOY_BUTTONS; button_nr++) {
-                sprintf(tmp2, "joystick_%i_button_%i", js, button_nr);
-                ini_section_delete_var(cat, tmp2);
+                sprintf(temp, "joystick_%i_button_%i", js, button_nr);
+                ini_section_delete_var(cat, temp);
             }
+
+            // --- Save POV (Hat Switch) Mappings ---
             for (int pov_nr = 0; pov_nr < MAX_JOY_POVS; pov_nr++) {
-                sprintf(tmp2, "joystick_%i_pov_%i", js, pov_nr);
-                ini_section_delete_var(cat, tmp2);
+                sprintf(temp, "joystick_%i_pov_%i", js, pov_nr);
+                ini_section_delete_var(cat, temp);
             }
         }
     } else {
+        uint8_t gp = 0;
+
         ini_section_set_string(cat, "joystick_type", joystick_get_internal_name(joystick_type[joy_insn]));
 
         for (int js = 0; js < joystick_get_max_joysticks(joystick_type[joy_insn]); js++) {
-            sprintf(tmp2, "joystick_%i_nr", js);
-            ini_section_set_int(cat, tmp2, joystick_state[0][js].plat_joystick_nr);
+            sprintf(temp, "joystick_%i_nr", js);
+            ini_section_set_int(cat, temp, joystick_state[gp][js].plat_joystick_nr);
 
-            if (joystick_state[0][js].plat_joystick_nr) {
+            if (joystick_state[gp][js].plat_joystick_nr) {
+                // --- Save Axis Mappings ---
                 for (int axis_nr = 0; axis_nr < joystick_get_axis_count(joystick_type[joy_insn]); axis_nr++) {
-                    sprintf(tmp2, "joystick_%i_axis_%i", js, axis_nr);
-                    ini_section_set_int(cat, tmp2, joystick_state[0][js].axis_mapping[axis_nr]);
+                    sprintf(temp, "joystick_%i_axis_%i", js, axis_nr);
+                    ini_section_set_int(cat, temp, joystick_state[gp][js].axis_mapping[axis_nr]);
                 }
+
+                // --- Save Button Mappings ---
                 for (int button_nr = 0; button_nr < joystick_get_button_count(joystick_type[joy_insn]); button_nr++) {
-                    sprintf(tmp2, "joystick_%i_button_%i", js, button_nr);
-                    ini_section_set_int(cat, tmp2, joystick_state[0][js].button_mapping[button_nr]);
+                    sprintf(temp, "joystick_%i_button_%i", js, button_nr);
+                    ini_section_set_int(cat, temp, joystick_state[gp][js].button_mapping[button_nr]);
                 }
+
+                // --- Save POV (Hat Switch) Mappings ---
                 for (int pov_nr = 0; pov_nr < joystick_get_pov_count(joystick_type[joy_insn]); pov_nr++) {
-                    sprintf(tmp2, "joystick_%i_pov_%i", js, pov_nr);
-                    sprintf(temp, "%i, %i", joystick_state[0][js].pov_mapping[pov_nr][0],
-                            joystick_state[0][js].pov_mapping[pov_nr][1]);
-                    ini_section_set_string(cat, tmp2, temp);
+                    sprintf(temp, "joystick_%i_pov_%i", js, pov_nr);
+                    sprintf(tmp2, "%i, %i", joystick_state[gp][js].pov_mapping[pov_nr][0],
+                                            joystick_state[gp][js].pov_mapping[pov_nr][1]);
+                    ini_section_set_string(cat, temp, tmp2);
                 }
             }
         }
     }
 
-    if (tablet_tool_type != 1) {
+    if (tablet_tool_type != 1)
         ini_section_set_int(cat, "tablet_tool_type", tablet_tool_type);
-    } else {
+    else
         ini_section_delete_var(cat, "tablet_tool_type");
-    }
 
     ini_delete_section_if_empty(config, cat);
 }
@@ -3010,6 +3083,14 @@ save_image_file(char *cat, char *var, char *src)
 {
     char  temp[2048] = { 0 };
     char *prefix     = "";
+    char *slash      = NULL;
+    char *above      = NULL;
+
+    if ((slash = memrmem(usr_path + strlen(usr_path) - 2, usr_path, "/")) != NULL) {
+        slash++;
+        above = (char *) calloc(1, slash - usr_path + 1);
+        memcpy(above, usr_path, slash - usr_path);
+    }
 
     path_normalize(src);
 
@@ -3018,12 +3099,21 @@ save_image_file(char *cat, char *var, char *src)
         prefix  = "wp://";
     }
 
-    if (!strnicmp(src, usr_path, strlen(usr_path)))
+    if (strstr(src, "ioctl://") == src)
+        sprintf(temp, "%s", src);
+    else if (!strnicmp(src, usr_path, strlen(usr_path)))
         sprintf(temp, "%s%s", prefix, &src[strlen(usr_path)]);
+    else if ((above != NULL) && !strnicmp(src, above, strlen(above)))
+        sprintf(temp, "../%s%s", prefix, &src[strlen(above)]);
+    else if (!strnicmp(src, exe_path, strlen(exe_path)))
+        sprintf(temp, "<exe_path>/%s%s", prefix, &src[strlen(exe_path)]);
     else
         sprintf(temp, "%s%s", prefix, src);
 
     ini_section_set_string(cat, var, temp);
+
+    if (above != NULL)
+        free(above);
 }
 
 /* Save "Storage Controllers" section. */
@@ -3143,25 +3233,15 @@ save_storage_controllers(void)
 
         if (strlen(cart_fns[c]) == 0)
             ini_section_delete_var(cat, temp);
-        else {
-            path_normalize(cart_fns[c]);
-            if (!strnicmp(cart_fns[c], usr_path, strlen(usr_path)))
-                ini_section_set_string(cat, temp, &cart_fns[c][strlen(usr_path)]);
-            else
-                ini_section_set_string(cat, temp, cart_fns[c]);
-        }
+        else
+            save_image_file(cat, temp, cart_fns[c]);
 
         for (int i = 0; i < MAX_PREV_IMAGES; i++) {
             sprintf(temp, "cartridge_%02i_image_history_%02i", c + 1, i + 1);
             if ((cart_image_history[c][i] == 0) || strlen(cart_image_history[c][i]) == 0)
                 ini_section_delete_var(cat, temp);
-            else {
-                path_normalize(cart_image_history[c][i]);
-                if (!strnicmp(cart_image_history[c][i], usr_path, strlen(usr_path)))
-                    ini_section_set_string(cat, temp, &cart_image_history[c][i][strlen(usr_path)]);
-                else
-                    ini_section_set_string(cat, temp, cart_image_history[c][i]);
-            }
+            else
+                save_image_file(cat, temp, cart_image_history[c][i]);
         }
     }
 
@@ -3332,13 +3412,9 @@ save_hard_disks(void)
         }
 
         sprintf(temp, "hdd_%02i_fn", c + 1);
-        if (hdd_is_valid(c) && (strlen(hdd[c].fn) != 0)) {
-            path_normalize(hdd[c].fn);
-            if (!strnicmp(hdd[c].fn, usr_path, strlen(usr_path)))
-                ini_section_set_string(cat, temp, &hdd[c].fn[strlen(usr_path)]);
-            else
-                ini_section_set_string(cat, temp, hdd[c].fn);
-        } else
+        if (hdd_is_valid(c) && (strlen(hdd[c].fn) != 0))
+            save_image_file(cat, temp, hdd[c].fn);
+        else
             ini_section_delete_var(cat, temp);
 
         sprintf(temp, "hdd_%02i_vhd_blocksize", c + 1);
@@ -3416,6 +3492,19 @@ save_floppy_and_cdrom_drives(void)
             else
                 save_image_file(cat, temp, fdd_image_history[c][i]);
         }
+
+        sprintf(temp, "fdd_%02i_audio", c + 1);
+#ifndef DISABLE_FDD_AUDIO
+        int         prof          = fdd_get_audio_profile(c);
+        const char *internal_name = fdd_audio_get_profile_internal_name(prof);
+        if (internal_name && strcmp(internal_name, "none") != 0) {
+            ini_section_set_string(cat, temp, internal_name);
+        } else {
+            ini_section_delete_var(cat, temp);
+        }
+#else
+        ini_section_delete_var(cat, temp);
+#endif
     }
 
     for (c = 0; c < CDROM_NUM; c++) {
@@ -3486,25 +3575,15 @@ save_floppy_and_cdrom_drives(void)
         sprintf(temp, "cdrom_%02i_image_path", c + 1);
         if ((cdrom[c].bus_type == 0) || (strlen(cdrom[c].image_path) == 0))
             ini_section_delete_var(cat, temp);
-        else {
-            path_normalize(cdrom[c].image_path);
-            if (!strnicmp(cdrom[c].image_path, usr_path, strlen(usr_path)))
-                ini_section_set_string(cat, temp, &cdrom[c].image_path[strlen(usr_path)]);
-            else
-                ini_section_set_string(cat, temp, cdrom[c].image_path);
-        }
+        else
+            save_image_file(cat, temp, cdrom[c].image_path);
 
         for (int i = 0; i < MAX_PREV_IMAGES; i++) {
             sprintf(temp, "cdrom_%02i_image_history_%02i", c + 1, i + 1);
             if ((cdrom[c].image_history[i] == 0) || strlen(cdrom[c].image_history[i]) == 0)
                 ini_section_delete_var(cat, temp);
-            else {
-                path_normalize(cdrom[c].image_history[i]);
-                if (!strnicmp(cdrom[c].image_history[i], usr_path, strlen(usr_path)))
-                    ini_section_set_string(cat, temp, &cdrom[c].image_history[i][strlen(usr_path)]);
-                else
-                    ini_section_set_string(cat, temp, cdrom[c].image_history[i]);
-            }
+            else
+                save_image_file(cat, temp, cdrom[c].image_history[i]);
         }
     }
 

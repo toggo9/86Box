@@ -1,20 +1,17 @@
 /*
-* 86Box	A hypervisor and IBM PC system emulator that specializes in
-*		running old operating systems and software designed for IBM
-*		PC systems and compatibles from 1981 through fairly recent
-*		system designs based on the PCI bus.
-*
-*		This file is part of the 86Box distribution.
-*
-*		86Box VM manager preferences module
-*
-*
-*
-* Authors:	cold-brewed
-*
-*		Copyright 2024 cold-brewed
-*/
-
+ * 86Box    A hypervisor and IBM PC system emulator that specializes in
+ *          running old operating systems and software designed for IBM
+ *          PC systems and compatibles from 1981 through fairly recent
+ *          system designs based on the PCI bus.
+ *
+ *          This file is part of the 86Box distribution.
+ *
+ *          86Box VM manager preferences module
+ *
+ * Authors: cold-brewed
+ *
+ *          Copyright 2024 cold-brewed
+ */
 #include <QFileDialog>
 #include <QStyle>
 #include <cstring>
@@ -25,8 +22,8 @@
 #include "ui_qt_vmmanager_preferences.h"
 
 #ifdef Q_OS_WINDOWS
-#include "qt_vmmanager_windarkmodefilter.hpp"
-extern WindowsDarkModeFilter* vmm_dark_mode_filter;
+#    include "qt_vmmanager_windarkmodefilter.hpp"
+extern WindowsDarkModeFilter *vmm_dark_mode_filter;
 #endif
 
 extern "C" {
@@ -36,18 +33,19 @@ extern "C" {
 }
 
 VMManagerPreferences::
-VMManagerPreferences(QWidget *parent) : ui(new Ui::VMManagerPreferences)
+    VMManagerPreferences(QWidget *parent)
+    : ui(new Ui::VMManagerPreferences)
 {
     ui->setupUi(this);
     ui->dirSelectButton->setIcon(QApplication::style()->standardIcon(QStyle::SP_DirIcon));
     connect(ui->dirSelectButton, &QPushButton::clicked, this, &VMManagerPreferences::chooseDirectoryLocation);
 
-    const auto config = new VMManagerConfig(VMManagerConfig::ConfigType::General);
+    const auto config          = new VMManagerConfig(VMManagerConfig::ConfigType::General);
     const auto configSystemDir = QString(vmm_path_cfg);
-    if(!configSystemDir.isEmpty()) {
+    if (!configSystemDir.isEmpty()) {
         // Prefer this one
         ui->systemDirectory->setText(QDir::toNativeSeparators(configSystemDir));
-    } else if(!QString(vmm_path).isEmpty()) {
+    } else if (!QString(vmm_path).isEmpty()) {
         // If specified on command line
         ui->systemDirectory->setText(QDir::toNativeSeparators(QDir(vmm_path).path()));
     }
@@ -82,8 +80,7 @@ VMManagerPreferences(QWidget *parent) : ui(new Ui::VMManagerPreferences)
 #endif
 }
 
-VMManagerPreferences::~
-VMManagerPreferences()
+VMManagerPreferences::~VMManagerPreferences()
     = default;
 
 // Bad copy pasta from machine add
@@ -107,7 +104,7 @@ VMManagerPreferences::accept()
     const auto config = new VMManagerConfig(VMManagerConfig::ConfigType::General);
 
     strncpy(vmm_path_cfg, QDir::cleanPath(ui->systemDirectory->text()).toUtf8().constData(), sizeof(vmm_path_cfg) - 1);
-    lang_id = ui->comboBoxLanguage->currentData().toInt();
+    lang_id      = ui->comboBoxLanguage->currentData().toInt();
     color_scheme = (ui->radioButtonSystem->isChecked()) ? 0 : (ui->radioButtonLight->isChecked() ? 1 : 2);
     config_save_global();
 

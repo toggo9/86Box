@@ -8,7 +8,6 @@
  *
  *          IBM PCjr video subsystem emulation
  *
- *
  * Authors: Sarah Walker, <https://pcem-emulator.co.uk/>
  *          Miran Grca, <mgrca8@gmail.com>
  *          Connor Hyde / starfrost <mario64crashed@gmail.com> 
@@ -18,7 +17,6 @@
  *          Copyright 2017-2019 Fred N. van Kempen.
  *          Copyright 2025 starfrost
  */
-
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -271,7 +269,7 @@ vid_get_h_overscan_delta(pcjr_t *pcjr)
             break;
     }
 
-    ret = pcjr->crtc[0x02] - def;
+    ret = def - pcjr->crtc[0x02];
 
     if (ret < -8)
         ret = -8;

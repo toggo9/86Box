@@ -8,8 +8,6 @@
  *
  *          Matrox MGA graphics card emulation.
  *
- *
- *
  * Authors: Sarah Walker, <https://pcem-emulator.co.uk/>
  *
  *          Copyright 2008-2020 Sarah Walker.
@@ -3753,10 +3751,10 @@ blit_iload_iload(mystique_t *mystique, uint32_t data, int size)
 
                             case MACCESS_PWIDTH_24:
                                 if (mystique->dwgreg.xdst >= mystique->dwgreg.cxleft && mystique->dwgreg.xdst <= mystique->dwgreg.cxright && mystique->dwgreg.ydst_lin >= mystique->dwgreg.ytop && mystique->dwgreg.ydst_lin <= mystique->dwgreg.ybot) {
-                                    uint32_t old_dst = *((uint32_t *) &svga->vram[((mystique->dwgreg.ydst_lin + mystique->dwgreg.xdst) * 3) & mystique->vram_mask]);
+                                    uint32_t old_dst = AS_U32(svga->vram[((mystique->dwgreg.ydst_lin + mystique->dwgreg.xdst) * 3) & mystique->vram_mask]);
 
                                     dst                                                                                                          = bitop(data64, old_dst, mystique->dwgreg.dwgctrl_running);
-                                    *((uint32_t *) &svga->vram[((mystique->dwgreg.ydst_lin + mystique->dwgreg.xdst) * 3) & mystique->vram_mask]) = (dst & 0xffffff) | (old_dst & 0xff000000);
+                                    AS_U32(svga->vram[((mystique->dwgreg.ydst_lin + mystique->dwgreg.xdst) * 3) & mystique->vram_mask]) = (dst & 0xffffff) | (old_dst & 0xff000000);
                                     svga->changedvram[(((mystique->dwgreg.ydst_lin + mystique->dwgreg.xdst) * 3) & mystique->vram_mask) >> 12]   = changeframecount;
                                 }
 
@@ -4494,7 +4492,7 @@ blit_line(mystique_t *mystique, int closed, int autoline)
                 if (x >= mystique->dwgreg.cxleft && x <= mystique->dwgreg.cxright && mystique->dwgreg.ydst_lin >= mystique->dwgreg.ytop && mystique->dwgreg.ydst_lin <= mystique->dwgreg.ybot) {
                     pattern_y = ((mystique->dwgreg.funcnt % (mystique->dwgreg.stylelen + 1)) >> 4) & 0x7;
                     pattern_x = (mystique->dwgreg.funcnt % (mystique->dwgreg.stylelen + 1)) & 0xf;
-                    if (!transc || (transc && (mystique->dwgreg.pattern[pattern_y][pattern_x])))
+                    if (!transc || (mystique->dwgreg.pattern[pattern_y][pattern_x]))
                     switch (mystique->maccess_running & MACCESS_PWIDTH_MASK) {
                         case MACCESS_PWIDTH_8:
                             src = mystique->dwgreg.pattern[pattern_y][pattern_x] ? mystique->dwgreg.fcol : mystique->dwgreg.bcol;
@@ -4815,7 +4813,7 @@ blit_trap(mystique_t *mystique)
                         int      pattern = mystique->dwgreg.pattern[yoff][xoff];
                         uint32_t dst;
 
-                        if (!transc || (transc && pattern))
+                        if (!transc || pattern)
                         switch (mystique->maccess_running & MACCESS_PWIDTH_MASK) {
                             case MACCESS_PWIDTH_8:
                                 svga->vram[(mystique->dwgreg.ydst_lin + x_l) & mystique->vram_mask]                = (pattern ? mystique->dwgreg.fcol : mystique->dwgreg.bcol) & 0xff;
@@ -4887,7 +4885,7 @@ blit_trap(mystique_t *mystique)
                         uint32_t dst;
                         uint32_t old_dst;
 
-                        if (!transc || (transc && pattern))
+                        if (!transc || pattern)
                         switch (mystique->maccess_running & MACCESS_PWIDTH_MASK) {
                             case MACCESS_PWIDTH_8:
                                 dst = svga->vram[(mystique->dwgreg.ydst_lin + x_l) & mystique->vram_mask];

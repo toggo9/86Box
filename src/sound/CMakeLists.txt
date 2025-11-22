@@ -52,6 +52,7 @@ add_library(snd OBJECT
     snd_optimc.c
     snd_opl_esfm.c
     snd_ymf701.c
+    snd_ymf71x.c
 )
 
 # TODO: Should platform-specific audio driver be here?
@@ -190,6 +191,10 @@ target_link_libraries(86Box ymfm)
 if(OPL4ML)
     target_compile_definitions(snd PRIVATE USE_OPL4ML)
     target_sources(snd PRIVATE midi_opl4.c midi_opl4_yrw801.c)
+endif()
+
+if(SOFTMODEM)
+    target_compile_definitions(snd PRIVATE USE_SOFTMODEM)
 endif()
  
 find_package(PkgConfig)

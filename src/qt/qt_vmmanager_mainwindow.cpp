@@ -1,20 +1,17 @@
 /*
-* 86Box	A hypervisor and IBM PC system emulator that specializes in
-*		running old operating systems and software designed for IBM
-*		PC systems and compatibles from 1981 through fairly recent
-*		system designs based on the PCI bus.
-*
-*		This file is part of the 86Box distribution.
-*
-*		86Box VM manager main window
-*
-*
-*
-* Authors:	cold-brewed
-*
-*		Copyright 2024 cold-brewed
-*/
-
+ * 86Box    A hypervisor and IBM PC system emulator that specializes in
+ *          running old operating systems and software designed for IBM
+ *          PC systems and compatibles from 1981 through fairly recent
+ *          system designs based on the PCI bus.
+ *
+ *          This file is part of the 86Box distribution.
+ *
+ *          86Box VM manager main window
+ *
+ * Authors: cold-brewed
+ *
+ *          Copyright 2024 cold-brewed
+ */
 #include "qt_vmmanager_mainwindow.hpp"
 #include "qt_vmmanager_main.hpp"
 #include "qt_vmmanager_preferences.hpp"
@@ -33,17 +30,16 @@
 #include <QCloseEvent>
 #include <QDesktopServices>
 
-extern "C"
-{
+extern "C" {
 extern void config_load_global();
 extern void config_save_global();
 }
 
-VMManagerMainWindow* vmm_main_window = nullptr;
-extern WindowsDarkModeFilter* vmm_dark_mode_filter;
+VMManagerMainWindow          *vmm_main_window = nullptr;
+extern WindowsDarkModeFilter *vmm_dark_mode_filter;
 
 VMManagerMainWindow::
-VMManagerMainWindow(QWidget *parent)
+    VMManagerMainWindow(QWidget *parent)
     : ui(new Ui::VMManagerMainWindow)
     , vmm(new VMManagerMain(this))
     , statusLeft(new QLabel)
@@ -66,14 +62,14 @@ VMManagerMainWindow(QWidget *parent)
     connect(ui->actionHard_Reset, &QAction::triggered, vmm, &VMManagerMain::restartButtonPressed);
     connect(ui->actionForce_Shutdown, &QAction::triggered, vmm, &VMManagerMain::shutdownForceButtonPressed);
 
-    // Set up menu actions
-    // (Disable this if the EMU_BUILD_NUM == 0)
-    #if EMU_BUILD_NUM == 0
-        ui->actionCheck_for_updates->setVisible(false);
-    #else
-        connect(ui->actionCheck_for_updates, &QAction::triggered, this, &VMManagerMainWindow::checkForUpdatesTriggered);
-    #endif
-    
+// Set up menu actions
+// (Disable this if the EMU_BUILD_NUM == 0)
+#if EMU_BUILD_NUM == 0
+    ui->actionCheck_for_updates->setVisible(false);
+#else
+    connect(ui->actionCheck_for_updates, &QAction::triggered, this, &VMManagerMainWindow::checkForUpdatesTriggered);
+#endif
+
     // TODO: Remove all of this (all the way to END REMOVE) once certain the search will no longer be in the toolbar.
     // BEGIN REMOVE
     // Everything is still setup here for it but it is all hidden. None of it will be
@@ -93,7 +89,7 @@ VMManagerMainWindow(QWidget *parent)
     searchBar->setClearButtonEnabled(true);
     // Spacer to make the search go all the way to the right
     const auto spacer = new QWidget();
-    spacer->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
+    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     ui->toolBar->addWidget(spacer);
     ui->toolBar->addWidget(searchBar);
     // Connect signal for search
@@ -130,7 +126,7 @@ VMManagerMainWindow(QWidget *parent)
     connect(this, &VMManagerMainWindow::languageUpdated, vmm, &VMManagerMain::onLanguageUpdated);
 #ifdef Q_OS_WINDOWS
     connect(this, &VMManagerMainWindow::darkModeUpdated, vmm, &VMManagerMain::onDarkModeUpdated);
-    connect(this, &VMManagerMainWindow::preferencesUpdated, [] () { vmm_dark_mode_filter->reselectDarkMode(); });
+    connect(this, &VMManagerMainWindow::preferencesUpdated, []() { vmm_dark_mode_filter->reselectDarkMode(); });
 #endif
 
     {
@@ -139,7 +135,7 @@ VMManagerMainWindow(QWidget *parent)
             QString coords = config->getStringValue("window_coordinates");
             if (!coords.isEmpty()) {
                 QStringList list = coords.split(',');
-                for (auto& cur : list) {
+                for (auto &cur : list) {
                     cur = cur.trimmed();
                 }
                 QRect geom;
@@ -158,7 +154,7 @@ VMManagerMainWindow(QWidget *parent)
             QString splitter = config->getStringValue("window_splitter");
             if (!splitter.isEmpty()) {
                 QStringList list = splitter.split(',');
-                for (auto& cur : list) {
+                for (auto &cur : list) {
                     cur = cur.trimmed();
                 }
                 QList<int> paneSizes;
@@ -174,11 +170,9 @@ VMManagerMainWindow(QWidget *parent)
         }
         delete config;
     }
-
 }
 
-VMManagerMainWindow::~
-VMManagerMainWindow()
+VMManagerMainWindow::~VMManagerMainWindow()
     = default;
 
 void
@@ -228,7 +222,7 @@ void
 VMManagerMainWindow::saveSettings() const
 {
     const auto currentSelection = vmm->getCurrentSelection();
-    const auto config = new VMManagerConfig(VMManagerConfig::ConfigType::General);
+    const auto config           = new VMManagerConfig(VMManagerConfig::ConfigType::General);
     config->setStringValue("last_selection", currentSelection);
     if (!!config->getStringValue("window_remember").toInt()) {
         config->setStringValue("window_coordinates", QString::asprintf("%i, %i, %i, %i", this->geometry().x(), this->geometry().y(), this->geometry().width(), this->geometry().height()));
@@ -252,7 +246,6 @@ VMManagerMainWindow::updateLanguage()
     setWindowTitle(tr("%1 VM Manager").arg(EMU_NAME));
     emit languageUpdated();
 }
-
 
 #ifdef Q_OS_WINDOWS
 void
