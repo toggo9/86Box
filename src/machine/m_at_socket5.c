@@ -427,12 +427,84 @@ machine_at_optiplexgxl_init(const machine_t *model)
 
     return ret;
 }
+
+static void
+machine_at_morrison32_gpio_init(void)
+{
+    uint32_t gpio = 0xffffe2ff;
+
+    /* Register 0x0079: */
+    /* Bit 7: 0 = Clear password, 1 = Keep password. */
+    /* Bit 6: 0 = NVRAM cleared by jumper, 1 = NVRAM normal. */
+    /* Bit 5: 0 = CMOS Setup disabled, 1 = CMOS Setup enabled. */
+    /* Bit 4: External CPU clock (Switch 8). */
+    /* Bit 3: External CPU clock (Switch 7). */
+    /*        50 MHz: Switch 7 = Off, Switch 8 = Off. */
+    /*        60 MHz: Switch 7 = On, Switch 8 = Off. */
+    /*        66 MHz: Switch 7 = Off, Switch 8 = On. */
+    /* Bit 2: 0 = No onboard audio, 1 = Onboard audio present. */
+    /* Bit 1: 0 = Soft Off capable power supply, 1 = Standard power supply. */
+    /* Bit 0: 2x multiplier, 1 = 1.5x multiplier (Switch 6). */
+    /* NOTE: A bit is read as 1 if switch is off, and as 0 if switch is on. */
+    if (cpu_busspeed <= 50000000)
+        gpio |= 0xffff00ff;
+    else if ((cpu_busspeed > 50000000) && (cpu_busspeed <= 60000000))
+        gpio |= 0xffff08ff;
+    else if (cpu_busspeed > 60000000)
+        gpio |= 0xffff10ff;
+
+    if (cpu_dmulti <= 1.5)
+        gpio |= 0xffff01ff;
+    else
+        gpio |= 0xffff00ff;
+
+    if (sound_card_current[0] == SOUND_INTERNAL)
+        gpio |= 0xffff04ff;
+
+    machine_set_gpio_default(gpio);
+}
+
+int
+machine_at_morrison32_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear_combined("roms/machines/morrison32/1011BT0L.BIO",
+                                    "roms/machines/morrison32/1011BT0L.BI1",
+                                    0x20000, 128);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+    machine_at_morrison32_gpio_init();
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x08, PCI_CARD_VIDEO,       4, 0, 0, 0);
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x13, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+
+    if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+
+    if (sound_card_current[0] == SOUND_INTERNAL)
+        machine_snd = device_add(machine_get_snd_device(machine));
+
+    device_add(&i430fx_device);
+    device_add(&piix_device);
+    device_add_params(&pc87306_device, (void *) PCX730X_AMI);
+    device_add(&intel_flash_bxt_ami_device);
+
+    return ret;
+}
+
 /* Some stuff taken from Monaco */
 static void
 machine_at_morrison64_gpio_init(void)
 {
     uint32_t gpio = 0xffffe0cf;
-    uint16_t addr;
 
     /* Return to this after CS4232 PnP is working. */
     /* Register 0x0078 (Undocumented): */
@@ -482,26 +554,10 @@ machine_at_morrison64_gpio_init(void)
         gpio |= 0xffff01af;
     else if (cpu_dmulti <= 2.0)
         gpio |= 0xffffe2af;
-	if ((cpu_dmulti > 2.0) && (cpu_dmulti <= 2.5))
-		gpio |= 0xffffe5cf;
+    else if ((cpu_dmulti > 2.0) && (cpu_dmulti <= 2.5))
+        gpio |= 0xffffe5cf;
 
     machine_set_gpio_default(gpio);
-}
-
-uint32_t
-machine_at_morrison64_gpio_handler(uint8_t write, uint32_t val)
-{
-    uint32_t ret = machine_get_gpio_default();
-
-    if (write) {
-        ret &= ((val & 0xffffffcf) | 0xffff0000);
-        ret |= (val & 0x00000030);
-
-        machine_set_gpio(ret);
-    } else
-        ret = machine_get_gpio();
-
-    return ret;
 }
 
 int
@@ -569,16 +625,71 @@ machine_at_zappa_gpio_init(void)
     machine_set_gpio_default(gpio);
 }
 
+static const device_config_t pt2000_config[] = {
+    // clang-format off
+    {
+        .name           = "bios",
+        .description    = "BIOS Version",
+        .type           = CONFIG_BIOS,
+        .default_string = "pt2000",
+        .default_int    = 0,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = {
+            {
+                .name          = "Award Modular BIOS v4.50GP - Revision T1.01",
+                .internal_name = "pt2000",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = 0,
+                .size          = 131072,
+                .files         = { "roms/machines/ficpt2000/PT2000_v1.01.BIN", "" }
+            },
+            {
+                .name          = "Award Modular BIOS v4.51PG - Revision 3.072C806",
+                .internal_name = "pt2000_451pg",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = 0,
+                .size          = 131072,
+                .files         = { "roms/machines/ficpt2000/3072c806.bin", "" }
+            },
+            { .files_no = 0 }
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+const device_t pt2000_device = {
+    .name          = "FIC PT-2000",
+    .internal_name = "pt2000_device",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = pt2000_config
+};
+
 int
 machine_at_pt2000_init(const machine_t *model)
 {
-    int ret;
+    int         ret = 0;
+    const char *fn;
 
-    ret = bios_load_linear("roms/machines/ficpt2000/PT2000_v1.01.BIN",
-                           0x000e0000, 131072, 0);
-
-    if (bios_only || !ret)
+    /* No ROMs available */
+    if (!device_available(model->device))
         return ret;
+
+    device_context(model->device);
+    fn  = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 0);
+    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
+    device_context_restore();
 
     machine_at_common_init(model);
 
@@ -685,16 +796,71 @@ machine_at_zappa_init(const machine_t *model)
     return ret;
 }
 
+static const device_config_t powermatev_config[] = {
+    // clang-format off
+    {
+        .name           = "bios",
+        .description    = "BIOS Version",
+        .type           = CONFIG_BIOS,
+        .default_string = "powermatev",
+        .default_int    = 0,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = {
+            {
+                .name          = "PhoenixBIOS Version 4.05.M - Revision 00.04.08",
+                .internal_name = "powermatev_122195",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = 0,
+                .size          = 131072,
+                .files         = { "roms/machines/powermatev/B50NM00M.ROM", "" }
+            },
+            {
+                .name          = "PhoenixBIOS Version 4.05.V - Revision 00.04.15",
+                .internal_name = "powermatev",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = 0,
+                .size          = 131072,
+                .files         = { "roms/machines/powermatev/B50NM00V.ROM", "" }
+            },      
+            { .files_no = 0 }            
+        }
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+const device_t powermatev_device = {
+    .name          = "NEC PowerMate Vxxx",
+    .internal_name = "powermatev_device",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = powermatev_config
+};
+
 int
 machine_at_powermatev_init(const machine_t *model)
 {
-    int ret;
+    int         ret = 0;
+    const char *fn;
 
-    ret = bios_load_linear("roms/machines/powermatev/BIOS.ROM",
-                           0x000e0000, 131072, 0);
-
-    if (bios_only || !ret)
+    /* No ROMs available */
+    if (!device_available(model->device))
         return ret;
+
+    device_context(model->device);
+    fn  = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 0);
+    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
+    device_context_restore();
 
     machine_at_common_init(model);
 
