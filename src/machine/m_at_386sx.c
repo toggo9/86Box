@@ -507,6 +507,8 @@ machine_at_me386sx_init(const machine_t *model)
 
     machine_at_common_init(model);
 
+    device_add_params(machine_get_kbc_device(machine), (void *) model->kbc_params);
+
     device_add(&neat_device);
 
     if (fdc_current[0] == FDC_INTERNAL)
