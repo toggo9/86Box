@@ -594,6 +594,7 @@ extern int             machine_at_shuttle386sx_init(const machine_t *);
 /* NEAT */
 extern int             machine_at_cmdsl386sx16_init(const machine_t *);
 extern int             machine_at_neat_init(const machine_t *);
+extern int             machine_at_me386sx_init(const machine_t *);
 extern int             machine_at_p3345_init(const machine_t *);
 
 /* NEATsx */
@@ -1220,6 +1221,11 @@ extern const device_t  ficpo6000_device;
 #endif
 extern int             machine_at_p6rp4_init(const machine_t *);
 extern int             machine_at_ficpo6000_init(const machine_t *);
+#ifdef EMU_DEVICE_H
+extern const device_t  performance_au_device;
+#endif
+extern int             machine_at_performance_au_init(const machine_t *);
+extern int             machine_at_m6pi_init(const machine_t *);
 
 /* i440FX */
 extern int             machine_at_acerv60n_init(const machine_t *);
