@@ -19972,9 +19972,9 @@ const machine_t machines[] = {
         .net_device               = NULL,
         .aliases                  = { "" }
     },
-
-     {
-        .name              = "[i450GX] Intel Performance/AU (Aurora)",
+    /* 450KX */
+    {
+        .name              = "[i450KX] Intel Performance/AU (Aurora)",
         .internal_name     = "performance_au",
         .type              = MACHINE_TYPE_SOCKET8,
         .chipset           = MACHINE_CHIPSET_INTEL_450GX,
@@ -20022,7 +20022,7 @@ const machine_t machines[] = {
     },
 
     {
-        .name              = "[i450GX] Micronics M6Pi",
+        .name              = "[i450KX] Micronics M6Pi",
         .internal_name     = "m6pi",
         .type              = MACHINE_TYPE_SOCKET8,
         .chipset           = MACHINE_CHIPSET_INTEL_450GX,
