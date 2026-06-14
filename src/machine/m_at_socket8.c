@@ -195,6 +195,142 @@ machine_at_ficpo6000_init(const machine_t *model)
     return ret;
 }
 
+static const device_config_t performance_au_config[] = {
+    // clang-format off
+    {
+        .name           = "bios",
+        .description    = "Vendor",
+        .type           = CONFIG_BIOS,
+        .default_string = "ast",
+        .default_int    = 0,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = {
+            {
+                .name          = "AST OEM BIOS (Bravo MS-T 6150)",
+                .internal_name = "ast",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = 0,
+                .size          = 262144,
+                .files         = { "roms/machines/performance_au/intelast.bin", "" }
+            },
+            {
+                .name          = "Compaq OEM BIOS (ProLinea 6150e/6180e)",
+                .internal_name = "compaq",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = 0,
+                .size          = 262144,
+                .files         = { "roms/machines/performance_au/intelcompaq.bin", "" }
+            },
+            { .files_no = 0 }
+        }
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+const device_t performance_au_device = {
+    .name          = "Intel Performance/AU (Aurora)",
+    .internal_name = "performance_au",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = performance_au_config
+};
+/* more or less a "dummy" to make the Compaq OEM BIOS report the proper CPU speed in Setup. */
+static void
+machine_at_performance_au_gpio_init(void)
+{
+    uint32_t gpio = 0xffffe0cf;
+    uint16_t addr;
+    
+    if (cpu_busspeed <= 50000000)
+        gpio |= 0xffff0000;
+    else if ((cpu_busspeed > 50000000) && (cpu_busspeed <= 60000000))
+        gpio |= 0xffff0800;
+    else if (cpu_busspeed > 60000000)
+        gpio |= 0xffff1000;
+
+    if (sound_card_current[0] == SOUND_INTERNAL)
+        gpio |= 0xffff0400;
+
+	if ((cpu_dmulti > 2.5) && (cpu_dmulti <= 3.0))
+		gpio |= 0xffffe5df;
+
+    machine_set_gpio_default(gpio);
+}
+
+int
+machine_at_performance_au_init(const machine_t *model)
+{
+  int         ret = 0;
+    const char *fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn  = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 0);
+    ret = bios_load_linear(fn, 0x000c0000, 262144, 0);
+    device_context_restore();
+
+    machine_at_common_init(model);
+	machine_at_performance_au_gpio_init();
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x19, PCI_CARD_NORTHBRIDGE,     0, 0, 0, 0);
+    pci_register_slot(0x14, PCI_CARD_NORTHBRIDGE_SEC, 0, 0, 0, 0);
+    pci_register_slot(0x02, PCI_CARD_SOUTHBRIDGE,     0, 0, 0, 0);
+    pci_register_slot(0x06, PCI_CARD_NORMAL,          1, 2, 3, 4);
+    pci_register_slot(0x0A, PCI_CARD_NORMAL,          4, 1, 2, 3);
+    pci_register_slot(0x0C, PCI_CARD_NORMAL,          3, 4, 1, 2);
+    pci_register_slot(0x0E, PCI_CARD_NORMAL,          2, 3, 4, 1);
+    device_add(&i450kx_device);
+    device_add(&piix_device);
+    device_add_params(&pc87306_device, (void *) PCX730X_AMI);
+    device_add(&intel_flash_bxt_ami_device);
+    return ret;
+}
+
+int
+machine_at_m6pi_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/m6pi/M6PI.05",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x19, PCI_CARD_NORTHBRIDGE,     0, 0, 0, 0);
+    pci_register_slot(0x14, PCI_CARD_NORTHBRIDGE_SEC, 0, 0, 0, 0);
+    pci_register_slot(0x03, PCI_CARD_SOUTHBRIDGE,     0, 0, 0, 0);
+    pci_register_slot(0x0C, PCI_CARD_IDE,             0, 0, 0, 0);
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,          1, 3, 2, 4); /* Slot 01 */
+    pci_register_slot(0x0E, PCI_CARD_NORMAL,          2, 3, 4, 1); /* Slot 02 */
+	pci_register_slot(0x0F, PCI_CARD_NORMAL,          2, 1, 3, 4); /* Slot 03 */
+    device_add(&i450kx_device);
+    device_add(&sio_zb_device);
+    device_add(&ide_cmd646_device);
+    device_add_params(&fdc37c93x_device, (void *) (FDC37XXX5 | FDC37C93X_NORMAL));
+    device_add(&intel_flash_bxt_device);
+
+    return ret;
+}
+
 /* i440FX */
 int
 machine_at_acerv60n_init(const machine_t *model)
