@@ -1115,6 +1115,79 @@ machine_at_g586opa_init(const machine_t *model)
     return ret;
 }
 
+int
+machine_at_ergoproviper_init(const machine_t *model)
+{
+    int ret = 0;
+    const char* fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios_versions"), 0);
+    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
+    device_context_restore();
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x06, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x08, PCI_CARD_NORMAL,      4, 1, 2, 3);
+    pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4);
+	pci_register_slot(0x0D, PCI_CARD_VIDEO,       4, 0, 0, 0);
+	pci_register_slot(0x0E, PCI_CARD_IDE,         1, 0, 0, 0);
+
+    device_add(&opti55x_noide_device);
+    device_add(&intel_flash_bxt_device);
+    device_add_params(machine_get_kbc_device(machine), (void *) model->kbc_params);
+	device_add(&ide_pci_2ch_device);
+    device_add_params(&fdc37c6xx_device, (void *) FDC37C665);
+	
+	if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+
+    return ret;
+}
+
+static const device_config_t ergoproviper_config[] = {
+    // clang-format off
+    {
+        .name = "bios_versions",
+        .description = "BIOS Versions",
+        .type = CONFIG_BIOS,
+        .default_string = "ergoproviper_feb96",
+        .default_int = 0,
+        .file_filter = "",
+        .spinner = { 0 }, /*W1*/
+        .bios = {
+            { .name = "BIOS #51 - Version 1.51 (02/27/96, e450/e650)", .internal_name = "ergoproviper_feb96", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/ergoproviper/B51_KL.LDB", "" } },
+            { .name = "BIOS #54 - Version 1.30 (09/27/96, e451/e651)", .internal_name = "ergoproviper_sep96", .bios_type = BIOS_NORMAL,
+              .files_no = 1, .local = 0, .size = 131072, .files = { "roms/machines/ergoproviper/B54_D.LDB", "" } },
+        },
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+
+const device_t ergoproviper_device = {
+    .name          = "ICL ErgoPro e450/e451",
+    .internal_name = "ergoproviper",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = ergoproviper_config
+};
+
 /* SiS 501 */
 int
 machine_at_p54sp4_init(const machine_t *model)
