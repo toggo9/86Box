@@ -85,6 +85,21 @@
 #define ROM_NUMBER9_9FX_771            "roms/video/s3/no9motionfx771.BIN"
 #define ROM_PHOENIX_VISION968          "roms/video/s3/1-DSV3968P.BIN"
 #define ROM_DIAMOND_STEALTH64_968      "roms/video/s3/vv_303.rom"
+#define ROM_ORCHID_86C801              "roms/video/s3/Orchid Technology Fahrenheit 1280+ (S3 86c801 ISA, SC15025).bin"
+#define ROM_DIGITAL_86C805             "roms/video/s3/DEC PC76H-EA (S3 86c805 VLB, ATT20C491).bin"
+#define ROM_ORCHID_86C805              "roms/video/s3/Orchid Technology Fahrenheit 1280+ (S3 86c805 VLB, ATT20C491).bin"
+#define ROM_DIAMOND_STEALTH64_864      "roms/video/s3/Diamond Stealth64 Graphics 2000 PCI (S3 Vision864).BIN"
+#define ROM_LEADTEK_VISION864          "roms/video/s3/Leadtek WinFast S430 PCI (S3 Vision864).bin"
+#define ROM_SPEA_86C964                "roms/video/s3/SPEA V7-Mercury P-64 (S3 Vision964 PCI, BT485).bin"
+#define ROM_GENOA_VISION868            "roms/video/s3/Genoa Phantom 64 PCI (S3 Vision868).bin"
+#define ROM_MIROVIDEO_VISION868        "roms/video/s3/miroVIDEO 20SD PCI (S3 Vision868).bin"
+#define ROM_SPEA_TRIO32                "roms/video/s3/SPEA V7-Mirage P-32 (S3 Trio32 PCI).bin"
+#define ROM_DIAMOND_TRIO64V            "roms/video/s3/Diamond Stealth64 Video 2001 (S3 Trio64V+ PCI).bin"
+#define ROM_HERCULES_TRIO64V           "roms/video/s3/Hercules Terminator 64 Video (S3 Trio64V+ PCI).BIN"
+#define ROM_MIROMEDIA_TV               "roms/video/s3/miroMEDIA TV (S3 Trio64V+ PCI).rom"
+#define ROM_MIRO_TRIO64V               "roms/video/s3/miroVIDEO 22SD (S3 Trio64V+ PCI).BIN"
+#define ROM_ACER_TRIO64V2              "roms/video/s3/Acer Win-Artist PV70 (S3 Trio64V2 PCI).bin"
+#define ROM_ASUS_TRIO64V2              "roms/video/s3/ASUS PCI-V775V2C (S3 Trio64V2 PCI).bin"
 
 enum {
     S3_NUMBER9_9FX,
@@ -132,6 +147,21 @@ enum {
     S3_86C805_ONBOARD,
     S3_DIAMOND_STEALTH64_968,
     S3_WINNER1000_805,
+    S3_ORCHID_86C801,
+    S3_DIGITAL_86C805,
+    S3_ORCHID_86C805,
+    S3_DIAMOND_STEALTH64_864,
+    S3_LEADTEK_VISION864,
+    S3_SPEA_86C964,
+    S3_GENOA_VISION868,
+    S3_MIROVIDEO_VISION868,
+    S3_SPEA_TRIO32,
+    S3_DIAMOND_TRIO64V,
+    S3_HERCULES_TRIO64V,
+    S3_MIROMEDIA_TV,
+    S3_MIRO_TRIO64V,
+    S3_ACER_TRIO64V2,
+    S3_ASUS_TRIO64V2,
     S3_USE_CONFIG_BIOS
 };
 
@@ -3269,7 +3299,7 @@ s3_out(uint16_t addr, uint8_t val, void *priv)
                     s3_log("Write CRTC45=%02x.\n", val);
                     if ((s3->chip == S3_VISION964) || (s3->chip == S3_VISION968))
                         break;
-                    svga->hwcursor.ena = val & 1;
+                    svga->hwcursor.ena = val & 0x01;
                     break;
                 case 0x46:
                 case 0x47:
@@ -3279,9 +3309,15 @@ s3_out(uint16_t addr, uint8_t val, void *priv)
                 case 0x4d:
                 case 0x4e:
                 case 0x4f:
+                    ;
+                    uint16_t x_mask = 0x7ff;
+
+                    if (((s3->chip >= S3_86C928) && (s3->chip <= S3_86C805I) && ((svga->bpp == 15) || (svga->bpp == 16)) && s3->elsa_eeprom && (svga->hwcursor_draw != NULL)))
+                        x_mask = 0xfff;
+
                     if ((s3->chip == S3_VISION964) || (s3->chip == S3_VISION968))
                         break;
-                    svga->hwcursor.x = ((svga->crtc[0x46] << 8) | svga->crtc[0x47]) & 0x7ff;
+                    svga->hwcursor.x = ((svga->crtc[0x46] << 8) | svga->crtc[0x47]) & x_mask;
                     if (svga->bpp == 32)
                         svga->hwcursor.x >>= 1;
 
@@ -3300,6 +3336,8 @@ s3_out(uint16_t addr, uint8_t val, void *priv)
                         svga->hwcursor.x /= 3;
                     else if ((s3->chip <= S3_86C805) && s3->color_16bit)
                         svga->hwcursor.x >>= 1;
+
+                    s3_log("Write CRTC46=%02x, CRTC47=%02x, x=%04x.\n", svga->crtc[0x46], svga->crtc[0x47], svga->hwcursor.x);
                     break;
 
                 case 0x4a:
@@ -3489,7 +3527,11 @@ s3_in(uint16_t addr, void *priv)
                  */
                 if (((s3->card_type == S3_STB_POWERGRAPH_64_VIDEO) ||
                     (s3->card_type == S3_PHOENIX_TRIO64VPLUS_ONBOARD) ||
-                    (s3->card_type == S3_CARDEX_TRIO64VPLUS)) && (svga->seqaddr == 0x17))
+                    (s3->card_type == S3_CARDEX_TRIO64VPLUS) ||
+                    (s3->card_type == S3_DIAMOND_TRIO64V) ||
+                    (s3->card_type == S3_HERCULES_TRIO64V) ||
+                    (s3->card_type == S3_MIROMEDIA_TV) ||
+                    (s3->card_type == S3_MIRO_TRIO64V)) && (svga->seqaddr == 0x17))
                     svga->seqregs[svga->seqaddr] ^= 0x01;
                 return temp;
             }
@@ -3943,9 +3985,9 @@ s3_recalctimings(svga_t *svga)
 
     if (enhanced_8bpp_modes) {
         s3_log("BPP=%d, pitch=%d, width=%02x, double?=%x, 16bit?=%d, highres?=%d, "
-               "attr=%02x, hdisp=%d, dotsperclock=%x, clksel=%x, clockmultiplier=%d, multiplexingrate=%d, mapenable=%x.\n", svga->bpp, s3->width, svga->crtc[0x50],
+               "attr=%02x, hdisp=%d, dotsperclock=%x, clksel=%x, clockmultiplier=%d, multiplexingrate=%d, mapenable=%x, ramdac type=%d, clksel=%d.\n", svga->bpp, s3->width, svga->crtc[0x50],
                svga->crtc[0x31] & 0x02, s3->color_16bit, s3->accel.advfunc_cntl & 0x04,
-               svga->attrregs[0x10] & 0x40, svga->hdisp, svga->dots_per_clock, clk_sel, svga->clock_multiplier, svga->multiplexing_rate, svga->mapping.enable);
+               svga->attrregs[0x10] & 0x40, svga->hdisp, svga->dots_per_clock, clk_sel, svga->clock_multiplier, svga->multiplexing_rate, svga->mapping.enable, s3->ramdac_type, clk_sel);
         switch (svga->bpp) {
             case 8:
                 svga->render = svga_render_8bpp_highres;
@@ -4165,10 +4207,8 @@ s3_recalctimings(svga_t *svga)
                                         svga->dots_per_clock >>= 1;
                                         svga->clock *= 2.0;
                                     } else {
-                                        if (clk_sel != 2) {
-                                            svga->hdisp >>= 1;
-                                            svga->dots_per_clock >>= 1;
-                                        }
+                                        svga->hdisp >>= 1;
+                                        svga->dots_per_clock >>= 1;
                                     }
                                 }
                                 break;
@@ -4372,10 +4412,8 @@ s3_recalctimings(svga_t *svga)
                                         svga->dots_per_clock >>= 1;
                                         svga->clock *= 2.0;
                                     } else {
-                                        if (clk_sel != 2) {
-                                            svga->hdisp >>= 1;
-                                            svga->dots_per_clock >>= 1;
-                                        }
+                                        svga->hdisp >>= 1;
+                                        svga->dots_per_clock >>= 1;
                                     }
                                 }
                                 break;
@@ -4769,12 +4807,17 @@ s3_recalctimings(svga_t *svga)
         }
     }
 
-    if ((s3->elsa_eeprom && (svga->bpp == 32)) ||
-        (s3->chip == S3_TRIO32) || (s3->chip == S3_TRIO64) || (s3->chip == S3_VISION864) || (s3->chip == S3_VISION868) || (s3->chip == S3_VISION968))
+    const int is_vga_mode = ((svga->bpp <= 8) || ((svga->gdcreg[5] & 0x60) <= 0x20));
+    if (!is_vga_mode && ((s3->elsa_eeprom && (svga->bpp == 32)) ||
+        (s3->chip == S3_TRIO32) || (s3->chip == S3_TRIO64) ||
+        (s3->chip == S3_VISION864) || (s3->chip == S3_VISION868) ||
+        (s3->chip == S3_VISION968)))
         svga->hoverride = 1;
-    else
+    else {
         svga->hoverride = 0;
-
+        if (((s3->chip == S3_TRIO32) || (s3->chip == S3_TRIO64)) && enhanced_8bpp_modes)
+            svga->hoverride = 1;
+    }
     if (svga->render == svga_render_2bpp_lowres)
         svga->render = svga_render_2bpp_s3_lowres;
     else if (svga->render == svga_render_2bpp_highres)
@@ -4976,7 +5019,8 @@ s3_trio64v_recalctimings(svga_t *svga)
         svga->vram_display_mask = s3->vram_mask;
     }
 
-    svga->hoverride = 1;
+    const int is_vga_mode = ((svga->bpp <= 8) || ((svga->gdcreg[5] & 0x60) <= 0x20));
+    svga->hoverride = !is_vga_mode;
 
     if (svga->render == svga_render_2bpp_lowres)
         svga->render = svga_render_2bpp_s3_lowres;
@@ -10604,6 +10648,11 @@ s3_init(const device_t *info)
             chip    = S3_86C924;
             video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_86c911);
             break;
+        case S3_ORCHID_86C801:
+            bios_fn = ROM_ORCHID_86C801;
+            chip    = S3_86C801;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_86c801);
+            break;
         case S3_SPEA_MIRAGE_86C801:
             bios_fn = ROM_SPEA_MIRAGE_86C801;
             chip    = S3_86C801;
@@ -10616,6 +10665,16 @@ s3_init(const device_t *info)
             break;
         case S3_86C805_ONBOARD:
             bios_fn = NULL;
+            chip    = S3_86C805;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_86c805);
+            break;
+        case S3_DIGITAL_86C805:
+            bios_fn = ROM_DIGITAL_86C805;
+            chip    = S3_86C805;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_86c805);
+            break;
+        case S3_ORCHID_86C805:
+            bios_fn = ROM_ORCHID_86C805;
             chip    = S3_86C805;
             video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_86c805);
             break;
@@ -10698,8 +10757,28 @@ s3_init(const device_t *info)
             chip    = S3_VISION864;
             video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_vision864_pci);
             break;
+        case S3_DIAMOND_STEALTH64_864:
+            bios_fn = ROM_DIAMOND_STEALTH64_864;
+            chip    = S3_VISION864;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_vision864_pci);
+            break;
+        case S3_LEADTEK_VISION864:
+            bios_fn = ROM_LEADTEK_VISION864;
+            chip    = S3_VISION864;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_vision864_pci);
+            break;
         case S3_NUMBER9_9FX_531:
             bios_fn = ROM_NUMBER9_9FX_531;
+            chip    = S3_VISION868;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_vision868_pci);
+            break;
+        case S3_GENOA_VISION868:
+            bios_fn = ROM_GENOA_VISION868;
+            chip    = S3_VISION868;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_vision868_pci);
+            break;
+        case S3_MIROVIDEO_VISION868:
+            bios_fn = ROM_MIROVIDEO_VISION868;
             chip    = S3_VISION868;
             video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_vision868_pci);
             break;
@@ -10725,6 +10804,11 @@ s3_init(const device_t *info)
                 bios_fn = ROM_MIROCRYSTAL20SV_964_VLB;
                 video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_vision964_vlb);
             }
+            break;
+        case S3_SPEA_86C964:
+            bios_fn = ROM_SPEA_86C964;
+            chip    = S3_VISION964;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_vision964_pci);
             break;
         case S3_DIAMOND_STEALTH64_968:
             bios_fn = ROM_DIAMOND_STEALTH64_968;
@@ -10788,6 +10872,11 @@ s3_init(const device_t *info)
             else
                 video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio32_vlb);
             break;
+        case S3_SPEA_TRIO32:
+            bios_fn = ROM_SPEA_TRIO32;
+            chip    = S3_TRIO32;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio32_pci);
+            break;
         case S3_PHOENIX_TRIO64:
             bios_fn = ROM_PHOENIX_TRIO64;
             chip    = S3_TRIO64;
@@ -10838,6 +10927,26 @@ s3_init(const device_t *info)
             chip    = S3_TRIO64V;
             video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64vp_cardex_pci);
             break;
+        case S3_DIAMOND_TRIO64V:
+            bios_fn = ROM_DIAMOND_TRIO64V;
+            chip    = S3_TRIO64V;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64_pci);
+            break;
+        case S3_HERCULES_TRIO64V:
+            bios_fn = ROM_HERCULES_TRIO64V;
+            chip    = S3_TRIO64V;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64_pci);
+            break;
+        case S3_MIROMEDIA_TV:
+            bios_fn = ROM_MIROMEDIA_TV;
+            chip    = S3_TRIO64V;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64_pci);
+            break;
+        case S3_MIRO_TRIO64V:
+            bios_fn = ROM_MIRO_TRIO64V;
+            chip    = S3_TRIO64V;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64_pci);
+            break;
         case S3_DIAMOND_STEALTH64_764:
             bios_fn = ROM_DIAMOND_STEALTH64_764;
             chip    = S3_TRIO64;
@@ -10856,6 +10965,16 @@ s3_init(const device_t *info)
             break;
         case S3_TRIO64V2_DX:
             bios_fn = ROM_TRIO64V2_DX_VBE20;
+            chip    = S3_TRIO64V2;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64_pci);
+            break;
+        case S3_ACER_TRIO64V2:
+            bios_fn = ROM_ACER_TRIO64V2;
+            chip    = S3_TRIO64V2;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64_pci);
+            break;
+        case S3_ASUS_TRIO64V2:
+            bios_fn = ROM_ASUS_TRIO64V2;
             chip    = S3_TRIO64V2;
             video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64_pci);
             break;
@@ -11108,6 +11227,8 @@ s3_init(const device_t *info)
             svga_recalctimings(svga);
             break;
 
+        case S3_DIGITAL_86C805:
+        case S3_ORCHID_86C805:
         case S3_SPEA_MIRAGE_86C801:
         case S3_SPEA_MIRAGE_86C805:
             svga->decode_mask = (2 << 20) - 1;
@@ -11171,6 +11292,20 @@ s3_init(const device_t *info)
             s3->ramdac_type = ATT49X;
             svga->clock_gen = device_add(&av9194_device);
             svga->getclock  = av9194_getclock;
+            break;
+
+        case S3_ORCHID_86C801:
+            svga->decode_mask = (2 << 20) - 1;
+            stepping          = 0xa0; /*86C801/86C805*/
+            s3->id            = stepping;
+            s3->id_ext        = stepping;
+            s3->id_ext_pci    = 0;
+            s3->packed_mmio   = 0;
+            svga->crtc[0x5a]  = 0x0a;
+            svga->ramdac      = device_add(&sc1502x_ramdac_device);
+            s3->ramdac_type   = SC1502X;
+            svga->clock_gen   = device_add(&av9194_device);
+            svga->getclock    = av9194_getclock;
             break;
 
         case S3_ELSAWIN1K_86C928:
@@ -11254,6 +11389,8 @@ s3_init(const device_t *info)
 
         case S3_PARADISE_BAHAMAS64:
         case S3_PHOENIX_VISION864:
+        case S3_DIAMOND_STEALTH64_864:
+        case S3_LEADTEK_VISION864:
         case S3_DEC_VISION864:
         case S3_MIROCRYSTAL20SD_864: /*BIOS 3.xx has a SDAC ramdac.*/
             svga->decode_mask = (8 << 20) - 1;
@@ -11277,6 +11414,7 @@ s3_init(const device_t *info)
         case S3_DIAMOND_STEALTH64_964:
         case S3_ELSAWIN2KPROX_964:
         case S3_MIROCRYSTAL20SV_964:
+        case S3_SPEA_86C964:
             svga->decode_mask = (8 << 20) - 1;
             stepping          = 0xd0; /*Vision964*/
             s3->id            = stepping;
@@ -11354,6 +11492,8 @@ s3_init(const device_t *info)
             }
             break;
 
+        case S3_GENOA_VISION868:
+        case S3_MIROVIDEO_VISION868:
         case S3_NUMBER9_9FX_531:
         case S3_PHOENIX_VISION868:
             svga->decode_mask = (8 << 20) - 1;
@@ -11392,6 +11532,7 @@ s3_init(const device_t *info)
         case S3_PHOENIX_TRIO32:
         case S3_PHOENIX_TRIO32_ONBOARD:
         case S3_DIAMOND_STEALTH_SE:
+        case S3_SPEA_TRIO32:
             svga->decode_mask = (4 << 20) - 1;
             s3->id            = 0xe1; /*Trio32*/
             s3->id_ext        = 0x10;
@@ -11408,6 +11549,10 @@ s3_init(const device_t *info)
         case S3_PHOENIX_TRIO64VPLUS:
         case S3_PHOENIX_TRIO64VPLUS_ONBOARD:
         case S3_CARDEX_TRIO64VPLUS:
+        case S3_DIAMOND_TRIO64V:
+        case S3_HERCULES_TRIO64V:
+        case S3_MIROMEDIA_TV:
+        case S3_MIRO_TRIO64V:
         case S3_DIAMOND_STEALTH64_764:
         case S3_SPEA_MIRAGE_P64:
         case S3_NUMBER9_9FX:
@@ -11424,6 +11569,8 @@ s3_init(const device_t *info)
             break;
 
         case S3_TRIO64V2_DX:
+        case S3_ACER_TRIO64V2:
+        case S3_ASUS_TRIO64V2:
         case S3_TRIO64V2_DX_ONBOARD:
             svga->decode_mask = (4 << 20) - 1;
             s3->id            = 0xe1; /*Trio64V2*/
@@ -11957,6 +12104,16 @@ static const device_config_t s3_86c801_isa_config[] = {
         .spinner        = { 0 },
         .bios           = {
             {
+                .name          = "Orchid Fahrenheit 1280+",
+                .internal_name = "orchid_s3_801",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = S3_ORCHID_86C801,
+                .size          = 32768,
+                .flags         = 0,
+                .files         = { ROM_ORCHID_86C801, "" }
+            },
+            {
                 .name          = "Phoenix",
                 .internal_name = "px_86c801_isa",
                 .bios_type     = BIOS_NORMAL,
@@ -12049,6 +12206,16 @@ static const device_config_t s3_86c805_vlb_config[] = {
         .spinner        = { 0 },
         .bios           = {
             {
+                .name          = "Digital (DEC) PC76H-EA",
+                .internal_name = "digital_s3_805",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = S3_DIGITAL_86C805,
+                .size          = 32768,
+                .flags         = 0,
+                .files         = { ROM_DIGITAL_86C805, "" }
+            },
+            {
                 .name          = "miroCRYSTAL 8S",
                 .internal_name = "mirocrystal8s_vlb",
                 .bios_type     = BIOS_NORMAL,
@@ -12067,6 +12234,16 @@ static const device_config_t s3_86c805_vlb_config[] = {
                 .size          = 32768,
                 .flags         = 0,
                 .files         = { ROM_MIROCRYSTAL10SD_805, "" }
+            },
+            {
+                .name          = "Orchid Fahrenheit 1280+",
+                .internal_name = "orchid_s3_805",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = S3_ORCHID_86C805,
+                .size          = 32768,
+                .flags         = 0,
+                .files         = { ROM_ORCHID_86C805, "" }
             },
             {
                 .name          = "Phoenix",
@@ -12182,6 +12359,36 @@ static const device_config_t s3_vision864_pci_config[] = {
         .spinner        = { 0 },
         .bios           = {
             {
+                .name          = "Digital (DEC) PCXAG-AL",
+                .internal_name = "dec_vision864_pci",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = S3_DEC_VISION864,
+                .size          = 32768,
+                .flags         = BIOS_LIMIT_MAX_MEMORY | (2 << 16),
+                .files         = { ROM_DEC_VISION864, "" }
+            },
+            {
+                .name          = "Diamond Stealth64 Graphics 2000",
+                .internal_name = "stealth64d_864_pci",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = S3_DIAMOND_STEALTH64_864,
+                .size          = 32768,
+                .flags         = BIOS_LIMIT_MAX_MEMORY | (2 << 16),
+                .files         = { ROM_DIAMOND_STEALTH64_864, "" }
+            },
+            {
+                .name          = "Leadtek WinFast S430", /* Also known as: ASUS VideoMagic PCI-V864 */
+                .internal_name = "leadtek_s430_pci",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = S3_LEADTEK_VISION864,
+                .size          = 32768,
+                .flags         = BIOS_LIMIT_MAX_MEMORY | (2 << 16),
+                .files         = { ROM_LEADTEK_VISION864, "" }
+            },
+            {
                 .name          = "Paradise Bahamas 64",
                 .internal_name = "bahamas64_pci",
                 .bios_type     = BIOS_NORMAL,
@@ -12200,16 +12407,6 @@ static const device_config_t s3_vision864_pci_config[] = {
                 .size          = 32768,
                 .flags         = 0,
                 .files         = { ROM_PHOENIX_VISION864, "" }
-            },
-            {
-                .name          = "DIGITAL PCXAG-AL S3-864 PCI",
-                .internal_name = "dec_vision864_pci",
-                .bios_type     = BIOS_NORMAL,
-                .files_no      = 1,
-                .local         = S3_DEC_VISION864,
-                .size          = 32768,
-                .flags         = 0,
-                .files         = { ROM_DEC_VISION864, "" }
             },
             { .files_no = 0 }
         },
@@ -12314,6 +12511,16 @@ static const device_config_t s3_trio32_pci_config[] = {
                 .size          = 32768,
                 .flags         = 0,
                 .files         = { ROM_PHOENIX_TRIO32, "" }
+            },
+            {
+                .name          = "SPEA V7-Mirage P-32",
+                .internal_name = "spea_mirage32p_pci", /* TODO: to add migration */
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = S3_SPEA_TRIO32,
+                .size          = 32768,
+                .flags         = 0,
+                .files         = { ROM_SPEA_TRIO32, "" }
             },
             { .files_no = 0 }
         },
@@ -12429,6 +12636,16 @@ static const device_config_t s3_vision964_pci_config[] = {
                 .flags         = BIOS_LIMIT_MAX_MEMORY | (2 << 16),
                 .files         = { ROM_MIROCRYSTAL20SV_964_PCI, "" }
             },
+            {
+                .name          = "SPEA V7-Mercury P-64",
+                .internal_name = "spea_mercury64p_964_pci",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = S3_SPEA_86C964,
+                .size          = 32768,
+                .flags         = BIOS_LIMIT_MAX_MEMORY | (2 << 16),
+                .files         = { ROM_SPEA_86C964, "" }
+            },
             { .files_no = 0 }
         },
     },
@@ -12493,7 +12710,7 @@ static const device_config_t s3_trio64_vlb_config[] = {
                 .files         = { ROM_PHOENIX_TRIO64, "" }
             },
             {
-                .name          = "SPEA V7-Mirage P64",
+                .name          = "SPEA V7-Mirage P-64",
                 .internal_name = "spea_miragep64_vlb",
                 .bios_type     = BIOS_NORMAL,
                 .files_no      = 1,
@@ -12596,6 +12813,26 @@ static const device_config_t s3_vision868_pci_config[] = {
         .file_filter    = NULL,
         .spinner        = { 0 },
         .bios           = {
+            {
+                .name          = "Genoa Phantom 64", /* TODO: to add the VLB version. */
+                .internal_name = "phantom64_pci",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = S3_GENOA_VISION868,
+                .size          = 32768,
+                .flags         = BIOS_LIMIT_MAX_MEMORY | (2 << 16),
+                .files         = { ROM_GENOA_VISION868, "" }
+            },
+            {
+                .name          = "miroVIDEO 20SD",
+                .internal_name = "mirovideo20sd_pci",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = S3_MIROVIDEO_VISION868,
+                .size          = 32768,
+                .flags         = BIOS_LIMIT_MAX_MEMORY | (2 << 16),
+                .files         = { ROM_MIROVIDEO_VISION868, "" }
+            },
             {
                 .name          = "Number Nine 9FX Motion 531",
                 .internal_name = "n9_9fx_531_pci",
@@ -12740,7 +12977,7 @@ static const device_config_t s3_vision968_pci_config[] = {
                 .files         = { ROM_PHOENIX_VISION968, "" }
             },
             {
-                .name          = "SPEA V7-Mercury P64V",
+                .name          = "SPEA V7-Mercury P-64V",
                 .internal_name = "spea_mercury64p_pci",
                 .bios_type     = BIOS_NORMAL,
                 .files_no      = 1,
@@ -12845,6 +13082,46 @@ static const device_config_t s3_trio64vplus_pci_config[] = {
                 .files         = { ROM_CARDEX_TRIO64VPLUS, "" }
             },
             {
+                .name          = "Diamond Stealth64 Video 2001",
+                .internal_name = "stealth64v_2001_pci",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = S3_DIAMOND_TRIO64V,
+                .size          = 32768,
+                .flags         = BIOS_LIMIT_MAX_MEMORY | (2 << 16),
+                .files         = { ROM_DIAMOND_TRIO64V, "" }
+            },
+            {
+                .name          = "Hercules Terminator 64 Video",
+                .internal_name = "terminator_64v_pci",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = S3_HERCULES_TRIO64V,
+                .size          = 32768,
+                .flags         = BIOS_LIMIT_MAX_MEMORY | (2 << 16),
+                .files         = { ROM_HERCULES_TRIO64V, "" }
+            },
+            {
+                .name          = "miroMEDIA TV",
+                .internal_name = "miromediatv_pci",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = S3_MIROMEDIA_TV,
+                .size          = 32768,
+                .flags         = BIOS_LIMIT_MAX_MEMORY | (2 << 16),
+                .files         = { ROM_MIROMEDIA_TV, "" }
+            },
+            {
+                .name          = "miroVIDEO 22SD",
+                .internal_name = "mirovideo22sd_pci",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = S3_MIRO_TRIO64V,
+                .size          = 32768,
+                .flags         = BIOS_LIMIT_MAX_MEMORY | (2 << 16),
+                .files         = { ROM_MIRO_TRIO64V, "" }
+            },
+            {
                 .name          = "Phoenix",
                 .internal_name = "px_trio64vplus_pci",
                 .bios_type     = BIOS_NORMAL,
@@ -12898,7 +13175,27 @@ static const device_config_t s3_trio64v2dx_pci_config[] = {
         .spinner        = { 0 },
         .bios           = {
             {
-                .name          = "Phoenix",
+                .name          = "Acer Win-Artist PV70",
+                .internal_name = "acer_trio64v2dx_pci",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = S3_ACER_TRIO64V2,
+                .size          = 32768,
+                .flags         = BIOS_LIMIT_MAX_MEMORY | (2 << 16),
+                .files         = { ROM_ACER_TRIO64V2, "" }
+            },
+            {
+                .name          = "ASUS PCI-V775V2C",
+                .internal_name = "asus_trio64v2dx_pci",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = S3_ASUS_TRIO64V2,
+                .size          = 32768,
+                .flags         = BIOS_LIMIT_MAX_MEMORY | (2 << 16),
+                .files         = { ROM_ASUS_TRIO64V2, "" }
+            },
+            {
+                .name          = "Generic",
                 .internal_name = "trio64v2dx_pci",
                 .bios_type     = BIOS_NORMAL,
                 .files_no      = 1,

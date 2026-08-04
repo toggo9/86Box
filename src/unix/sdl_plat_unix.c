@@ -367,6 +367,10 @@ plat_mmap(size_t size, uint8_t executable)
     void *ret = mmap(0, size, PROT_MPROTECT(PROT_READ | PROT_WRITE | (executable ? PROT_EXEC : 0)), MAP_ANON | MAP_PRIVATE, -1, 0);
 #    else
     void *ret = mmap(0, size, PROT_READ | PROT_WRITE | (executable ? PROT_EXEC : 0), MAP_ANON | MAP_PRIVATE, -1, 0);
+#       ifdef MADV_HUGEPAGE
+    if (ret)
+        (void)madvise(ret, size, MADV_HUGEPAGE);
+#       endif
 #    endif
     return (ret == MAP_FAILED) ? NULL : ret;
 }
@@ -496,4 +500,15 @@ plat_run_command(const char *cmd, const char **env, const char *title)
     if (new_env)
         free(new_env);
     return ret;
+}
+
+plat_device_vol_locked_t*
+plat_lock_volumes(FILE* file)
+{
+    return NULL;
+}
+
+void
+plat_unlock_volumes(plat_device_vol_locked_t* vol)
+{
 }

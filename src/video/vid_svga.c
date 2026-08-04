@@ -779,15 +779,21 @@ svga_recalctimings(svga_t *svga)
     if (!svga->scrblank && (svga->crtc[0x17] & 0x80) && svga->attr_palette_enable) {
         /* TODO: In case of bug reports, disable 9-dots-wide character clocks in graphics modes. */
         if (!(svga->gdcreg[6] & 1) && !(svga->attrregs[0x10] & 1)) {
-            if (svga->seqregs[1] & 8)
+            if (svga->seqregs[1] & 8) {
                 svga->hdisp *= (svga->seqregs[1] & 1) ? 16 : 18;
-            else
+                svga->dots_per_clock = (svga->seqregs[1] & 1) ? 16 : 18;
+            } else {
                 svga->hdisp *= (svga->seqregs[1] & 1) ? 8 : 9;
+                svga->dots_per_clock = (svga->seqregs[1] & 1) ? 8 : 9;
+            }
         } else {
-            if (svga->seqregs[1] & 8)
+            if (svga->seqregs[1] & 8) {
                 svga->hdisp *= 16;
-            else
+                svga->dots_per_clock = 16;
+            } else {
                 svga->hdisp *= 8;
+                svga->dots_per_clock = 8;
+            }
         }
 
         if (!(svga->gdcreg[6] & 1) && !(svga->attrregs[0x10] & 1)) { /*Text mode*/
@@ -933,6 +939,8 @@ svga_recalctimings(svga_t *svga)
         svga->y_add = (svga->monitor->mon_overscan_y >> 1);
         svga->left_overscan = svga->x_add = (svga->monitor->mon_overscan_x >> 1);
 
+        svga->hblank_sub = 0;
+
         svga->htotal &= 0x7fff;
     } else {
         const uint32_t hadj    = (svga->htotal & 0x8000) ? 0x100 : 0;
@@ -970,6 +978,9 @@ svga_recalctimings(svga_t *svga)
 
         const uint32_t hd = svga->hdisp;
         svga->hdisp -= (svga->hblank_sub * svga->dots_per_clock);
+
+        const uint32_t non_blanked = (svga->hblankstart + 1 - svga->hblank_sub) * svga->dots_per_clock;
+        svga->hdisp = MIN(svga->hdisp, non_blanked);
 
         svga->left_overscan = svga->x_add = (int) ((uint32_t) svga->htotal - adj_dot - hadj - 1) * svga->dots_per_clock;
         svga->monitor->mon_overscan_x = (int) ((uint32_t) svga->x_add + ((uint32_t) svga->hblankstart * (uint32_t) svga->dots_per_clock) - hd + (uint32_t) svga->dots_per_clock);
@@ -1613,7 +1624,7 @@ svga_poll(void *priv)
             svga->dispon   = 1;
             svga->displine = (svga->interlace && svga->oddeven) ? 1 : 0;
 
-            if ((svga->adv_flags & FLAG_PANNING_ATI) && svga->panning_blank) {
+            if (svga->hoverride || ((svga->adv_flags & FLAG_PANNING_ATI) && svga->panning_blank)) {
                 svga->scrollcache = 0;
                 svga->half_pixel  = 0;
 

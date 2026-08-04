@@ -141,6 +141,15 @@ static const device_config_t ibmpc_config[] = {
                 .size          = 40960,
                 .files         = { "roms/machines/diagnostic/xtramtest_8k.bin", "" }
             },
+            {
+                .name          = "WindsorPOST",
+                .internal_name = "diag_windsorpost",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = 0,
+                .size          = 40960,
+                .files         = { "roms/machines/diagnostic/windsorpost_8k.bin", "" }
+            },            
             { .files_no = 0 }
         }
     },
@@ -310,6 +319,15 @@ static const device_config_t ibmpc82_config[] = {
                 .local         = 0,
                 .size          = 40960,
                 .files         = { "roms/machines/diagnostic/xtramtest_8k.bin", "" }
+            },
+            {
+                .name          = "WindsorPOST",
+                .internal_name = "diag_windsorpost",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = 0,
+                .size          = 40960,
+                .files         = { "roms/machines/diagnostic/windsorpost_8k.bin", "" }
             },
             { .files_no = 0 }
         }
@@ -498,6 +516,15 @@ static const device_config_t ibmxt_config[] = {
                 .files         = { "roms/machines/diagnostic/xtramtest_32k.bin",
                                    "roms/machines/ibmxt/BIOS_5160_08NOV82_U19_5000027.BIN", "" }
             },
+            {
+                .name          = "WindsorPOST",
+                .internal_name = "diag_windsorpost",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = 0,
+                .size          = 40960,
+                .files         = { "roms/machines/diagnostic/windsorpost_8k.bin", "" }
+            },            
             { .files_no = 0 }
         }
     },
@@ -588,6 +615,56 @@ machine_ibmxt_init(const machine_t *model)
 
     if (enable_5161)
         device_add(&ibm_5161_device);
+
+    return ret;
+}
+
+/*
+ * IBM 3270 PC (model 5271).
+ *
+ * The planar is a stock 5160 -- these two ROMs are byte-identical to the
+ * 08NOV82 XT set -- and every 3270-specific part of the machine lives on the
+ * display adapter and its option ROMs.  So there is nothing to do here beyond
+ * the ordinary XT init plus the card itself.
+ *
+ * The keyboard adapter at ports 0x1B0-0x1B7 is kbc_3270pc_device.  A real 5271
+ * always has that card fitted -- it carries the option ROM the display adapter
+ * maps -- so the ROM never tests for its absence, and leaving the range
+ * undecoded used to read back 0xFF, which satisfies every ready/present bit it
+ * polls and then fails the data compares.
+ *
+ * POST 0302 still appears and is authentic: Elliott records that a 5271 with an
+ * ordinary XT keyboard reports it at every boot, and the 122-key 3270 keyboard
+ * is not emulated.  2801 likewise -- there is no Host Connect card.  Both are
+ * non-fatal; F1 resumes.
+ */
+int
+machine_xt_ibm3270pc_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/ibm3270pc/1501512.bin",
+                           0x000f8000, 65536, 0);
+    if (ret)
+        ret = bios_load_aux_linear("roms/machines/ibm3270pc/6359116.bin",
+                                   0x000f6000, 8192, 0);
+
+    /* The adapter and font ROMs are read by the display device with
+       rom_fopen(), which is not bios_only-aware, so gate on them here. */
+    if (ret && !device_available(&ibm3270pc_vid_device))
+        ret = 0;
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&kbc_xt_device);
+
+    machine_xt_common_init(model, 0);
+
+    device_add(&ibm3270pc_vid_device);
+    /* After machine_xt_common_init(), so the system PIT exists and PITCONST is
+       settled before the adapter's own 8254 is added. */
+    device_add(&kbc_3270pc_device);
 
     return ret;
 }
@@ -686,7 +763,15 @@ static const device_config_t ibmxt86_config[] = {
                 .size          = 65536,
                 .files         = { "roms/machines/diagnostic/xtramtest_32k.bin", "roms/machines/ibmxt86/BIOS_5160_09MAY86_U19_62X0819_68X4370_27256_F000.BIN", "" }
             },
-
+            {
+                .name          = "WindsorPOST",
+                .internal_name = "diag_windsorpost",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = 0,
+                .size          = 40960,
+                .files         = { "roms/machines/diagnostic/windsorpost_8k.bin", "" }
+            },
             { .files_no = 0 }
         },
     },
@@ -1087,91 +1172,6 @@ machine_xt_super16te_init(const machine_t *model)
     return ret;
 }
 
-static const device_config_t jukopc_config[] = {
-    // clang-format off
-    {
-        .name           = "bios",
-        .description    = "BIOS Version",
-        .type           = CONFIG_BIOS,
-        .default_string = "jukost",
-        .default_int    = 0,
-        .file_filter    = NULL,
-        .spinner        = { 0 },
-        .selection      = { { 0 } },
-        .bios           = {
-            {
-                .name          = "Bios 2.30",
-                .internal_name = "jukost",
-                .bios_type     = BIOS_NORMAL,
-                .files_no      = 1,
-                .local         = 0,
-                .size          = 8192,
-                .files         = { "roms/machines/jukopc/000o001.bin", "" }
-            },
-
-            // GLaBIOS for Juko ST
-            {
-                .name          = "GLaBIOS 0.4.0 (8088)",
-                .internal_name = "glabios_040_8088",
-                .bios_type     = BIOS_NORMAL,
-                .files_no      = 1,
-                .local         = 0,
-                .size          = 8192,
-                .files         = { "roms/machines/glabios/GLABIOS_0.4.0_8S.ROM", "" }
-            },
-            {
-                .name          = "GLaBIOS 0.4.0 (V20)",
-                .internal_name = "glabios_040_v20",
-                .bios_type     = BIOS_NORMAL,
-                .files_no      = 1,
-                .local         = 0,
-                .size          = 8192,
-                .files         = { "roms/machines/glabios/GLABIOS_0.4.0_VS.ROM", "" }
-            },
-
-            { .files_no = 0 }
-        }
-    },
-    { .name = "", .description = "", .type = CONFIG_END }
-    // clang-format on
-};
-
-const device_t jukopc_device = {
-    .name          = "Juko ST",
-    .internal_name = "jukopc",
-    .flags         = 0,
-    .local         = 0,
-    .init          = NULL,
-    .close         = NULL,
-    .reset         = NULL,
-    .available     = NULL,
-    .speed_changed = NULL,
-    .force_redraw  = NULL,
-    .config        = jukopc_config
-};
-
-int
-machine_xt_jukopc_init(const machine_t *model)
-{
-    int         ret = 0;
-    const char *fn;
-
-    /* No ROMs available. */
-    if (!device_available(model->device))
-        return ret;
-
-    device_context(model->device);
-    fn  = device_get_bios_file(model->device, device_get_config_bios("bios"), 0);
-    ret = bios_load_linear(fn, 0x000fe000, 8192, 0);
-    device_context_restore();
-
-    if (bios_only || !ret)
-        return ret;
-
-    machine_xt_clone_init(model, 0);
-
-    return ret;
-}
 
 int
 machine_xt_kaypropc_init(const machine_t *model)
