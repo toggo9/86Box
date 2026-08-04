@@ -1017,6 +1017,9 @@ extern int             machine_at_pat54pv_init(const machine_t *);
 
 /* OPTi Viper */
 extern int             machine_at_acerm1_init(const machine_t *);
+#ifdef EMU_DEVICE_H
+extern const device_t  ergoproviper_device;
+#endif
 extern int             machine_at_ergoproviper_init(const machine_t *);
 extern int             machine_at_bristol_init(const machine_t *);
 extern int             machine_at_g586opa_init(const machine_t *);
