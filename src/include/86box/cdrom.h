@@ -319,6 +319,7 @@ static const struct cdrom_drive_types_s {
     { "PIONEER",  "CD-ROM DRM-604X",  "2403", "",          "pioneer_604x",   BUS_TYPE_SCSI, 2,  4, 47, 0, 0, { -1, -1, -1, -1 } }, /* NOTE: The real thing is a CD changer drive! */
     { "PIONEER",  "CD-ROM DR-U124X",  "4021", "",          "pioneer_u124x",  BUS_TYPE_SCSI, 2,  4, 47, 0, 0, { -1, -1, -1, -1 } }, /* Another (updated?) variant of DRM-604X */
     { "PIONEER",  "CD-ROM DR-U16S",   "0066", "",          "pioneer_u16s",   BUS_TYPE_SCSI, 2, 36, 47, 0, 0, { -1, -1, -1, -1 } },
+    { "PIONEER",  "DVD-ROM DVD-305S", "1.00", "",          "pioneer_305s",   BUS_TYPE_SCSI, 2, 40, 47, 0, 1, { -1, -1, -1, -1 } },
     { "PLEXTOR",  "CD-ROM PX-43CH",   "0204", "",          "plextor_43ch",   BUS_TYPE_SCSI, 2,  4, 36, 1, 0, { -1, -1, -1, -1 } }, /* Caddy. */
     { "PLEXTOR",  "CD-ROM PX-83CS",   "1.01", "",          "plextor_83cs",   BUS_TYPE_SCSI, 2,  8, 36, 1, 0, { -1, -1, -1, -1 } }, /* Caddy. */
     { "PLEXTOR",  "CD-ROM PX-12CS",   "1.04", "",          "plextor_12cs",   BUS_TYPE_SCSI, 2, 12, 36, 1, 0, { -1, -1, -1, -1 } }, /* Caddy. */
@@ -567,7 +568,8 @@ extern int             cdrom_audio_callback(cdrom_t *dev, int16_t *output, const
 extern uint8_t         cdrom_audio_play(cdrom_t *dev, const uint32_t pos, const uint32_t len, const int ismsf);
 extern uint8_t         cdrom_audio_track_search(cdrom_t *dev, const uint32_t pos,
                                                 const int type, const uint8_t playbit);
-extern uint8_t         cdrom_audio_track_search_pioneer(cdrom_t *dev, const uint32_t pos, const uint8_t playbit);
+extern uint8_t         cdrom_audio_track_search_pioneer(cdrom_t *dev, const uint32_t pos,
+                                                const int type, const uint8_t playbit);
 extern uint8_t         cdrom_audio_play_pioneer(cdrom_t *dev, const uint32_t pos);
 extern uint8_t         cdrom_audio_play_toshiba(cdrom_t *dev, const uint32_t pos, const int type);
 extern uint8_t         cdrom_audio_scan(cdrom_t *dev, const uint32_t pos);
@@ -590,6 +592,10 @@ extern int             cdrom_get_q(cdrom_t *dev, uint8_t *buf, int curtoctrk, ui
 extern uint8_t         cdrom_mitsumi_audio_play(cdrom_t *dev, uint32_t pos, uint32_t len);
 #endif
 extern uint8_t         cdrom_read_disc_info_toc(cdrom_t *dev, uint8_t *b,
+                                                const uint8_t track, const int type);
+extern uint8_t         cdrom_read_toc_nec(cdrom_t *dev, uint8_t *b,
+                                                const uint8_t track, const int type, const int len);
+extern uint8_t         cdrom_read_toc_pioneer(cdrom_t *dev, uint8_t *b,
                                                 const uint8_t track, const int type);
 extern int             cdrom_is_track_audio(cdrom_t *dev, const int sector, const int ismsf,
                                             int cdrom_sector_type, const uint8_t vendor_type);
