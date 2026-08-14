@@ -28,6 +28,8 @@
 #include <86box/pit.h>
 #include <86box/video.h>
 #include <86box/vid_mcga.h>
+#include "cpu.h"
+#include "808x_marty_86box.h"
 
 #define MCGA_VRAM_SIZE      0x10000
 #define MCGA_FONT_RAM_SIZE  0x02000
@@ -394,6 +396,10 @@ mcga_io_write(uint16_t addr, uint8_t val, void *priv)
 
     switch (addr) {
         case 0x03c6:
+            /*
+             * Type 8525 latches this register, but IBM documents that PEL
+             * mask operations are not supported; do not apply it to pixels.
+             */
             dev->dac_mask = val;
             break;
 
