@@ -773,6 +773,7 @@ extern int             machine_at_sensation1_init(const machine_t *);
 extern int             machine_at_tuliptc38_init(const machine_t *);
 
 /* ZyMOS Poach */
+extern int             machine_at_asus486_25_init(const machine_t *);
 extern int             machine_at_isa486c_init(const machine_t *);
 extern int             machine_at_genoa486_init(const machine_t *);
 
