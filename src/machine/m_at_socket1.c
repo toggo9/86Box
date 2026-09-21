@@ -617,6 +617,30 @@ machine_at_tuliptc38_init(const machine_t *model)
 
 /* ZyMOS Poach */
 int
+machine_at_asus486_25_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/asus486_25/Mainboard_Asus_486-25_Rev211_LOW_EVEN_AM27C256-DIP28.bin",
+                                "roms/machines/asus486_25/Mainboard_Asus_486-25_Rev211_HIGH_ODD_AM27C256-DIP28.bin",
+								0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    device_add(&isa486c_device);
+    device_add(&port_92_key_device);
+
+    device_add_params(machine_get_kbc_device(machine), (void *) model->kbc_params);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+int
 machine_at_isa486c_init(const machine_t *model)
 {
     int ret;
