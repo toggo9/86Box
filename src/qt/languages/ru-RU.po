@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2026-08-10 21:47+0000\n"
+"PO-Revision-Date: 2026-08-16 00:00+0000\n"
 "Last-Translator: Alexander Babikov <lemondrops358@gmail.com>\n"
 "Language-Team: Russian <https://weblate.86box.net/projects/86box/86box/ru/>\n"
 "Language: ru-RU\n"
@@ -81,6 +81,9 @@ msgstr "&Указать размеры главного окна…"
 
 msgid "Force &4:3 display ratio"
 msgstr "Установить соотношение сторон &4:3"
+
+msgid "Force &%1:%2 display ratio"
+msgstr "Установить соотношение сторон &%1:%2"
 
 msgid "&Window scale factor"
 msgstr "&Масштаб окна"
@@ -424,8 +427,11 @@ msgstr "Включено (UTC)"
 msgid "Use the 486 interpreter for 286 and 386 processors"
 msgstr "Использовать интерпретатор 486 для процессоров 286 и 386"
 
-msgid "Dynamic Recompiler"
+msgid "Dynamic recompiler"
 msgstr "Динамический рекомпилятор"
+
+msgid "Accurate FPU environment on the dynamic recompiler"
+msgstr ""
 
 msgid "CPU frame size"
 msgstr "Размер кадра ЦП"
@@ -457,6 +463,9 @@ msgstr "Ускоритель XGA"
 msgid "IBM PS/55 Display Adapter Graphics"
 msgstr "IBM PS/55 Display Adapter Graphics"
 
+msgid "SCSI:"
+msgstr "SCSI:"
+
 msgid "Voodoo:"
 msgstr "Voodoo:"
 
@@ -471,6 +480,21 @@ msgstr "Мышь:"
 
 msgid "Mouse"
 msgstr "Мышь"
+
+msgid "&Mouse"
+msgstr "&Мышь"
+
+msgid "Tablet:"
+msgstr "Планшет:"
+
+msgid "Tablet"
+msgstr "Планшет"
+
+msgid "&Tablet"
+msgstr "&Планшет"
+
+msgid "Tablet (&Crosshair)"
+msgstr "Планшет (&отображать прицел)"
 
 msgid "Joystick:"
 msgstr "Джойстик:"
@@ -831,6 +855,9 @@ msgstr "Дисплей"
 
 msgid "Input devices"
 msgstr "Устройства ввода"
+
+msgid "Input &device"
+msgstr "&Устройство ввода"
 
 msgid "Sound"
 msgstr "Звук"
@@ -1482,6 +1509,18 @@ msgstr "Сигнал завершения ACPI"
 
 msgid "ACP&I shutdown"
 msgstr "Сигнал завершения ACP&I"
+
+msgid "Power off"
+msgstr ""
+
+msgid "Power &off…"
+msgstr ""
+
+msgid "Power &off"
+msgstr ""
+
+msgid "Powering off the emulated machine may cause data loss. Are you sure you want to continue?"
+msgstr ""
 
 msgid "Hard disk (%1)"
 msgstr "Жёсткий диск (%1)"
@@ -2689,6 +2728,18 @@ msgstr "Улучшенный цветной - нормальный режим (5
 msgid "Enhanced Color - Enhanced Mode (5154/ECD)"
 msgstr "Улучшенный цветной - улучшенный режим (5154/ECD)"
 
+msgid "IBM 8507 (1024x768, Monochrome)"
+msgstr "IBM 8507 (1024x768, монохромный)"
+
+msgid "IBM 8514 (1024x768, Color)"
+msgstr "IBM 8514 (1024x768, цветной)"
+
+msgid "IBM 8503 (640x480, Monochrome)"
+msgstr "IBM 8503 (640x480, монохромный)"
+
+msgid "IBM 8512/13 (640x480, Color)"
+msgstr "IBM 8512/13 (640x480, цветной)"
+
 msgid "Green"
 msgstr "Зелёный"
 
@@ -2887,8 +2938,14 @@ msgstr "[Стандартный] 1989 (3500 RPM)"
 msgid "[Generic] 1992 (3600 RPM)"
 msgstr "[Стандартный] 1992 (3600 RPM)"
 
+msgid "[Generic] 1993 (4000 RPM)"
+msgstr "[Стандартный] 1993 (4000 RPM)"
+
 msgid "[Generic] 1994 (4500 RPM)"
 msgstr "[Стандартный] 1994 (4500 RPM)"
+
+msgid "[Generic] 1995 (5200 RPM)"
+msgstr "[Стандартный] 1995 (5200 RPM)"
 
 msgid "[Generic] 1996 (5400 RPM)"
 msgstr "[Стандартный] 1996 (5400 RPM)"
@@ -2901,6 +2958,9 @@ msgstr "[Стандартный] 1998 (5400 RPM)"
 
 msgid "[Generic] 2000 (7200 RPM)"
 msgstr "[Стандартный] 2000 (7200 RPM)"
+
+msgid "[Generic] 2004 (10000 RPM)"
+msgstr "[Стандартный] 2004 (10000 RPM)"
 
 msgid "IBM 8514/A clone"
 msgstr "Клон IBM 8514/A"
@@ -2952,6 +3012,15 @@ msgstr "Модель"
 
 msgid "Model:"
 msgstr "Модель:"
+
+msgid "Brand:"
+msgstr ""
+
+msgid "Revision:"
+msgstr ""
+
+msgid "[Generic HDD] Device Configuration"
+msgstr ""
 
 msgid "Failed to initialize Vulkan renderer."
 msgstr "Не удалось инициализировать рендерер Vulkan."
@@ -3271,6 +3340,12 @@ msgstr "П&еремотка вперёд"
 msgid "Fast forward"
 msgstr "Перемотка вперёд"
 
+msgid "&Non-maskable interrupt"
+msgstr "Немаскируемое прерывание (&NMI)"
+
+msgid "Non-maskable interrupt"
+msgstr "Немаскируемое прерывание"
+
 msgid "To change the system directory, stop all running machines."
 msgstr "Чтобы изменить системную папку, остановите все запущенные машины."
 
@@ -3451,3 +3526,9 @@ msgstr "938 (китайский, традиционное письмо)"
 
 msgid "Sample rate:"
 msgstr "Частота дискретизации:"
+
+msgid "CGA lightpen"
+msgstr "Световое перо CGA"
+
+msgid "Luminance threshold (%)"
+msgstr "Порог яркости (%)"

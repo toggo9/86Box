@@ -82,6 +82,9 @@ msgstr "Tự nhập độ &phân giải…"
 msgid "Force &4:3 display ratio"
 msgstr "Giữ nguyên khung hình &4:3"
 
+msgid "Force &%1:%2 display ratio"
+msgstr "Giữ nguyên khung hình &%1:%2"
+
 msgid "&Window scale factor"
 msgstr "Đổi &tỷ lệ cửa sổ"
 
@@ -424,8 +427,11 @@ msgstr "Bật (UTC)"
 msgid "Use the 486 interpreter for 286 and 386 processors"
 msgstr "Sử dụng trình thông dịch 486 cho các bộ xử lý 286 và 386"
 
-msgid "Dynamic Recompiler"
-msgstr "Bộ tái biên dịch động (Dynamic Recompiler)"
+msgid "Dynamic recompiler"
+msgstr "Bộ tái biên dịch động (Dynamic recompiler)"
+
+msgid "Accurate FPU environment on the dynamic recompiler"
+msgstr ""
 
 msgid "CPU frame size"
 msgstr "Cỡ khung CPU"
@@ -457,6 +463,9 @@ msgstr "Đồ họa XGA"
 msgid "IBM PS/55 Display Adapter Graphics"
 msgstr "Đồ họa adaptor xuất hình IBM PS/55"
 
+msgid "SCSI:"
+msgstr "SCSI:"
+
 msgid "Voodoo:"
 msgstr "Voodoo:"
 
@@ -471,6 +480,21 @@ msgstr "Chuột:"
 
 msgid "Mouse"
 msgstr "Chuột"
+
+msgid "&Mouse"
+msgstr "&Chuột"
+
+msgid "Tablet:"
+msgstr ""
+
+msgid "Tablet"
+msgstr ""
+
+msgid "&Tablet"
+msgstr ""
+
+msgid "Tablet (&Crosshair)"
+msgstr ""
 
 msgid "Joystick:"
 msgstr "Cần điều khiển:"
@@ -831,6 +855,9 @@ msgstr "Hiển thị"
 
 msgid "Input devices"
 msgstr "Thiết bị nhập"
+
+msgid "Input &device"
+msgstr ""
 
 msgid "Sound"
 msgstr "Âm thanh"
@@ -1460,6 +1487,18 @@ msgstr "Tắt máy theo ACPI"
 
 msgid "ACP&I shutdown"
 msgstr "Tắt máy theo ACP&I"
+
+msgid "Power off"
+msgstr ""
+
+msgid "Power &off…"
+msgstr ""
+
+msgid "Power &off"
+msgstr ""
+
+msgid "Powering off the emulated machine may cause data loss. Are you sure you want to continue?"
+msgstr ""
 
 msgid "Hard disk (%1)"
 msgstr "Ổ cứng (%1)"
@@ -2672,6 +2711,18 @@ msgstr "Màu sắc nâng cao - Chế độ bình thường (5154/ECD)"
 msgid "Enhanced Color - Enhanced Mode (5154/ECD)"
 msgstr "Màu sắc nâng cao - Chế độ nâng cao (5154/ECD)"
 
+msgid "IBM 8507 (1024x768, Monochrome)"
+msgstr "IBM 8507 (1024x768, đơn sắc)"
+
+msgid "IBM 8514 (1024x768, Color)"
+msgstr "IBM 8514 (1024x768, màu sắc)"
+
+msgid "IBM 8503 (640x480, Monochrome)"
+msgstr "IBM 8503 (640x480, đơn sắc)"
+
+msgid "IBM 8512/13 (640x480, Color)"
+msgstr "IBM 8512/13 (640x480, màu sắc)"
+
 msgid "Green"
 msgstr "Màu xanh lá cây"
 
@@ -2870,8 +2921,14 @@ msgstr "[Generic] 1989 (3500 RPM)"
 msgid "[Generic] 1992 (3600 RPM)"
 msgstr "[Generic] 1992 (3600 RPM)"
 
+msgid "[Generic] 1993 (4000 RPM)"
+msgstr "[Generic] 1993 (4000 RPM)"
+
 msgid "[Generic] 1994 (4500 RPM)"
 msgstr "[Generic] 1994 (4500 RPM)"
+
+msgid "[Generic] 1995 (5200 RPM)"
+msgstr "[Generic] 1995 (5200 RPM)"
 
 msgid "[Generic] 1996 (5400 RPM)"
 msgstr "[Generic] 1996 (5400 RPM)"
@@ -2884,6 +2941,9 @@ msgstr "[Generic] 1998 (5400 RPM)"
 
 msgid "[Generic] 2000 (7200 RPM)"
 msgstr "[Generic] 2000 (7200 RPM)"
+
+msgid "[Generic] 2004 (10000 RPM)"
+msgstr "[Generic] 2004 (10000 RPM)"
 
 msgid "IBM 8514/A clone"
 msgstr "IBM 8514/A bản sao"
@@ -2935,6 +2995,15 @@ msgstr "Mẫu máy"
 
 msgid "Model:"
 msgstr "Mẫu máy:"
+
+msgid "Brand:"
+msgstr ""
+
+msgid "Revision:"
+msgstr ""
+
+msgid "[Generic HDD] Device Configuration"
+msgstr ""
 
 msgid "Failed to initialize Vulkan renderer."
 msgstr "Không thể khởi tạo renderer Vulkan."
@@ -3254,6 +3323,12 @@ msgstr "&Tăng tốc giả lập"
 msgid "Fast forward"
 msgstr "Tăng tốc giả lập"
 
+msgid "&Non-maskable interrupt"
+msgstr ""
+
+msgid "Non-maskable interrupt"
+msgstr ""
+
 msgid "To change the system directory, stop all running machines."
 msgstr "Để thay đổi thư mục hệ thống, hãy tắt tất cả các máy đang chạy."
 
@@ -3434,3 +3509,9 @@ msgstr "938 (Trung phồn thể)"
 
 msgid "Sample rate:"
 msgstr "Tần số lấy mẫu:"
+
+msgid "CGA lightpen"
+msgstr ""
+
+msgid "Luminance threshold (%)"
+msgstr ""

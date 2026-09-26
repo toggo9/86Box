@@ -239,6 +239,7 @@ typedef struct pas16_t {
     int      midi_w;
     int      midi_uart_out;
     int      midi_uart_in;
+    int      midi_used;
     int      sysex;
 
     int      irq;
@@ -823,6 +824,8 @@ pas_in(uint16_t port, void *priv)
                     if (pas16->midi_r != pas16->midi_w) {
                         pas16->midi_r++;
                         pas16->midi_r &= 0xff;
+                        if (pas16->midi_used > 0)
+                            pas16->midi_used--;
                     }
                     if (pas16->midi_r == pas16->midi_w) {
                         pas16->ym3802_reg4_banked[0x03] &= 0x7f;
@@ -955,6 +958,8 @@ pas16_in(uint16_t port, void *priv)
                     if (pas16->midi_r != pas16->midi_w) {
                         pas16->midi_r++;
                         pas16->midi_r &= 0xff;
+                        if (pas16->midi_used > 0)
+                            pas16->midi_used--;
                     }
                 }
                 pas16->midi_stat &= ~0x04;
@@ -2482,6 +2487,7 @@ pas_input_msg(void *priv, uint8_t *msg, uint32_t len)
             pas16_log("Write message %02X to queue\n", msg[i]);
             pas16->midi_queue[pas16->midi_w++] = msg[i];
             pas16->midi_w &= 0xff;
+            pas16->midi_used++;
         }
 
         if (pas16->ym3802_reg6_banked[0x00] & 0x20) /* Check if FIFO-Rx interrupt is enabled */
@@ -2503,6 +2509,7 @@ pas16_input_msg(void *priv, uint8_t *msg, uint32_t len)
         for (uint32_t i = 0; i < len; i++) {
             pas16->midi_queue[pas16->midi_w++] = msg[i];
             pas16->midi_w &= 0xff;
+            pas16->midi_used++;
         }
 
         pas16_update_irq(pas16);
@@ -2524,9 +2531,18 @@ pas16_input_sysex(void *priv, uint8_t *buffer, uint32_t len, int abort)
             return (int) (len - i);
         pas16->midi_queue[pas16->midi_w++] = buffer[i];
         pas16->midi_w &= 0xff;
+        pas16->midi_used++;
     }
     pas16->sysex = 0;
     return 0;
+}
+
+static int
+pas16_input_remain(void *priv)
+{
+    pas16_t  *pas16 = (pas16_t *) priv;
+
+    return (256 - pas16->midi_used);
 }
 
 static void
@@ -3109,6 +3125,19 @@ pas16_speed_changed(void *priv)
     pas16_change_pit_clock_speed(priv);
 }
 
+/* Which models carry the SCSI port: all but the 16D. */
+static int
+pas16_has_scsi(uint8_t type)
+{
+    return (!type) || (type == 0x0f);
+}
+
+static uint32_t
+pas16_scsi_buses(const device_t *dev)
+{
+    return pas16_has_scsi(dev->local & 0xff) ? 1 : 0;
+}
+
 static void *
 pas_init(UNUSED(const device_t *info))
 {
@@ -3116,7 +3145,7 @@ pas_init(UNUSED(const device_t *info))
 
     pas16->type = 0;
     pas16->is_old_pas = 1;
-    pas16->has_scsi = (!pas16->type) || (pas16->type == 0x0f);
+    pas16->has_scsi = pas16_has_scsi(pas16->type);
     fm_driver_get(FM_YM3812, &pas16->opl);
     fm_driver_get(FM_YM3812, &pas16->opl2);
     pas16->irq = device_get_config_int("irq");
@@ -3160,7 +3189,7 @@ pas_init(UNUSED(const device_t *info))
         sound_set_pc_speaker_filter(pasplus_filter_pc_speaker, pas16);
 
     if (device_get_config_int("receive_input"))
-        midi_in_handler(1, pas_input_msg, pas16_input_sysex, pas16);
+        midi_in_handler(1, pas_input_msg, pas16_input_sysex, pas16_input_remain, pas16);
 
     for (uint8_t i = 0; i < 16; i++) {
         if (i < 6)
@@ -3197,7 +3226,7 @@ pas16_init(const device_t *info)
     }
 
     pas16->type = info->local & 0xff;
-    pas16->has_scsi = (!pas16->type) || (pas16->type == 0x0f);
+    pas16->has_scsi = pas16_has_scsi(pas16->type);
     fm_driver_get_cs(FM_YMF262, &pas16->opl);
     sb_dsp_set_real_opl(&pas16->dsp, 1);
     sb_dsp_init(&pas16->dsp, SB_DSP_200, SB_SUBTYPE_MVD201, pas16);
@@ -3254,7 +3283,7 @@ pas16_init(const device_t *info)
     }
 
     if (device_get_config_int("receive_input"))
-        midi_in_handler(1, pas16_input_msg, pas16_input_sysex, pas16);
+        midi_in_handler(1, pas16_input_msg, pas16_input_sysex, pas16_input_remain, pas16);
 
     for (uint8_t i = 0; i < 16; i++) {
         if (i < 6)
@@ -3383,7 +3412,7 @@ static const device_config_t pas16_config[] = {
 };
 
 const device_t pas_device = {
-    .name          = "Pro Audio Spectrum",
+    .name          = "Media Vision Pro Audio Spectrum",
     .internal_name = "pas",
     .flags         = DEVICE_ISA,
     .local         = 0,
@@ -3393,11 +3422,13 @@ const device_t pas_device = {
     .available     = NULL,
     .speed_changed = pas16_speed_changed,
     .force_redraw  = NULL,
-    .config        = pas_config
+    .config        = pas_config,
+    .short_name    = "PAS",
+    .scsi_buses    = pas16_scsi_buses
 };
 
 const device_t pasplus_device = {
-    .name          = "Pro Audio Spectrum Plus",
+    .name          = "Media Vision Pro Audio Spectrum Plus",
     .internal_name = "pasplus",
     .flags         = DEVICE_ISA16,
     .local         = 0,
@@ -3407,11 +3438,13 @@ const device_t pasplus_device = {
     .available     = NULL,
     .speed_changed = pas16_speed_changed,
     .force_redraw  = NULL,
-    .config        = pas16_config
+    .config        = pas16_config,
+    .short_name    = "PAS Plus",
+    .scsi_buses    = pas16_scsi_buses
 };
 
 const device_t pas16_device = {
-    .name          = "Pro Audio Spectrum 16",
+    .name          = "Media Vision Pro Audio Spectrum 16",
     .internal_name = "pas16",
     .flags         = DEVICE_ISA16,
     .local         = 0x0f,
@@ -3421,11 +3454,13 @@ const device_t pas16_device = {
     .available     = NULL,
     .speed_changed = pas16_speed_changed,
     .force_redraw  = NULL,
-    .config        = pas16_config
+    .config        = pas16_config,
+    .short_name    = "PAS16",
+    .scsi_buses    = pas16_scsi_buses
 };
 
 const device_t pas16d_device = {
-    .name          = "Pro Audio Spectrum 16D",
+    .name          = "Media Vision Pro Audio Spectrum 16D",
     .internal_name = "pas16d",
     .flags         = DEVICE_ISA16,
     .local         = 0x0c,
@@ -3435,5 +3470,7 @@ const device_t pas16d_device = {
     .available     = NULL,
     .speed_changed = pas16_speed_changed,
     .force_redraw  = NULL,
-    .config        = pas16_config
+    .config        = pas16_config,
+    .short_name    = "PAS16D",
+    .scsi_buses    = pas16_scsi_buses
 };

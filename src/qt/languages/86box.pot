@@ -75,6 +75,9 @@ msgstr ""
 msgid "Force &4:3 display ratio"
 msgstr ""
 
+msgid "Force &%1:%2 display ratio"
+msgstr ""
+
 msgid "&Window scale factor"
 msgstr ""
 
@@ -417,7 +420,10 @@ msgstr ""
 msgid "Use the 486 interpreter for 286 and 386 processors"
 msgstr ""
 
-msgid "Dynamic Recompiler"
+msgid "Dynamic recompiler"
+msgstr ""
+
+msgid "Accurate FPU environment on the dynamic recompiler"
 msgstr ""
 
 msgid "CPU frame size"
@@ -450,6 +456,9 @@ msgstr ""
 msgid "IBM PS/55 Display Adapter Graphics"
 msgstr ""
 
+msgid "SCSI:"
+msgstr ""
+
 msgid "Voodoo:"
 msgstr ""
 
@@ -463,6 +472,21 @@ msgid "Mouse:"
 msgstr ""
 
 msgid "Mouse"
+msgstr ""
+
+msgid "&Mouse"
+msgstr ""
+
+msgid "Tablet:"
+msgstr ""
+
+msgid "Tablet"
+msgstr ""
+
+msgid "&Tablet"
+msgstr ""
+
+msgid "Tablet (&Crosshair)"
 msgstr ""
 
 msgid "Joystick:"
@@ -825,6 +849,9 @@ msgstr ""
 msgid "Input devices"
 msgstr ""
 
+msgid "Input &device"
+msgstr ""
+
 msgid "Sound"
 msgstr ""
 
@@ -910,6 +937,9 @@ msgid "Press %1 to release mouse"
 msgstr ""
 
 msgid "Press %1 or middle button to release mouse"
+msgstr ""
+
+msgid "Press %1 or thumb button to release mouse"
 msgstr ""
 
 msgid "Bus"
@@ -1452,6 +1482,18 @@ msgid "ACPI shutdown"
 msgstr ""
 
 msgid "ACP&I shutdown"
+msgstr ""
+
+msgid "Power off"
+msgstr ""
+
+msgid "Power &off…"
+msgstr ""
+
+msgid "Power &off"
+msgstr ""
+
+msgid "Powering off the emulated machine may cause data loss. Are you sure you want to continue?"
 msgstr ""
 
 msgid "Hard disk (%1)"
@@ -2660,6 +2702,18 @@ msgstr ""
 msgid "Enhanced Color - Enhanced Mode (5154/ECD)"
 msgstr ""
 
+msgid "IBM 8507 (1024x768, Monochrome)"
+msgstr ""
+
+msgid "IBM 8514 (1024x768, Color)"
+msgstr ""
+
+msgid "IBM 8503 (640x480, Monochrome)"
+msgstr ""
+
+msgid "IBM 8512/13 (640x480, Color)"
+msgstr ""
+
 msgid "Green"
 msgstr ""
 
@@ -2858,7 +2912,13 @@ msgstr ""
 msgid "[Generic] 1992 (3600 RPM)"
 msgstr ""
 
+msgid "[Generic] 1993 (4000 RPM)"
+msgstr ""
+
 msgid "[Generic] 1994 (4500 RPM)"
+msgstr ""
+
+msgid "[Generic] 1995 (5200 RPM)"
 msgstr ""
 
 msgid "[Generic] 1996 (5400 RPM)"
@@ -2871,6 +2931,9 @@ msgid "[Generic] 1998 (5400 RPM)"
 msgstr ""
 
 msgid "[Generic] 2000 (7200 RPM)"
+msgstr ""
+
+msgid "[Generic] 2004 (10000 RPM)"
 msgstr ""
 
 msgid "IBM 8514/A clone"
@@ -2922,6 +2985,15 @@ msgid "Model"
 msgstr ""
 
 msgid "Model:"
+msgstr ""
+
+msgid "Brand:"
+msgstr ""
+
+msgid "Revision:"
+msgstr ""
+
+msgid "[Generic HDD] Device Configuration"
 msgstr ""
 
 msgid "Failed to initialize Vulkan renderer."
@@ -3240,6 +3312,12 @@ msgstr ""
 msgid "Fast forward"
 msgstr ""
 
+msgid "&Non-maskable interrupt"
+msgstr ""
+
+msgid "Non-maskable interrupt"
+msgstr ""
+
 msgid "To change the system directory, stop all running machines."
 msgstr ""
 
@@ -3415,4 +3493,10 @@ msgid "938 (Traditional Chinese)"
 msgstr ""
 
 msgid "Sample rate:"
+msgstr ""
+
+msgid "CGA lightpen"
+msgstr ""
+
+msgid "Luminance threshold (%)"
 msgstr ""

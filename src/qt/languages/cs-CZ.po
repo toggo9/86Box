@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2026-06-16 17:51+0000\n"
+"PO-Revision-Date: 2026-08-27 20:33+0000\n"
 "Last-Translator: David Hrdlička <hrdlickadavid@outlook.com>\n"
 "Language-Team: Czech <https://weblate.86box.net/projects/86box/86box/cs/>\n"
 "Language: cs-CZ\n"
@@ -80,6 +80,9 @@ msgstr "&Zadat velikost…"
 
 msgid "Force &4:3 display ratio"
 msgstr "Dodržovat poměr stran &4:3"
+
+msgid "Force &%1:%2 display ratio"
+msgstr "Dodržovat poměr stran &%1:%2"
 
 msgid "&Window scale factor"
 msgstr "&Násobek zvětšení okna"
@@ -423,8 +426,11 @@ msgstr "Zapnuta (UTC)"
 msgid "Use the 486 interpreter for 286 and 386 processors"
 msgstr "Použít interpreter 486 pro procesory 286 a 386"
 
-msgid "Dynamic Recompiler"
+msgid "Dynamic recompiler"
 msgstr "Dynamický překladač"
+
+msgid "Accurate FPU environment on the dynamic recompiler"
+msgstr "Přesnější FPU prostředí při dynamickém překladu"
 
 msgid "CPU frame size"
 msgstr "Velikost CPU rámců"
@@ -456,6 +462,9 @@ msgstr "Povolit grafický adaptér XGA"
 msgid "IBM PS/55 Display Adapter Graphics"
 msgstr "Povolit grafický adaptér IBM PS/55"
 
+msgid "SCSI:"
+msgstr "SCSI:"
+
 msgid "Voodoo:"
 msgstr "Voodoo:"
 
@@ -470,6 +479,21 @@ msgstr "Myš:"
 
 msgid "Mouse"
 msgstr "Myš"
+
+msgid "&Mouse"
+msgstr "&Myš"
+
+msgid "Tablet:"
+msgstr "Tablet:"
+
+msgid "Tablet"
+msgstr "Tablet"
+
+msgid "&Tablet"
+msgstr "&Tablet"
+
+msgid "Tablet (&Crosshair)"
+msgstr "Tablet (&křížový kurzor)"
 
 msgid "Joystick:"
 msgstr "Joystick:"
@@ -831,6 +855,9 @@ msgstr "Obraz"
 msgid "Input devices"
 msgstr "Vstupní zařízení"
 
+msgid "Input &device"
+msgstr "Vstupní &zařízení"
+
 msgid "Sound"
 msgstr "Zvuk"
 
@@ -841,7 +868,7 @@ msgid "Ports (COM & LPT)"
 msgstr "COM a LPT porty"
 
 msgid "Port"
-msgstr ""
+msgstr "Port"
 
 msgid "Ports"
 msgstr "Porty"
@@ -1270,8 +1297,9 @@ msgstr "Nebylo možné otevřít vybraný konfigurační soubor pro čtení: %1"
 msgid "Use regular expressions in search box"
 msgstr "Použít ve vyhledávacím poli regulární výrazy"
 
+#, fuzzy
 msgid "Delete virtual machines to Recycle Bin"
-msgstr ""
+msgstr "Přesunout smazané virtuální počítače do koše"
 
 msgid "%n machine(s) are currently active. Are you sure you want to exit the VM manager anyway?"
 msgid_plural "%n machines are currently active. Are you sure you want to exit the VM manager anyway?"
@@ -1492,6 +1520,18 @@ msgstr "Vypnout skrze rozhraní ACPI"
 
 msgid "ACP&I shutdown"
 msgstr "Vypnout skrze rozhraní ACP&I"
+
+msgid "Power off"
+msgstr "Vypnout"
+
+msgid "Power &off…"
+msgstr ""
+
+msgid "Power &off"
+msgstr ""
+
+msgid "Powering off the emulated machine may cause data loss. Are you sure you want to continue?"
+msgstr ""
 
 msgid "Hard disk (%1)"
 msgstr "Pevný disk (%1)"
@@ -2718,6 +2758,18 @@ msgstr "Rozšířený barevný - normální režim (5154/ECD)"
 msgid "Enhanced Color - Enhanced Mode (5154/ECD)"
 msgstr "Rozšířený barevný - rozšířený režim (5154/ECD)"
 
+msgid "IBM 8507 (1024x768, Monochrome)"
+msgstr "IBM 8507 (1024x768, monochromatický)"
+
+msgid "IBM 8514 (1024x768, Color)"
+msgstr "IBM 8514 (1024x768, barevný)"
+
+msgid "IBM 8503 (640x480, Monochrome)"
+msgstr "IBM 8503 (640x480, monochromatický)"
+
+msgid "IBM 8512/13 (640x480, Color)"
+msgstr "IBM 8512/13 (640x480, barevný)"
+
 msgid "Green"
 msgstr "Zelený"
 
@@ -2916,8 +2968,14 @@ msgstr "[Obecný] 1989 (3500 ot./m)"
 msgid "[Generic] 1992 (3600 RPM)"
 msgstr "[Obecný] 1992 (3600 ot./m)"
 
+msgid "[Generic] 1993 (4000 RPM)"
+msgstr "[Obecný] 1993 (4000 ot./m)"
+
 msgid "[Generic] 1994 (4500 RPM)"
 msgstr "[Obecný] 1994 (4500 ot./m)"
+
+msgid "[Generic] 1995 (5200 RPM)"
+msgstr "[Obecný] 1995 (5200 ot./m)"
 
 msgid "[Generic] 1996 (5400 RPM)"
 msgstr "[Obecný] 1996 (5400 ot./m)"
@@ -2930,6 +2988,9 @@ msgstr "[Obecný] 1998 (5400 ot./m)"
 
 msgid "[Generic] 2000 (7200 RPM)"
 msgstr "[Obecný] 2000 (7200 ot./m)"
+
+msgid "[Generic] 2004 (10000 RPM)"
+msgstr "[Obecný] 2004 (10000 ot./m)"
 
 msgid "IBM 8514/A clone"
 msgstr "Klon IBM 8514/A"
@@ -2981,6 +3042,15 @@ msgstr "Model"
 
 msgid "Model:"
 msgstr "Model:"
+
+msgid "Brand:"
+msgstr ""
+
+msgid "Revision:"
+msgstr ""
+
+msgid "[Generic HDD] Device Configuration"
+msgstr ""
 
 msgid "Failed to initialize Vulkan renderer."
 msgstr "Selhala inicializace rendereru Vulkan."
@@ -3300,6 +3370,12 @@ msgstr "&Zrychlit"
 msgid "Fast forward"
 msgstr "Zrychlit"
 
+msgid "&Non-maskable interrupt"
+msgstr ""
+
+msgid "Non-maskable interrupt"
+msgstr ""
+
 msgid "To change the system directory, stop all running machines."
 msgstr "Před změnou systémového adresáře nejprve zastavte všechny běžící počítače."
 
@@ -3480,3 +3556,9 @@ msgstr "938 (klasická čínština)"
 
 msgid "Sample rate:"
 msgstr "Vzorkovací frekvence:"
+
+msgid "CGA lightpen"
+msgstr ""
+
+msgid "Luminance threshold (%)"
+msgstr ""

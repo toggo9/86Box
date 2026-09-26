@@ -52,6 +52,34 @@ enum {
     STRING_CHARDEV_ATTACHED,          /* "%s: Attached to %s" */
     STRING_CHARDEV_VCON_IN_USE,       /* "%s: Virtual console already in use by %s" */
     STRING_CHARDEV_TERMINAL_ERROR,    /* "%s: Could not create terminal: %s" */
+    /* A configuration naming hardware this build does not have. */
+    STRING_UNSUPPORTED_TITLE,
+    STRING_UNSUPPORTED_TEXT,
+    STRING_UNSUPPORTED_OTHERS,
+    STRING_UNSUPPORTED_REPLACE,
+    STRING_UNSUPPORTED_REMOVE,
+    STRING_UNSUPPORTED_REPLACE_REMOVE,
+    STRING_UNSUPPORTED_CONTINUE,
+    STRING_UNSUPPORTED_MACHINE,
+    STRING_UNSUPPORTED_VIDEO,
+    STRING_UNSUPPORTED_KEYBOARD,
+    STRING_UNSUPPORTED_MOUSE,
+    STRING_UNSUPPORTED_TABLET,
+    STRING_UNSUPPORTED_JOYSTICK,
+    STRING_UNSUPPORTED_SOUND,
+    STRING_UNSUPPORTED_MIDI_OUT,
+    STRING_UNSUPPORTED_MIDI_IN,
+    STRING_UNSUPPORTED_NETWORK,
+    STRING_UNSUPPORTED_SERIAL,
+    STRING_UNSUPPORTED_PARALLEL,
+    STRING_UNSUPPORTED_GAMEPORT,
+    STRING_UNSUPPORTED_SCSI,
+    STRING_UNSUPPORTED_FDC,
+    STRING_UNSUPPORTED_HDC,
+    STRING_UNSUPPORTED_CDROM_INTERFACE,
+    STRING_UNSUPPORTED_MEMORY,
+    STRING_UNSUPPORTED_ROM,
+    STRING_UNSUPPORTED_RTC,
 };
 
 struct plat_device_vol_locked_t
@@ -166,7 +194,6 @@ extern void     plat_get_system_directory(char *outbuf);
 #endif
 extern void     plat_set_thread_name(void *thread, const char *name);
 extern void     plat_break(void);
-extern void     plat_send_to_clipboard(unsigned char *rgb, int width, int height);
 extern int      plat_run_command(const char *cmd, const char **env, const char *title);
 extern void     plat_clean_up(void);
 

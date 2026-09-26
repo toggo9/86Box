@@ -83,6 +83,9 @@ msgstr "&Вказати розміри…"
 msgid "Force &4:3 display ratio"
 msgstr "Встановити відношення сторін &4:3"
 
+msgid "Force &%1:%2 display ratio"
+msgstr "Встановити відношення сторін &%1:%2"
+
 msgid "&Window scale factor"
 msgstr "&Масштаб вікна"
 
@@ -425,8 +428,11 @@ msgstr "Увімкнути (UTC)"
 msgid "Use the 486 interpreter for 286 and 386 processors"
 msgstr "Використовувати інтерпретатор 486 для процесорів 286 і 386"
 
-msgid "Dynamic Recompiler"
+msgid "Dynamic recompiler"
 msgstr "Динамічний рекомпілятор"
+
+msgid "Accurate FPU environment on the dynamic recompiler"
+msgstr ""
 
 msgid "CPU frame size"
 msgstr "Розмір кадру ЦП"
@@ -458,6 +464,9 @@ msgstr "Прискорювач XGA"
 msgid "IBM PS/55 Display Adapter Graphics"
 msgstr "IBM PS/55 Display Adapter Graphics"
 
+msgid "SCSI:"
+msgstr "SCSI:"
+
 msgid "Voodoo:"
 msgstr "Voodoo:"
 
@@ -472,6 +481,21 @@ msgstr "Миша:"
 
 msgid "Mouse"
 msgstr "Миша"
+
+msgid "&Mouse"
+msgstr "&Миша"
+
+msgid "Tablet:"
+msgstr ""
+
+msgid "Tablet"
+msgstr ""
+
+msgid "&Tablet"
+msgstr ""
+
+msgid "Tablet (&Crosshair)"
+msgstr ""
 
 msgid "Joystick:"
 msgstr "Джойстик:"
@@ -832,6 +856,9 @@ msgstr "Дисплей"
 
 msgid "Input devices"
 msgstr "Пристрій введення"
+
+msgid "Input &device"
+msgstr ""
 
 msgid "Sound"
 msgstr "Звук"
@@ -1471,6 +1498,18 @@ msgstr "Сигнал завершення ACPI"
 
 msgid "ACP&I shutdown"
 msgstr "Сигнал завершення ACP&I"
+
+msgid "Power off"
+msgstr ""
+
+msgid "Power &off…"
+msgstr ""
+
+msgid "Power &off"
+msgstr ""
+
+msgid "Powering off the emulated machine may cause data loss. Are you sure you want to continue?"
+msgstr ""
 
 msgid "Hard disk (%1)"
 msgstr "Жорсткий диск (%1)"
@@ -2684,6 +2723,18 @@ msgstr "Покращений колір - звичайний режим (5154/EC
 msgid "Enhanced Color - Enhanced Mode (5154/ECD)"
 msgstr "Покращений колір - розширений режим (5154/ECD)"
 
+msgid "IBM 8507 (1024x768, Monochrome)"
+msgstr "IBM 8507 (1024x768, монохромний)"
+
+msgid "IBM 8514 (1024x768, Color)"
+msgstr "IBM 8514 (1024x768, кольоровий)"
+
+msgid "IBM 8503 (640x480, Monochrome)"
+msgstr "IBM 8503 (640x480, монохромний)"
+
+msgid "IBM 8512/13 (640x480, Color)"
+msgstr "IBM 8512/13 (640x480, кольоровий)"
+
 msgid "Green"
 msgstr "Зелений"
 
@@ -2882,8 +2933,14 @@ msgstr "[Стандартний] 1989 (3500 RPM)"
 msgid "[Generic] 1992 (3600 RPM)"
 msgstr "[Стандартний] 1992 (3600 RPM)"
 
+msgid "[Generic] 1993 (4000 RPM)"
+msgstr "[Стандартний] 1993 (4000 RPM)"
+
 msgid "[Generic] 1994 (4500 RPM)"
 msgstr "[Стандартний] 1994 (4500 RPM)"
+
+msgid "[Generic] 1995 (5200 RPM)"
+msgstr "[Стандартний] 1995 (5200 RPM)"
 
 msgid "[Generic] 1996 (5400 RPM)"
 msgstr "[Стандартний] 1996 (5400 RPM)"
@@ -2896,6 +2953,9 @@ msgstr "[Стандартний] 1998 (5400 RPM)"
 
 msgid "[Generic] 2000 (7200 RPM)"
 msgstr "[Стандартний] 2000 (7200 RPM)"
+
+msgid "[Generic] 2004 (10000 RPM)"
+msgstr "[Стандартний] 2004 (10000 RPM)"
 
 msgid "IBM 8514/A clone"
 msgstr "Клон IBM 8514/A"
@@ -2947,6 +3007,15 @@ msgstr "Модель"
 
 msgid "Model:"
 msgstr "Модель:"
+
+msgid "Brand:"
+msgstr ""
+
+msgid "Revision:"
+msgstr ""
+
+msgid "[Generic HDD] Device Configuration"
+msgstr ""
 
 msgid "Failed to initialize Vulkan renderer."
 msgstr "Не вдалося ініціалізувати рендеринг Vulkan."
@@ -3266,6 +3335,12 @@ msgstr "&Перемотай вперед"
 msgid "Fast forward"
 msgstr "Перемотай вперед"
 
+msgid "&Non-maskable interrupt"
+msgstr ""
+
+msgid "Non-maskable interrupt"
+msgstr ""
+
 msgid "To change the system directory, stop all running machines."
 msgstr "Щоб змінити системний каталог, зупиніть усі машини, що працюють."
 
@@ -3445,4 +3520,10 @@ msgid "938 (Traditional Chinese)"
 msgstr "938 (китайська, традиційне письмо)"
 
 msgid "Sample rate:"
+msgstr ""
+
+msgid "CGA lightpen"
+msgstr ""
+
+msgid "Luminance threshold (%)"
 msgstr ""

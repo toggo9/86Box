@@ -118,9 +118,9 @@ video_cards[] = {
     { .device = &gd5428_isa_device,                             .flags = VIDEO_FLAG_TYPE_NONE      },
     { .device = &gd5429_isa_device,                             .flags = VIDEO_FLAG_TYPE_NONE      },
     { .device = &gd5434_isa_device,                             .flags = VIDEO_FLAG_TYPE_NONE      },
+    { .device = &ht216_standalone_device,                       .flags = VIDEO_FLAG_TYPE_NONE      },
     { .device = &inmos_isa_device,                              .flags = VIDEO_FLAG_TYPE_XGA       },
     { .device = &jvga_device,                                   .flags = VIDEO_FLAG_TYPE_NONE      },
-    { .device = &radius_svga_multiview_isa_device,              .flags = VIDEO_FLAG_TYPE_NONE      },
     { .device = &s3_86c911_isa_device,                          .flags = VIDEO_FLAG_TYPE_NONE      },
     { .device = &s3_86c924_isa_device,                          .flags = VIDEO_FLAG_TYPE_NONE      },
     { .device = &s3_86c928_isa_device,                          .flags = VIDEO_FLAG_TYPE_NONE      },
@@ -128,6 +128,7 @@ video_cards[] = {
     { .device = &s3_86c805_isa_device,                          .flags = VIDEO_FLAG_TYPE_NONE      },
     { .device = &et4000w32_isa_device,                          .flags = VIDEO_FLAG_TYPE_NONE      },
     { .device = &et4000w32i_isa_device,                         .flags = VIDEO_FLAG_TYPE_NONE      },
+    { .device = &v7_vram_2_ergo_device,                         .flags = VIDEO_FLAG_TYPE_NONE      },
     /* MCA */
     { .device = &mach32_mca_device,                             .flags = VIDEO_FLAG_TYPE_8514      },
     { .device = &gd5426_mca_device,                             .flags = VIDEO_FLAG_TYPE_NONE      },
@@ -212,6 +213,8 @@ video_cards[] = {
 #endif /*USE_G100 */
     { .device = &s3_trio3d2x_agp_device,                        .flags = VIDEO_FLAG_TYPE_NONE      },
     { .device = &s3_virge_gx2_agp_device,                       .flags = VIDEO_FLAG_TYPE_NONE      },
+    /* LPT */
+    { .device = &hd44780_device,                                .flags = VIDEO_FLAG_TYPE_SPECIAL   },
     { .device = NULL,                                           .flags = VIDEO_FLAG_TYPE_NONE      }
   // clang-format on
 };
@@ -378,6 +381,12 @@ vid_table_log(const char *fmt, ...)
 
 static pc_timer_t framerate_timer;
 
+void* lightpen_priv = NULL;
+
+void (*lightpen_hsync_callback)(void*) = NULL;
+void (*lightpen_vsync_callback)(void*) = NULL;
+void (*lightpen_check_trigger_strobe)(void* priv, int x_offset, int y, int x_offset_from_hsync, int firstline, double hpix_clock, int monitor_used) = NULL;
+
 void
 video_update_framerates(void* priv)
 {
@@ -401,6 +410,36 @@ video_reset_close(void)
     monitor_index_global = 0;
     video_inform(VIDEO_FLAG_TYPE_NONE, &timing_default);
     was_reset = 0;
+}
+
+void
+video_lightpen_set_callbacks(void* priv, void (*lightpen_hsync)(void*), void (*lightpen_vsync)(void*), void (*lightpen_trigger_strobe)(void* priv, int x, int y, int x_offset_from_hsync, int firstline, double hpix_clock, int monitor_used))
+{
+    lightpen_priv = priv;
+    lightpen_hsync_callback = lightpen_hsync;
+    lightpen_vsync_callback = lightpen_vsync;
+    lightpen_check_trigger_strobe = lightpen_trigger_strobe;
+}
+
+void
+video_lightpen_hsync(void)
+{
+    if (lightpen_hsync_callback)
+        lightpen_hsync_callback(lightpen_priv);
+}
+
+void
+video_lightpen_vsync(void)
+{
+    if (lightpen_vsync_callback)
+        lightpen_vsync_callback(lightpen_priv);
+}
+
+void
+video_lightpen_check_trigger_strobe(int x_offset, int y, int x_offset_from_hsync, int firstline, double pix_clock, int monitor_used)
+{
+    if (lightpen_check_trigger_strobe)
+        lightpen_check_trigger_strobe(lightpen_priv, x_offset, y, x_offset_from_hsync, firstline, pix_clock, monitor_used);
 }
 
 static void

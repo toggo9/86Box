@@ -33,7 +33,6 @@
 #include <QDebug>
 
 #include <QApplication>
-#include <QClipboard>
 #include <QDir>
 #include <QFileInfo>
 #include <QMimeData>
@@ -69,6 +68,7 @@
 #    include <sys/ioctl.h>
 #    ifdef Q_OS_LINUX
 #        include <linux/fs.h>
+#        include "../unix/gamemode/gamemode_client.h"
 #    endif
 #    ifdef Q_OS_MACOS
 #        include <sys/disk.h>
@@ -150,6 +150,7 @@ extern "C" {
 #include <86box/mem.h>
 #include <86box/rom.h>
 #include <86box/config.h>
+#include <86box/hdc_ide.h>
 #include <86box/hdd.h>
 #include <86box/ui.h>
 #ifdef DISCORD
@@ -771,6 +772,13 @@ plat_pause(int p)
         exit_pause();
 #endif
 
+#ifdef Q_OS_LINUX
+    if (p)
+        gamemode_request_end();
+    else
+        gamemode_request_start();
+#endif
+
     do_pause(p);
     if (p) {
         if (mouse_capture)
@@ -799,6 +807,7 @@ plat_power_off(void)
     plat_mouse_capture(0);
     plat_clean_up();
     confirm_exit_cmdl = 0;
+    ide_wait_for_async_reads();
     hdd_image_sync_all();
     nvr_save();
 
@@ -955,6 +964,33 @@ Preferences::reloadStrings()
     translatedstrings[STRING_HW_NOT_AVAILABLE_VIDEO]    = QCoreApplication::translate("", "Video card \"%s\" is not available due to missing ROMs in the roms/video directory. Switching to an available video card.").toUtf8();
     translatedstrings[STRING_HW_NOT_AVAILABLE_DEVICE]   = QCoreApplication::translate("", "Device \"%s\" is not available due to missing ROMs. Ignoring the device.").toUtf8();
     translatedstrings[STRING_HW_NOT_AVAILABLE_TITLE]    = QCoreApplication::translate("", "Hardware not available").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_TITLE] = QCoreApplication::translate("", "Unsupported Hardware").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_TEXT] = QCoreApplication::translate("", "Hardware in this machine profile is not supported by this current build of 86Box.").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_OTHERS] = QCoreApplication::translate("", "(and %i others)").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_REPLACE] = QCoreApplication::translate("", "Loading the configuration anyway will replace the machine and overwrite the existing configuration.").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_REMOVE] = QCoreApplication::translate("", "Loading the configuration anyway will remove these components and overwrite the existing configuration.").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_REPLACE_REMOVE] = QCoreApplication::translate("", "Loading the configuration anyway will replace the machine, remove the other components and overwrite the existing configuration.").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_CONTINUE] = QCoreApplication::translate("", "Do you want to continue?").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_MACHINE] = QCoreApplication::translate("", "Machine type \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_VIDEO] = QCoreApplication::translate("", "Video card \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_KEYBOARD] = QCoreApplication::translate("", "Keyboard \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_MOUSE] = QCoreApplication::translate("", "Mouse \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_TABLET] = QCoreApplication::translate("", "Tablet \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_JOYSTICK] = QCoreApplication::translate("", "Joystick \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_SOUND] = QCoreApplication::translate("", "Sound card \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_MIDI_OUT] = QCoreApplication::translate("", "MIDI output device \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_MIDI_IN] = QCoreApplication::translate("", "MIDI input device \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_NETWORK] = QCoreApplication::translate("", "Network card \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_SERIAL] = QCoreApplication::translate("", "Serial port device \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_PARALLEL] = QCoreApplication::translate("", "Parallel port device \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_GAMEPORT] = QCoreApplication::translate("", "Game port \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_SCSI] = QCoreApplication::translate("", "SCSI card \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_FDC] = QCoreApplication::translate("", "Floppy controller \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_HDC] = QCoreApplication::translate("", "Disk controller \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_CDROM_INTERFACE] = QCoreApplication::translate("", "CD-ROM interface \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_MEMORY] = QCoreApplication::translate("", "Memory expansion card \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_ROM] = QCoreApplication::translate("", "ROM expansion card \"%s\"").toUtf8();
+    translatedstrings[STRING_UNSUPPORTED_RTC] = QCoreApplication::translate("", "RTC card \"%s\"").toUtf8();
     translatedstrings[STRING_NET_ERROR]                 = QCoreApplication::translate("", "Failed to initialize network driver:\n\n%s\n\nThe network configuration will be switched to the null driver.").toUtf8();
     translatedstrings[STRING_ESCP_ERROR]                = QCoreApplication::translate("", "Unable to find Dot-Matrix fonts. TrueType fonts in the \"roms/printer/fonts\" directory are required for the emulation of the Generic ESC/P 2 Dot-Matrix Printer.").toUtf8();
     translatedstrings[STRING_EDID_READ_ERROR]           = QCoreApplication::translate("", "EDID file \"%s\" is invalid.").toUtf8();
@@ -1215,40 +1251,6 @@ plat_break(void)
 #else
     raise(SIGTRAP);
 #endif
-}
-
-static unsigned char *rgb_    = NULL;
-static int            width_  = 0;
-static int            height_ = 0;
-static volatile int   waiting = 0;
-
-static void
-send_to_clipboard(void)
-{
-    unsigned char *rgb = (unsigned char *) calloc(1, height_ * width_ * 4);
-    memcpy(rgb, rgb_, height_ * width_ * 3);
-    QImage image(rgb, width_, height_, width_ * 3, QImage::Format_RGB888);
-    QClipboard *clipboard = QApplication::clipboard();
-    clipboard->setImage(image, QClipboard::Clipboard);
-    free(rgb);
-    waiting = 0;
-}
-
-void
-plat_send_to_clipboard(unsigned char *rgb, int width, int height)
-{
-    rgb_    = rgb;
-    width_  = width;
-    height_ = height;
-    waiting = 1;
-
-    QTimer::singleShot(0, main_window, &send_to_clipboard);
-    while (waiting)
-        ;
-
-    height_ = 0;
-    width_  = 0;
-    rgb_    = NULL;
 }
 
 #if !defined(Q_OS_WINDOWS) && !defined(Q_OS_MACOS)

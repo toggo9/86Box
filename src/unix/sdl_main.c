@@ -198,6 +198,9 @@ main_thread(UNUSED(void *param))
     int      drawits;
     int      frames;
 
+    
+    is_cpu_thread = 1;
+
 #ifdef USE_SDL2_LIB
     SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
 #else
@@ -326,6 +329,36 @@ timer_onesec(UNUSED(void *param), UNUSED(SDL_TimerID timerID), uint32_t interval
 {
     pc_onesec();
     return interval;
+}
+
+/* Convert an SDL button number to a mouse_get_buttons_ex() mask. */
+static int
+sdl_mouse_buttonmask(uint8_t button)
+{
+    int ret;
+
+    switch (button) {
+        case SDL_BUTTON_LEFT:
+            ret = 1;
+            break;
+        case SDL_BUTTON_RIGHT:
+            ret = 2;
+            break;
+        case SDL_BUTTON_MIDDLE:
+            ret = 4;
+            break;
+        case SDL_BUTTON_X1:
+            ret = 8;
+            break;
+        case SDL_BUTTON_X2:
+            ret = 16;
+            break;
+        default:
+            ret = 0;
+            break;
+    }
+
+    return ret;
 }
 
 extern int gfxcard[GFXCARD_MAX];
@@ -513,32 +546,15 @@ main(int argc, char **argv)
                                 plat_mouse_capture(1);
                                 break;
                             }
-                            if (mouse_get_buttons() < 3 && event.button.button == SDL_BUTTON_MIDDLE && !video_fullscreen) {
+                            if (mouse_capture && (sdl_mouse_buttonmask(event.button.button) & mouse_get_release_buttons()) && !video_fullscreen) {
                                 plat_mouse_capture(0);
                                 break;
                             }
                             if (mouse_capture || video_fullscreen) {
-                                int buttonmask = 0;
+                                int buttonmask = sdl_mouse_buttonmask(event.button.button);
 
-                                switch (event.button.button) {
-                                    case SDL_BUTTON_LEFT:
-                                        buttonmask = 1;
-                                        break;
-                                    case SDL_BUTTON_RIGHT:
-                                        buttonmask = 2;
-                                        break;
-                                    case SDL_BUTTON_MIDDLE:
-                                        buttonmask = 4;
-                                        break;
-                                    case SDL_BUTTON_X1:
-                                        buttonmask = 8;
-                                        break;
-                                    case SDL_BUTTON_X2:
-                                        buttonmask = 16;
-                                        break;
-                                    default:
-                                        printf("Unknown mouse button %d\n", event.button.button);
-                                }
+                                if (buttonmask == 0)
+                                    printf("Unknown mouse button %d\n", event.button.button);
                                 SDL_LockMutex(mousemutex);
 #ifdef USE_SDL2_LIB
                                 if (event.button.state == SDL_PRESSED)
@@ -609,12 +625,19 @@ main(int argc, char **argv)
                             }
 #endif
 #ifdef USE_SDL2_LIB
-                            keyboard_input(event.key.state == SDL_PRESSED, xtkey);
+                            const int key_down = event.key.state == SDL_PRESSED;
 #else
-                            keyboard_input(event.key.down, xtkey);
+                            const int key_down = event.key.down;
 #endif
-                            if ((keyboard_get_shift() & 0x11) && keyboard_recv_ui(0x14f) && mouse_capture)
+                            if (key_down && (keyboard_get_shift() & 0x11) && (keyboard_get_shift() & 0x22) && (xtkey == 0x22) && mouse_capture) {
+                                /* Prevent an Alt-based shortcut from looking like a standalone
+                                 * Alt press to the guest when the held modifiers are released. */
+                                keyboard_input(0, xtkey);
+                                keyboard_all_up();
                                 plat_mouse_capture(0);
+                                break;
+                            }
+                            keyboard_input(key_down, xtkey);
                             break;
                         }
 #ifdef USE_SDL2_LIB
@@ -652,6 +675,10 @@ check_flags:
             extern void sdl_blit(int x, int y, int w, int h);
             sdl_blit(params.x, params.y, params.w, params.h);
         }
+        /* Drawing the OSD can ask it to close -- posting a message does -- so
+         * finish that here instead of waiting for the next input event. */
+        if (flag_osd_open && osd_take_pending_close())
+            flag_osd_open = 0;
         if (title_set) {
             ui_window_title_real();
         }

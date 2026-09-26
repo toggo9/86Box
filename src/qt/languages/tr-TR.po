@@ -81,6 +81,9 @@ msgstr "Pencere &boyutunu belirle…"
 msgid "Force &4:3 display ratio"
 msgstr "&4:3 görüntü oranına zorla"
 
+msgid "Force &%1:%2 display ratio"
+msgstr "&%1:%2 görüntü oranına zorla"
+
 msgid "&Window scale factor"
 msgstr "Pencere &boyut ölçeği"
 
@@ -423,8 +426,11 @@ msgstr "Etkin (UTC)"
 msgid "Use the 486 interpreter for 286 and 386 processors"
 msgstr "286 ve 386 işlemcilerde 486 yorumlayıcısını kullan"
 
-msgid "Dynamic Recompiler"
-msgstr "Dinamik Derleyici"
+msgid "Dynamic recompiler"
+msgstr "Dinamik derleyici"
+
+msgid "Accurate FPU environment on the dynamic recompiler"
+msgstr ""
 
 msgid "CPU frame size"
 msgstr "İşlemci kare boyutu"
@@ -456,6 +462,9 @@ msgstr "XGA Grafikleri"
 msgid "IBM PS/55 Display Adapter Graphics"
 msgstr "IBM PS/55 Display Adapter Grafikleri"
 
+msgid "SCSI:"
+msgstr "SCSI:"
+
 msgid "Voodoo:"
 msgstr "Voodoo:"
 
@@ -470,6 +479,21 @@ msgstr "Fare:"
 
 msgid "Mouse"
 msgstr "Fare"
+
+msgid "&Mouse"
+msgstr "&Fare"
+
+msgid "Tablet:"
+msgstr ""
+
+msgid "Tablet"
+msgstr ""
+
+msgid "&Tablet"
+msgstr ""
+
+msgid "Tablet (&Crosshair)"
+msgstr ""
 
 msgid "Joystick:"
 msgstr "Oyun Kolu:"
@@ -833,6 +857,9 @@ msgstr "Görüntü"
 
 msgid "Input devices"
 msgstr "Giriş cihazları"
+
+msgid "Input &device"
+msgstr ""
 
 msgid "Sound"
 msgstr "Ses"
@@ -1488,6 +1515,18 @@ msgstr "ACPI ile kapat"
 
 msgid "ACP&I shutdown"
 msgstr "ACP&I ile kapat"
+
+msgid "Power off"
+msgstr ""
+
+msgid "Power &off…"
+msgstr ""
+
+msgid "Power &off"
+msgstr ""
+
+msgid "Powering off the emulated machine may cause data loss. Are you sure you want to continue?"
+msgstr ""
 
 msgid "Hard disk (%1)"
 msgstr "Sabit disk (%1)"
@@ -2729,6 +2768,18 @@ msgstr "Gelişmiş Renkli - Normal Mod (5154/ECD)"
 msgid "Enhanced Color - Enhanced Mode (5154/ECD)"
 msgstr "Gelişmiş Renkli - Gelişmiş Mod (5154/ECD)"
 
+msgid "IBM 8507 (1024x768, Monochrome)"
+msgstr "IBM 8507 (1024x768, Tek Renkli)"
+
+msgid "IBM 8514 (1024x768, Color)"
+msgstr "IBM 8514 (1024x768, Çok Renkli)"
+
+msgid "IBM 8503 (640x480, Monochrome)"
+msgstr "IBM 8503 (640x480, Tek Renkli)"
+
+msgid "IBM 8512/13 (640x480, Color)"
+msgstr "IBM 8512/13 (640x480, Çok Renkli)"
+
 msgid "Green"
 msgstr "Yeşil"
 
@@ -2927,8 +2978,14 @@ msgstr "[Genel] 1989 (3500 RPM)"
 msgid "[Generic] 1992 (3600 RPM)"
 msgstr "[Genel] 1992 (3600 RPM)"
 
+msgid "[Generic] 1993 (4000 RPM)"
+msgstr "[Genel] 1993 (4000 RPM)"
+
 msgid "[Generic] 1994 (4500 RPM)"
 msgstr "[Genel] 1994 (4500 RPM)"
+
+msgid "[Generic] 1995 (5200 RPM)"
+msgstr "[Genel] 1995 (5200 RPM)"
 
 msgid "[Generic] 1996 (5400 RPM)"
 msgstr "[Genel] 1996 (5400 RPM)"
@@ -2941,6 +2998,9 @@ msgstr "[Genel] 1998 (5400 RPM)"
 
 msgid "[Generic] 2000 (7200 RPM)"
 msgstr "[Genel] 2000 (7200 RPM)"
+
+msgid "[Generic] 2004 (10000 RPM)"
+msgstr "[Genel] 2004 (10000 RPM)"
 
 msgid "IBM 8514/A clone"
 msgstr "IBM 8514/A klonu"
@@ -2992,6 +3052,15 @@ msgstr "Model"
 
 msgid "Model:"
 msgstr "Model:"
+
+msgid "Brand:"
+msgstr ""
+
+msgid "Revision:"
+msgstr ""
+
+msgid "[Generic HDD] Device Configuration"
+msgstr ""
 
 msgid "Failed to initialize Vulkan renderer."
 msgstr "Vulkan derleyicisi başlatılamadı."
@@ -3319,6 +3388,12 @@ msgstr "&İleri sar"
 msgid "Fast forward"
 msgstr "İleri sar"
 
+msgid "&Non-maskable interrupt"
+msgstr ""
+
+msgid "Non-maskable interrupt"
+msgstr ""
+
 msgid "To change the system directory, stop all running machines."
 msgstr "Sistem dizinini değiştirmek için çalışan tüm makineleri durdurun."
 
@@ -3501,3 +3576,9 @@ msgstr "938 (Geleneksel Çince)"
 
 msgid "Sample rate:"
 msgstr "Örnekleme hızı:"
+
+msgid "CGA lightpen"
+msgstr ""
+
+msgid "Luminance threshold (%)"
+msgstr ""

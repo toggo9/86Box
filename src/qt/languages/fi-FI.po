@@ -81,6 +81,9 @@ msgstr "&Määritä koko…"
 msgid "Force &4:3 display ratio"
 msgstr "Pakota &4:3-kuvasuhde"
 
+msgid "Force &%1:%2 display ratio"
+msgstr "Pakota &%1:%2-kuvasuhde"
+
 msgid "&Window scale factor"
 msgstr "&Ikkunan kokokerroin"
 
@@ -423,8 +426,11 @@ msgstr "Käytössä (UTC)"
 msgid "Use the 486 interpreter for 286 and 386 processors"
 msgstr "Käytä 486-tulkintaa 286- ja 386-prosessoreille"
 
-msgid "Dynamic Recompiler"
+msgid "Dynamic recompiler"
 msgstr "Dynaaminen uudelleenkääntäjä"
+
+msgid "Accurate FPU environment on the dynamic recompiler"
+msgstr ""
 
 msgid "CPU frame size"
 msgstr "CPU frame-koko"
@@ -456,6 +462,9 @@ msgstr "XGA-grafiikkasuoritin"
 msgid "IBM PS/55 Display Adapter Graphics"
 msgstr "IBM PS/55-näyttöadapteri"
 
+msgid "SCSI:"
+msgstr "SCSI:"
+
 msgid "Voodoo:"
 msgstr "Voodoo:"
 
@@ -470,6 +479,21 @@ msgstr "Hiiri:"
 
 msgid "Mouse"
 msgstr "Hiiri"
+
+msgid "&Mouse"
+msgstr "&Hiiri"
+
+msgid "Tablet:"
+msgstr ""
+
+msgid "Tablet"
+msgstr ""
+
+msgid "&Tablet"
+msgstr ""
+
+msgid "Tablet (&Crosshair)"
+msgstr ""
 
 msgid "Joystick:"
 msgstr "Peliohjain:"
@@ -830,6 +854,9 @@ msgstr "Näyttö"
 
 msgid "Input devices"
 msgstr "Syöttölaitteet"
+
+msgid "Input &device"
+msgstr ""
 
 msgid "Sound"
 msgstr "Ääni"
@@ -1468,6 +1495,18 @@ msgstr "ACPI-sammutus"
 
 msgid "ACP&I shutdown"
 msgstr "ACP&I-sammutus"
+
+msgid "Power off"
+msgstr ""
+
+msgid "Power &off…"
+msgstr ""
+
+msgid "Power &off"
+msgstr ""
+
+msgid "Powering off the emulated machine may cause data loss. Are you sure you want to continue?"
+msgstr ""
 
 msgid "Hard disk (%1)"
 msgstr "Kiintolevy (%1)"
@@ -2680,6 +2719,18 @@ msgstr "Parannettu väri - Normaali tila (5154/ECD)"
 msgid "Enhanced Color - Enhanced Mode (5154/ECD)"
 msgstr "Parannettu väri - Parannettu tila (5154/ECD)"
 
+msgid "IBM 8507 (1024x768, Monochrome)"
+msgstr "IBM 8507 (1024x768, yksivärinen)"
+
+msgid "IBM 8514 (1024x768, Color)"
+msgstr "IBM 8514 (1024x768, väri)"
+
+msgid "IBM 8503 (640x480, Monochrome)"
+msgstr "IBM 8503 (640x480, yksivärinen)"
+
+msgid "IBM 8512/13 (640x480, Color)"
+msgstr "IBM 8512/13 (640x480, väri)"
+
 msgid "Green"
 msgstr "Vihreä"
 
@@ -2878,8 +2929,14 @@ msgstr "[Yleinen] 1989 (3500 RPM)"
 msgid "[Generic] 1992 (3600 RPM)"
 msgstr "[Yleinen] 1992 (3600 RPM)"
 
+msgid "[Generic] 1993 (4000 RPM)"
+msgstr "[Yleinen] 1993 (4000 RPM)"
+
 msgid "[Generic] 1994 (4500 RPM)"
 msgstr "[Yleinen] 1994 (4500 RPM)"
+
+msgid "[Generic] 1995 (5200 RPM)"
+msgstr "[Yleinen] 1995 (5200 RPM)"
 
 msgid "[Generic] 1996 (5400 RPM)"
 msgstr "[Yleinen] 1996 (5400 RPM)"
@@ -2892,6 +2949,9 @@ msgstr "[Yleinen] 1998 (5400 RPM)"
 
 msgid "[Generic] 2000 (7200 RPM)"
 msgstr "[Yleinen] 2000 (7200 RPM)"
+
+msgid "[Generic] 2004 (10000 RPM)"
+msgstr "[Yleinen] 2004 (10000 RPM)"
 
 msgid "IBM 8514/A clone"
 msgstr "IBM 8514/A-klooni"
@@ -2943,6 +3003,15 @@ msgstr "Malli"
 
 msgid "Model:"
 msgstr "Malli:"
+
+msgid "Brand:"
+msgstr ""
+
+msgid "Revision:"
+msgstr ""
+
+msgid "[Generic HDD] Device Configuration"
+msgstr ""
 
 msgid "Failed to initialize Vulkan renderer."
 msgstr "Vulkan-rendereriä ei voitu alustaa."
@@ -3261,6 +3330,12 @@ msgstr "&Pikakelaus"
 msgid "Fast forward"
 msgstr "Pikakelaus"
 
+msgid "&Non-maskable interrupt"
+msgstr ""
+
+msgid "Non-maskable interrupt"
+msgstr ""
+
 msgid "To change the system directory, stop all running machines."
 msgstr "Järjestelmähakemiston muuttamiseksi pysäytä kaikki käynnissä olevat koneet."
 
@@ -3440,4 +3515,10 @@ msgid "938 (Traditional Chinese)"
 msgstr "938 (perinteinen kiina)"
 
 msgid "Sample rate:"
+msgstr ""
+
+msgid "CGA lightpen"
+msgstr ""
+
+msgid "Luminance threshold (%)"
 msgstr ""

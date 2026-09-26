@@ -112,6 +112,7 @@ enum {
 
     DEVICE_BIOS_ALIAS = 0x8000000,  /* use only BIOS names for aliases */
 
+    DEVICE_AUDIO_IN   = 0x10000000,
     DEVICE_ONBOARD    = 0x40000000, /* is on-board */
     DEVICE_PIT        = 0x80000000, /* device is a PIT */
 
@@ -129,6 +130,8 @@ enum {
 
 #define BIOS_LIMIT_MIN_MEMORY            0x0100000000000000
 #define BIOS_LIMIT_MAX_MEMORY            0x0200000000000000
+#define BIOS_LIMIT_MIN_MEMORY_2          0x0400000000000000
+#define BIOS_LIMIT_MAX_MEMORY_2          0x0800000000000000
 
 typedef struct device_config_selection_t {
     const char *description;
@@ -181,7 +184,24 @@ typedef struct _device_ {
     const char *alias;
     const char *machine;
     const device_config_t *config;
+
+    void (*power_button)(void *priv); /* Optional emulated power-button press. */
+
+    const char *short_name;                           /* Short label, as on an IDE channel; name if NULL. */
+    uint32_t  (*ide_boards)(const struct _device_ *); /* The IDE boards the device claims, with its
+                                                         configuration as the current context. */
+    uint32_t  (*scsi_buses)(const struct _device_ *); /* How many SCSI buses it takes, the same way;
+                                                         one for a SCSI card without it. */
 } device_t;
+
+/* Who has a bus (an IDE board, a SCSI bus): the device and its instance,
+   and whether it is on the machine's board (with device NULL, the
+   chipset's own). */
+typedef struct bus_owner_t {
+    const device_t *device;
+    int             instance;
+    int             onboard;
+} bus_owner_t;
 
 typedef struct device_context_t {
     const device_t *dev;
@@ -219,6 +239,9 @@ extern void *device_get_priv(const device_t *dev);
 extern int   device_available(const device_t *dev);
 extern void  device_speed_changed(void);
 extern void  device_force_redraw(void);
+extern int   device_has_power_button(void);
+/* Call with the CPU paused before dispatching to device state. */
+extern void  device_power_button(void);
 extern const char *device_get_bus_name(const device_t *dev);
 extern void  device_get_name(const device_t *dev, int bus, char *name);
 extern int   device_has_config(const device_t *dev);
@@ -244,10 +267,11 @@ extern void        device_set_config_int(const char *str, int val);
 extern void        device_set_config_hex16(const char *str, int val);
 extern void        device_set_config_hex20(const char *str, int val);
 extern void        device_set_config_mac(const char *str, int val);
+extern const char *device_get_config_bios(const char *name);
+extern void        device_migrate_config_bios(const void *priv, const char *name);
 extern const char *device_get_config_string(const char *name);
 extern void        device_set_config_string(const char *str, const char *val);
 extern int         device_get_instance(void);
-#define device_get_config_bios device_get_config_string
 
 extern const char *device_get_internal_name(const device_t *dev);
 

@@ -71,6 +71,7 @@ typedef enum video_font_format_e
     FONT_FORMAT_PC1512_T1000 = 8,
     FONT_FORMAT_IM1024 = 9,
     FONT_FORMAT_PRAVETZ = 10,
+    FONT_FORMAT_IM1024_8X12 = 11,
 } video_font_format;
 
 #define VIDEO_FLAG_TYPE_CGA     0
@@ -136,6 +137,8 @@ typedef struct monitor_t {
     int                      mon_efscrnsz_y;
     int                      mon_unscaled_size_x;
     int                      mon_unscaled_size_y;
+    int                      mon_device_aspect_x;
+    int                      mon_device_aspect_y;
     double                   mon_res_x;
     double                   mon_res_y;
     int                      mon_bpp;
@@ -232,7 +235,8 @@ extern uint8_t      fontdat[2048][8];      /* IBM CGA font */
 extern uint8_t      fontdatm[2048][16];    /* IBM MDA font */
 extern uint8_t      fontdatw[512][32];     /* Wyse700 font */
 extern uint8_t      fontdat8x12[256][16];  /* MDSI Genius font */
-extern uint8_t      fontdat12x18[256][36]; /* IM1024 font */
+extern uint8_t      fontdat12x18[256][36]; /* IM1024 12x18 font */
+extern uint8_t      fontdat8x12im1024[256][12]; /* IM1024 8x12 font */
 extern dbcs_font_t *fontdatksc5601;        /* Korean KSC-5601 font */
 extern dbcs_font_t *fontdatksc5601_user;   /* Korean KSC-5601 user defined font */
 extern uint32_t    *video_6to8;
@@ -242,6 +246,7 @@ extern uint32_t    *video_15to32;
 extern uint32_t    *video_16to32;
 extern int          enable_overscan;
 extern int          force_43;
+extern int          force_device_aspect;
 extern int          vid_resize;
 extern int          herc_blend;
 extern int          vid_cga_contrast;
@@ -299,6 +304,8 @@ extern void video_blit_complete_monitor(int monitor_index);
 extern void video_wait_for_blit_monitor(int monitor_index);
 extern void video_wait_for_buffer_monitor(int monitor_index);
 
+extern int video_6845_get_hsync_delay(const uint8_t *crtc, int hsync_width);
+
 extern bitmap_t *create_bitmap(int w, int h);
 extern void      destroy_bitmap(bitmap_t *b);
 extern void      cgapal_rebuild_monitor(int monitor_index);
@@ -310,6 +317,10 @@ extern void    video_monitor_close(int);
 extern void    video_init(void);
 extern void    video_close(void);
 extern void    video_reset_close(void);
+extern void    video_lightpen_set_callbacks(void* priv, void (*lightpen_hsync)(void*), void (*lightpen_vsync)(void*), void (*lightpen_trigger_strobe)(void* priv, int x, int y, int x_offset_from_hsync, int firstline, double pix_clock, int monitor_used));
+extern void    video_lightpen_hsync(void);
+extern void    video_lightpen_vsync(void);
+extern void    video_lightpen_check_trigger_strobe(int x_offset, int y, int x_offset_from_hsync, int firstline, double pix_clock, int monitor_used);
 extern void    video_pre_reset(int card);
 extern void    video_reset(int card);
 extern void    video_post_reset(void);
@@ -323,6 +334,7 @@ extern void     video_load_font(char *fn, int format, int offset);
 extern uint32_t video_color_transform(uint32_t color);
 
 extern void     video_clamp_vram(uint64_t bios_flags, int *vram);
+extern void     video_clamp_vram_2(uint64_t bios_flags, int *vram);
 
 #define video_inform(type, video_timings_ptr) video_inform_monitor(type, video_timings_ptr, monitor_index_global)
 #define video_get_type()                      video_get_type_monitor(0)
@@ -341,10 +353,10 @@ extern void     video_clamp_vram(uint64_t bios_flags, int *vram);
 #endif
 
 #ifdef EMU_DEVICE_H
-/* IBM XGA */
+/* IBM XGA and XGA-2 */
 extern void xga_device_add(void);
 
-/* IBM 8514/A and clones*/
+/* IBM 8514/A and clones */
 extern void ibm8514_device_add(void);
 extern const device_t mach8_vga_isa_device;
 extern const device_t mach32_isa_device;
@@ -353,12 +365,16 @@ extern const device_t mach32_mca_device;
 extern const device_t mach32_pci_device;
 extern const device_t mach32_onboard_pci_device;
 
-/* IBM Display Adapter (PS/55) */
+/* IBM PS/55 Display Adapter */
 extern void da2_device_add(void);
+
+/* IBM PS/2 Plasma Display Adapter */
+extern const device_t ibm_plasma_vga_device;
 
 /* ATi Mach64 */
 extern const device_t mach64gx_isa_device;
 extern const device_t mach64gx_vlb_device;
+extern const device_t mach64gx_xpression_vlb_device;
 extern const device_t mach64gx_pci_device;
 extern const device_t mach64ct_device;
 extern const device_t mach64ct_device_onboard;
@@ -481,8 +497,9 @@ extern const device_t incolor_device;
 /* Headland GC-2xx/HT-2xx */
 extern const device_t g2_gc205_device;
 extern const device_t v7_vga_1024i_device;
-extern const device_t radius_svga_multiview_isa_device;
+extern const device_t v7_vram_2_ergo_device;
 extern const device_t radius_svga_multiview_mca_device;
+extern const device_t ht216_standalone_device;
 extern const device_t ht216_32_pb410a_device;
 extern const device_t ht216_32_standalone_device;
 
@@ -624,6 +641,10 @@ extern const device_t v6355d_device;
 extern const device_t tandy_1000_video_device;
 extern const device_t tandy_1000hx_video_device;
 extern const device_t tandy_1000sl_video_device;
+
+/* Hitachi HD44780 character LCD */
+extern const device_t hd44780_device;
+extern const device_t hd44780_cobalt3k_device;
 
 #endif
 

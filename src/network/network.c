@@ -90,6 +90,7 @@ static const NETWORK_CARD net_cards[] = {
     /* ISA */
     { &threec501_device           },
     { &threec503_device           },
+    { &threec509b_device          },
     { &ne1000_compat_device       },
     { &ne2000_compat_8bit_device  },
     { &ne1000_device              },
@@ -102,13 +103,22 @@ static const NETWORK_CARD net_cards[] = {
     { &modem_device               },
     /* LPT */
     { &plip_device                },
+    { &pe3_device                 },
     /* ISA16 */
     { &pcnet_am79c960_device      },
     { &pcnet_am79c961_device      },
     { &de220p_device              },
     { &ne2000_compat_device       },
     { &pcnet_am79c960_eb_device   },
+    /* EISA */
+    { &threec592_device           },
+    { &threec597_device           },
     /* MCA */
+    { &threec529_mc_device        },
+    { &threec529_tp_device        },
+    { &ibm_ethernet_efe5_device   },
+    { &ibm_ethernet_efd5_device   },
+    { &ibm_ethernet_efd4_device   },
     { &ethernext_mc_device        },
     { &wd8003ea_device            },
     { &wd8003eta_device           },
@@ -123,6 +133,7 @@ static const NETWORK_CARD net_cards[] = {
     { &dec_tulip_device           },
     { &i82557_device              },
     { &i82558_device              },
+    { &nec_pk_ug_x006_device      },
     { &rtl8029as_device           },
     { &rtl8139c_plus_device       },
     { &smc_epic100_device         },

@@ -25,7 +25,7 @@
 #define EMU_FDD_TAPE_H
 
 /* For logging detailed QIC-117 debugging into the emulator log. */
-#if 0
+#if 1
 #    define ENABLE_FDD_TAPE_LOG 1
 #endif
 
@@ -39,6 +39,8 @@
 #define FDD_TAPE_SECTOR_SIZE     1024
 #define FDD_TAPE_SECTORS_PER_SEG 32
 #define FDD_TAPE_SEGMENT_SIZE    (FDD_TAPE_SECTOR_SIZE * FDD_TAPE_SECTORS_PER_SEG)
+/* The last three sectors of a segment hold its Reed-Solomon parity. */
+#define FDD_TAPE_ECC_SECTORS     3
 /*
    Blank-cartridge defaults, keyed on the format being laid down. A formatted
    cartridge states its true mapping in its own header segment, which the
@@ -59,11 +61,8 @@
 extern "C" {
 #endif
 
-extern int  fdd_tape_enabled;                   /* drive fitted to the cable */
-extern int  fdd_tape_unit;                      /* drive select line, 0..3 */
-extern char fdd_tape_fn[MAX_IMAGE_PATH_LEN];    /* cartridge image */
-
-/* Attaches or detaches the drive according to the configuration above. */
+/* Attaches or detaches the drive according to its tape_drives[] entry
+   (TAPE_BUS_FDC). */
 extern void fdd_tape_init(void);
 extern void fdd_tape_close(void);
 

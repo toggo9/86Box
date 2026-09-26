@@ -8,6 +8,7 @@
 #    include <stdlib.h>
 #    define HAVE_STDARG_H
 #    include <86box/86box.h>
+#    include <86box/pic.h>
 #    include <86box/plat.h>
 #    include "cpu.h"
 #    include "x86.h"
@@ -295,10 +296,32 @@ codegen_block_start_recompile(codeblock_t *block)
     addlong((uint32_t) rip_rel);
 #    endif
     block_pos = BLOCK_EXIT_OFFSET; /*Exit code*/
+#if _WIN64
+    /* XMM6 holds guest FPU/MMX values and XMM15 is scratch, and the
+       Windows x64 ABI makes both the caller's: put back what it had. */
+    addbyte(0xf3); /*MOVDQU XMM6, [RSP+0x28]*/
+    addbyte(0x0f);
+    addbyte(0x6f);
+    addbyte(0x74);
+    addbyte(0x24);
+    addbyte(0x28);
+    addbyte(0xf3); /*MOVDQU XMM15, [RSP+0x38]*/
+    addbyte(0x44);
+    addbyte(0x0f);
+    addbyte(0x6f);
+    addbyte(0x7c);
+    addbyte(0x24);
+    addbyte(0x38);
+    addbyte(0x48); /*ADDL $72,%rsp*/
+    addbyte(0x83);
+    addbyte(0xC4);
+    addbyte(0x48);
+#else
     addbyte(0x48);                 /*ADDL $40,%rsp*/
     addbyte(0x83);
     addbyte(0xC4);
     addbyte(0x28);
+#endif
     addbyte(0x41); /*POP R15*/
     addbyte(0x5f);
     addbyte(0x41); /*POP R14*/
@@ -326,10 +349,30 @@ codegen_block_start_recompile(codeblock_t *block)
     addbyte(0x56);
     addbyte(0x41); /*PUSH R15*/
     addbyte(0x57);
+#if _WIN64
+    addbyte(0x48); /*SUBL $72,%rsp*/
+    addbyte(0x83);
+    addbyte(0xEC);
+    addbyte(0x48);
+    addbyte(0xf3); /*MOVDQU [RSP+0x28], XMM6*/
+    addbyte(0x0f);
+    addbyte(0x7f);
+    addbyte(0x74);
+    addbyte(0x24);
+    addbyte(0x28);
+    addbyte(0xf3); /*MOVDQU [RSP+0x38], XMM15*/
+    addbyte(0x44);
+    addbyte(0x0f);
+    addbyte(0x7f);
+    addbyte(0x7c);
+    addbyte(0x24);
+    addbyte(0x38);
+#else
     addbyte(0x48); /*SUBL $40,%rsp*/
     addbyte(0x83);
     addbyte(0xEC);
     addbyte(0x28);
+#endif
     addbyte(0x48); /*MOVL RBP, &cpu_state*/
     addbyte(0xBD);
     addquad(((uintptr_t) &cpu_state) + 128);
@@ -445,10 +488,32 @@ codegen_block_end_recompile(codeblock_t *block)
 
     codegen_accumulate_flush();
 
+#if _WIN64
+    /* XMM6 holds guest FPU/MMX values and XMM15 is scratch, and the
+       Windows x64 ABI makes both the caller's: put back what it had. */
+    addbyte(0xf3); /*MOVDQU XMM6, [RSP+0x28]*/
+    addbyte(0x0f);
+    addbyte(0x6f);
+    addbyte(0x74);
+    addbyte(0x24);
+    addbyte(0x28);
+    addbyte(0xf3); /*MOVDQU XMM15, [RSP+0x38]*/
+    addbyte(0x44);
+    addbyte(0x0f);
+    addbyte(0x6f);
+    addbyte(0x7c);
+    addbyte(0x24);
+    addbyte(0x38);
+    addbyte(0x48); /*ADDL $72,%rsp*/
+    addbyte(0x83);
+    addbyte(0xC4);
+    addbyte(0x48);
+#else
     addbyte(0x48); /*ADDL $40,%rsp*/
     addbyte(0x83);
     addbyte(0xC4);
     addbyte(0x28);
+#endif
     addbyte(0x41); /*POP R15*/
     addbyte(0x5f);
     addbyte(0x41); /*POP R14*/
@@ -810,6 +875,20 @@ codegen_generate_ea_32_long(x86seg *op_ea_seg, uint32_t fetchdat, int op_ssegs, 
     return op_ea_seg;
 }
 // #endif
+
+static void
+fpu_sf_check_exceptions(void)
+{
+    cpu_state.sf_exc = 0;
+    if (fpu_state.swd & FPU_SW_Summary) {
+        if (cr0 & 0x20)
+            new_ne = 1;
+        else
+            picint(1 << 13);
+        cpu_state.sf_exc = 1;
+    }
+}
+
 void
 codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t new_pc, uint32_t old_pc)
 {
@@ -824,6 +903,7 @@ codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t new_p
     int          pc_off          = 0;
     int          test_modrm      = 1;
     int          in_lock         = 0;
+    int          is_fpu          = 0;
     int          c;
     uint32_t     op87            = 0x00000000;
 
@@ -844,6 +924,7 @@ codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t new_p
                 op_table        = x86_dynarec_opcodes_0f;
                 recomp_op_table = fpu_softfloat ? recomp_opcodes_0f_no_mmx : recomp_opcodes_0f;
                 over            = 1;
+                is_fpu          = 0;
                 break;
 
             case 0x26: /*ES:*/
@@ -887,6 +968,7 @@ codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t new_p
                 over            = 1;
                 pc_off          = -1;
                 test_modrm      = 0;
+                is_fpu          = 1;
                 block->flags |= CODEBLOCK_HAS_FPU;
                 break;
             case 0xd9:
@@ -897,6 +979,7 @@ codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t new_p
                 over            = 1;
                 pc_off          = -1;
                 test_modrm      = 0;
+                is_fpu          = 1;
                 block->flags |= CODEBLOCK_HAS_FPU;
                 break;
             case 0xda:
@@ -907,6 +990,7 @@ codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t new_p
                 over            = 1;
                 pc_off          = -1;
                 test_modrm      = 0;
+                is_fpu          = 1;
                 block->flags |= CODEBLOCK_HAS_FPU;
                 break;
             case 0xdb:
@@ -917,6 +1001,7 @@ codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t new_p
                 over            = 1;
                 pc_off          = -1;
                 test_modrm      = 0;
+                is_fpu          = 1;
                 block->flags |= CODEBLOCK_HAS_FPU;
                 break;
             case 0xdc:
@@ -928,6 +1013,7 @@ codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t new_p
                 over            = 1;
                 pc_off          = -1;
                 test_modrm      = 0;
+                is_fpu          = 1;
                 block->flags |= CODEBLOCK_HAS_FPU;
                 break;
             case 0xdd:
@@ -938,6 +1024,7 @@ codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t new_p
                 over            = 1;
                 pc_off          = -1;
                 test_modrm      = 0;
+                is_fpu          = 1;
                 block->flags |= CODEBLOCK_HAS_FPU;
                 break;
             case 0xde:
@@ -948,6 +1035,7 @@ codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t new_p
                 over            = 1;
                 pc_off          = -1;
                 test_modrm      = 0;
+                is_fpu          = 1;
                 block->flags |= CODEBLOCK_HAS_FPU;
                 break;
             case 0xdf:
@@ -958,6 +1046,7 @@ codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t new_p
                 over            = 1;
                 pc_off          = -1;
                 test_modrm      = 0;
+                is_fpu          = 1;
                 block->flags |= CODEBLOCK_HAS_FPU;
                 break;
 
@@ -968,10 +1057,12 @@ codegen_generate_call(uint8_t opcode, OpFn op, uint32_t fetchdat, uint32_t new_p
             case 0xf2: /*REPNE*/
                 op_table        = x86_dynarec_opcodes_REPNE;
                 recomp_op_table = recomp_opcodes_REPNE;
+                is_fpu          = 0;
                 break;
             case 0xf3: /*REPE*/
                 op_table        = x86_dynarec_opcodes_REPE;
                 recomp_op_table = recomp_opcodes_REPE;
+                is_fpu          = 0;
                 break;
 
             default:
@@ -1025,6 +1116,39 @@ generate_call:
 
     if (recomp_op_table && recomp_op_table[(opcode | op_32) & 0x1ff]) {
         uint32_t new_pc = recomp_op_table[(opcode | op_32) & 0x1ff](opcode, fetchdat, op_32, op_pc, block);
+        if (cpu_dyn_accurate_fpu_env && is_fpu) {
+            addbyte(0x50 | REG_ESI); /*PUSH RSI*/
+            addbyte(0x48); /*MOV RSI, &(cpu_state.fpu_op)*/
+            addbyte(0xb8 | REG_ESI);
+            addquad((uint64_t) &(cpu_state.fpu_op));
+            addbyte(0x66); /*MOVW $x87_op,(RSI)*/
+            addbyte(0xC7);
+            addbyte(0x00 | REG_ESI);
+            addword(x87_op);
+            addbyte(0x48); /*MOV RSI, &(cpu_state.fpu_CS)*/
+            addbyte(0xb8 | REG_ESI);
+            addquad((uint64_t) &(cpu_state.fpu_CS));
+            addbyte(0x66); /*MOVW $cpu_state.temp_CS,(RSI)*/
+            addbyte(0xC7);
+            addbyte(0x00 | REG_ESI);
+            addword(cpu_state.temp_CS);
+            addbyte(0x48); /*MOV RSI, &(cpu_state.fpu_cs)*/
+            addbyte(0xb8 | REG_ESI);
+            addquad((uint64_t) &(cpu_state.fpu_CS));
+            addbyte(0xC7); /*MOVW $cpu_state.temp_cs,(RSI)*/
+            addbyte(0x00 | REG_ESI);
+            addlong(cpu_state.temp_cs);
+            addbyte(0x48); /*MOV RSI, &(cpu_state.fpu_cs)*/
+            addbyte(0xb8 | REG_ESI);
+            addquad((uint64_t) &(cpu_state.fpu_pc));
+            addbyte(0xC7); /*MOVW $cpu_state.temp_pc,(RSI)*/
+            addbyte(0x00 | REG_ESI);
+            addlong(cpu_state.temp_pc);
+            addbyte(0x58 | REG_ESI); /*POP RSI*/
+            if ((x87_op & 0xff) < 0xc0) {
+                call(block, (uintptr_t) fpu_postamble);
+            }
+        }
         if (new_pc) {
             if (new_pc != -1)
                 STORE_IMM_ADDR_L((uintptr_t) &cpu_state.pc, new_pc);
@@ -1113,6 +1237,56 @@ codegen_skip:
 
     load_param_1_32(block, fetchdat);
     call(block, (uintptr_t) op);
+    if (cpu_dyn_accurate_fpu_env && is_fpu) {
+        if (fpu_softfloat) {
+            call(block, (uintptr_t) fpu_sf_check_exceptions);
+        }
+        addbyte(0x50 | REG_ESI); /*PUSH RSI*/
+        addbyte(0x48); /*MOV RSI, &(cpu_state.fpu_op)*/
+        addbyte(0xb8 | REG_ESI);
+        addquad((uint64_t) &(cpu_state.fpu_op));
+        addbyte(0x66); /*MOVW $x87_op,(RSI)*/
+        addbyte(0xC7);
+        addbyte(0x00 | REG_ESI);
+        addword(x87_op);
+        addbyte(0x48); /*MOV RSI, &(cpu_state.fpu_CS)*/
+        addbyte(0xb8 | REG_ESI);
+        addquad((uint64_t) &(cpu_state.fpu_CS));
+        addbyte(0x66); /*MOVW $cpu_state.temp_CS,(RSI)*/
+        addbyte(0xC7);
+        addbyte(0x00 | REG_ESI);
+        addword(cpu_state.temp_CS);
+        addbyte(0x48); /*MOV RSI, &(cpu_state.fpu_cs)*/
+        addbyte(0xb8 | REG_ESI);
+        addquad((uint64_t) &(cpu_state.fpu_CS));
+        addbyte(0xC7); /*MOVW $cpu_state.temp_cs,(RSI)*/
+        addbyte(0x00 | REG_ESI);
+        addlong(cpu_state.temp_cs);
+        addbyte(0x48); /*MOV RSI, &(cpu_state.fpu_cs)*/
+        addbyte(0xb8 | REG_ESI);
+        addquad((uint64_t) &(cpu_state.fpu_pc));
+        addbyte(0xC7); /*MOVW $cpu_state.temp_pc,(RSI)*/
+        addbyte(0x00 | REG_ESI);
+        addlong(cpu_state.temp_pc);
+        if ((x87_op & 0xff) < 0xc0) {
+            call(block, (uintptr_t) fpu_postamble);
+        }
+        if (fpu_softfloat) {
+            /* Check for exceptions. */
+            addbyte(0x48); /*MOV RSI, &(cpu_state.sf_exc)*/
+            addbyte(0xb8 | REG_ESI);
+            addquad((uint64_t) &(cpu_state.sf_exc));
+            addbyte(0xf6); /* test byte ptr[rsi],1 */
+            addbyte(0x06);
+            addbyte(0x01);
+            addbyte(0x58 | REG_ESI); /*POP RSI*/
+            addbyte(0x0F);
+            addbyte(0x85); /*JNZ 0*/
+            addlong((uint32_t) (uintptr_t) &block->data[BLOCK_EXIT_OFFSET] - (uint32_t) (uintptr_t) (&block->data[block_pos + 4]));
+        } else {
+            addbyte(0x58 | REG_ESI); /*POP RSI*/
+        }
+    }
 
     codegen_block_ins++;
 

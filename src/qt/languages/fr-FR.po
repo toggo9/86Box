@@ -81,6 +81,9 @@ msgstr "Spécifier dimen&sions…"
 msgid "Force &4:3 display ratio"
 msgstr "Forcer le ratio &4:3"
 
+msgid "Force &%1:%2 display ratio"
+msgstr "Forcer le ratio &%1:%2"
+
 msgid "&Window scale factor"
 msgstr "Facteur d'éch&elle"
 
@@ -423,8 +426,11 @@ msgstr "Activé (UTC)"
 msgid "Use the 486 interpreter for 286 and 386 processors"
 msgstr "Employer l'interprète 486 pour les processeurs 286 et 386"
 
-msgid "Dynamic Recompiler"
+msgid "Dynamic recompiler"
 msgstr "Recompilateur dynamique"
+
+msgid "Accurate FPU environment on the dynamic recompiler"
+msgstr ""
 
 msgid "CPU frame size"
 msgstr "Taille du bloc de processeur"
@@ -456,6 +462,9 @@ msgstr "Graphique XGA"
 msgid "IBM PS/55 Display Adapter Graphics"
 msgstr "Graphique de l'adaptateur IBM PS/55"
 
+msgid "SCSI:"
+msgstr "SCSI :"
+
 msgid "Voodoo:"
 msgstr "Voodoo :"
 
@@ -470,6 +479,21 @@ msgstr "Souris :"
 
 msgid "Mouse"
 msgstr "Souris"
+
+msgid "&Mouse"
+msgstr "&Souris"
+
+msgid "Tablet:"
+msgstr ""
+
+msgid "Tablet"
+msgstr ""
+
+msgid "&Tablet"
+msgstr ""
+
+msgid "Tablet (&Crosshair)"
+msgstr ""
 
 msgid "Joystick:"
 msgstr "Manette :"
@@ -834,6 +858,9 @@ msgstr "Affichage"
 
 msgid "Input devices"
 msgstr "Dispositifs d'entrée"
+
+msgid "Input &device"
+msgstr ""
 
 msgid "Sound"
 msgstr "Son"
@@ -1480,6 +1507,18 @@ msgstr "Arrêt ACPI"
 
 msgid "ACP&I shutdown"
 msgstr "Arrêt ACP&I"
+
+msgid "Power off"
+msgstr ""
+
+msgid "Power &off…"
+msgstr ""
+
+msgid "Power &off"
+msgstr ""
+
+msgid "Powering off the emulated machine may cause data loss. Are you sure you want to continue?"
+msgstr ""
 
 msgid "Hard disk (%1)"
 msgstr "Disque dur (%1)"
@@ -2694,6 +2733,18 @@ msgstr "Couleur améliorée - Mode normal (5154/ECD)"
 msgid "Enhanced Color - Enhanced Mode (5154/ECD)"
 msgstr "Couleur améliorée - Mode amélioré (5154/ECD)"
 
+msgid "IBM 8507 (1024x768, Monochrome)"
+msgstr "IBM 8507 (1024x768, monochrome)"
+
+msgid "IBM 8514 (1024x768, Color)"
+msgstr "IBM 8514 (1024x768, couleur)"
+
+msgid "IBM 8503 (640x480, Monochrome)"
+msgstr "IBM 8503 (640x480, monochrome)"
+
+msgid "IBM 8512/13 (640x480, Color)"
+msgstr "IBM 8512/13 (640x480, couleur)"
+
 msgid "Green"
 msgstr "Vert"
 
@@ -2892,8 +2943,14 @@ msgstr "[Générique] 1989 (3500 RPM)"
 msgid "[Generic] 1992 (3600 RPM)"
 msgstr "[Générique] 1992 (3600 RPM)"
 
+msgid "[Generic] 1993 (4000 RPM)"
+msgstr "[Générique] 1993 (4000 RPM)"
+
 msgid "[Generic] 1994 (4500 RPM)"
 msgstr "[Générique] 1994 (4500 RPM)"
+
+msgid "[Generic] 1995 (5200 RPM)"
+msgstr "[Générique] 1995 (5200 RPM)"
 
 msgid "[Generic] 1996 (5400 RPM)"
 msgstr "[Générique] 1996 (5400 RPM)"
@@ -2906,6 +2963,9 @@ msgstr "[Générique] 1998 (5400 RPM)"
 
 msgid "[Generic] 2000 (7200 RPM)"
 msgstr "[Générique] 2000 (7200 RPM)"
+
+msgid "[Generic] 2004 (10000 RPM)"
+msgstr "[Générique] 2004 (10000 RPM)"
 
 msgid "IBM 8514/A clone"
 msgstr "Clone IBM 8514/A"
@@ -2957,6 +3017,15 @@ msgstr "Modèle"
 
 msgid "Model:"
 msgstr "Modèle :"
+
+msgid "Brand:"
+msgstr ""
+
+msgid "Revision:"
+msgstr ""
+
+msgid "[Generic HDD] Device Configuration"
+msgstr ""
 
 msgid "Failed to initialize Vulkan renderer."
 msgstr "Impossible d’initialiser le moteur de rendu Vulkan."
@@ -3275,6 +3344,12 @@ msgstr "&Avance rapide"
 msgid "Fast forward"
 msgstr "Avance rapide"
 
+msgid "&Non-maskable interrupt"
+msgstr ""
+
+msgid "Non-maskable interrupt"
+msgstr ""
+
 msgid "To change the system directory, stop all running machines."
 msgstr "Pour modifier le répertoire système, arrêtez toutes les machines en cours d'exécution."
 
@@ -3455,4 +3530,10 @@ msgid "938 (Traditional Chinese)"
 msgstr "938 (chinois traditionnel)"
 
 msgid "Sample rate:"
+msgstr ""
+
+msgid "CGA lightpen"
+msgstr ""
+
+msgid "Luminance threshold (%)"
 msgstr ""

@@ -45,6 +45,14 @@ project(86Box
     HOMEPAGE_URL "https://86box.net"
     LANGUAGES C CXX)
 
+if (NOT (CMAKE_SIZEOF_VOID_P STREQUAL "8"))
+    message(FATAL_ERROR "Only 64-bit builds are supported.")
+endif()
+
+if (CMAKE_C_BYTE_ORDER STREQUAL "BIG_ENDIAN")
+    message(FATAL_ERROR "Big-endian builds are not supported.")
+endif()
+
 include(CPack)
 include(CMakeDependentOption)
 include(FetchContent)
@@ -127,6 +135,19 @@ option(DEBUGREGS486 "Enable debug register opeartion on 486+ CPUs"              
 option(LIBASAN      "Enable compilation with the addresss sanitizer"             OFF)
 option(QT           "Use the Qt-based user interface"                            ON)
 option(SDL2         "Use SDL2 instead of SDL3"                                   OFF)
+option(BUILD_TESTING "Build the unit test suite"                                  OFF)
+option(BUILD_BENCHMARKS "Build performance benchmarks"                            OFF)
+
+if(BUILD_TESTING)
+    enable_testing()
+    find_package(GTest CONFIG REQUIRED)
+endif()
+if(BUILD_BENCHMARKS)
+    find_package(benchmark CONFIG REQUIRED)
+endif()
+if(BUILD_TESTING OR BUILD_BENCHMARKS)
+    add_subdirectory(tests)
+endif()
 
 if((ARCH STREQUAL "arm64"))
     set(NEW_DYNAREC ON)
@@ -178,7 +199,6 @@ endif()
 #                      Option         Description                                Def.  Condition     Otherwise
 #                      ------         -----------                                ----  ------------  ---------
 cmake_dependent_option(AMD_K5         "AMD K5"                                   ON    "DEV_BRANCH"  OFF)
-cmake_dependent_option(CDROM_MITSUMI  "Mitsumi CDROM"                            ON    "DEV_BRANCH"  OFF)
 cmake_dependent_option(G100           "Matrox Productiva G100"                   ON    "DEV_BRANCH"  OFF)
 cmake_dependent_option(ISAMEM_RAMPAGE "AST Rampage"                              ON    "DEV_BRANCH"  OFF)
 cmake_dependent_option(ISAMEM_IAB     "Intel Above Board"                        ON    "DEV_BRANCH"  OFF)
