@@ -1838,6 +1838,94 @@ machine_at_ax6bc_init(const machine_t *model)
 
     return ret;
 }
+/* partially BROKEN */
+int
+machine_at_ap200_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/ap200/rom.bin",
+                           0x000c0000, 262144, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0); /* Onboard */
+	pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   3, 4, 0, 0); /* Onboard */
+	pci_register_slot(0x14, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4); /* Onboard */
+	pci_register_slot(0x0D, PCI_CARD_NORMAL,      1, 2, 3, 4); /* Slot 01 */
+	pci_register_slot(0x0E, PCI_CARD_NORMAL, 	  2, 3, 4, 1); /* Slot 02 */
+	pci_register_slot(0x0F, PCI_CARD_NORMAL, 	  3, 4, 1, 2); /* Slot 03 */
+    device_add(&i440bx_device);
+    device_add(&piix4e_device);
+	device_add(ics9xxx_get(ICS9150_08));
+	device_add_params(&pc87309_device, (void *) (PCX730X_AMI | PC87309_PC87309 | PCX730X_15C));
+    device_add(&intel_flash_bxb_device);
+    spd_register(SPD_TYPE_SDRAM, 0x03, 256);
+    return ret;
+}
+
+int
+machine_at_prosignia310_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/prosignia310/rom.bin",
+                           0x000c0000, 262144, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0); /* Onboard */
+	pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   3, 4, 0, 0); /* Onboard */
+	pci_register_slot(0x14, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4); /* Onboard */
+	pci_register_slot(0x0D, PCI_CARD_NORMAL,      1, 2, 3, 4); /* Slot 01 */
+	pci_register_slot(0x0E, PCI_CARD_NORMAL, 	  2, 3, 4, 1); /* Slot 02 */
+	pci_register_slot(0x0F, PCI_CARD_NORMAL, 	  3, 4, 1, 2); /* Slot 03 */
+    device_add(&i440bx_device);
+    device_add(&piix4e_device);
+	device_add(ics9xxx_get(ICS9150_08));
+	device_add_params(&pc87309_device, (void *) (PCX730X_AMI | PC87309_PC87309 | PCX730X_15C));
+    device_add(&intel_flash_bxb_device);
+    spd_register(SPD_TYPE_SDRAM, 0x03, 256);
+    return ret;
+}
+
+int
+machine_at_prosignia720_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/prosignia720/rom.bin",
+                           0x000c0000, 262144, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0); /* Onboard */
+	pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   3, 4, 0, 0); /* Onboard */
+	pci_register_slot(0x14, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4); /* Onboard */
+	pci_register_slot(0x0D, PCI_CARD_NORMAL,      1, 2, 3, 4); /* Slot 01 */
+	pci_register_slot(0x0E, PCI_CARD_NORMAL, 	  2, 3, 4, 1); /* Slot 02 */
+	pci_register_slot(0x0F, PCI_CARD_NORMAL, 	  3, 4, 1, 2); /* Slot 03 */
+	pci_register_slot(0x10, PCI_CARD_NORMAL, 	  4, 1, 2, 3); /* Slot 04 */
+    device_add(&i440bx_device);
+    device_add(&piix4e_device);
+	device_add(ics9xxx_get(ICS9150_08));
+	device_add_params(&pc87309_device, (void *) (PCX730X_AMI | PC87309_PC87309 | PCX730X_15C));
+    device_add(&intel_flash_bxt_device);
+    spd_register(SPD_TYPE_SDRAM, 0x03, 256);
+    return ret;
+}
 
 static const device_config_t optiplexgx1_config[] = {
     // clang-format off
