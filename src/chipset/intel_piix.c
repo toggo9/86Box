@@ -1304,6 +1304,14 @@ piix_reset_hard(piix_t *dev)
         nvr_at_handler(1, 0x0074, dev->nvr);
         dev->nvr_io_base = 0x0070;
     }
+    if ((machines[machine].init == machine_at_ap200_init) || (machines[machine].init == machine_at_prosignia310_init) || (machines[machine].init == machine_at_prosignia720_init)) {
+    dev->type = 3;
+		nvr_at_handler(0, 0x0073, dev->nvr);
+        nvr_wp_set(0, 0, dev->nvr);
+        nvr_wp_set(0, 1, dev->nvr);
+        nvr_at_handler(1, 0x0072, dev->nvr);
+        dev->nvr_io_base = 0x0070;
+}
 
     /* Clear all 4 functions' arrays and set their vendor and device ID's. */
     for (uint8_t i = 0; i < 4; i++) {
